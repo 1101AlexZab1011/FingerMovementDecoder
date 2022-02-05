@@ -146,7 +146,7 @@ class EpochsCombiner(AbstractCombiner, UserList):
                 i for _ in range(class_data.shape[0])
             ]))
         
-        X = np.append(*all_class_data, axis=0)
+        X = np.array(all_class_data)
         Y = np.concatenate(all_class_labels)
 
         if shuffle:
