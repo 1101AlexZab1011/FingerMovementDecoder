@@ -107,8 +107,7 @@ class EpochsCombiner(AbstractCombiner, UserList):
 
     def combine(
             self,
-            first_class_indices: Union[int, Tuple[int, ...]],
-            second_class_indices: Union[int, Tuple[int, ...]],
+            *args: Union[int, Tuple[int, ...]],
             shuffle: Optional[bool] = False
     ) -> NoReturn:
 
@@ -133,25 +132,22 @@ class EpochsCombiner(AbstractCombiner, UserList):
                 raise ValueError(f'Class indices must be integers of any iterable of integers, '
                                  f'{type(indices)} is given instead')
 
-        first_class_indices, second_class_indices = \
-            format_indices(first_class_indices), \
-            format_indices(second_class_indices)
-        first_class_data = np.concatenate(
-            [self.data[i].get_data() for i in first_class_indices],
-            axis=0
-        )
-        first_class_labels = np.array([
-            0 for _ in range(first_class_data.shape[0])
-        ])
-        second_class_data = np.concatenate(
-            [self.data[i].get_data() for i in second_class_indices],
-            axis=0
-        )
-        second_class_labels = np.array([
-            1 for _ in range(second_class_data.shape[0])
-        ])
-        X = np.append(first_class_data, second_class_data, axis=0)
-        Y = np.concatenate((first_class_labels, second_class_labels))
+        args = [format_indices(indices) for indices in args]
+        
+        all_class_data = list()
+        all_class_labels = list()
+        for i, class_indices in enumerate(args):
+            class_data = np.concatenate(
+                [self.data[i].get_data() for i in class_indices],
+                axis=0
+            )
+            all_class_data.append(class_data)
+            all_class_labels.append(np.array([
+                i for _ in range(class_data.shape[0])
+            ]))
+        
+        X = np.append(*all_class_data, axis=0)
+        Y = np.concatenate(all_class_labels)
 
         if shuffle:
             p = np.random.permutation(Y.shape[0])
