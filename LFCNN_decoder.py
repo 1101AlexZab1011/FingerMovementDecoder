@@ -109,9 +109,16 @@ if __name__ == '__main__':
                 cases_to_combine_list.append(epochs[case])
                 
             i += 1
+        
+        classes_names = ['&'.join(cases_combination) for cases_combination in cases_to_combine]
+        
         if classification_name is None:
-            classification_name = '_vs_'.join(['&'.join(cases_combination) for cases_combination in cases_to_combine])
-        combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine, shuffle=True)
+            classification_name = '_vs_'.join(classes_names)
+            
+        combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
+        n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
+        classes_samples = list(classes_samples.values())
+        combiner.shuffle()
         check_path(os.path.join(subject_path, 'TFR'))
         import_opt = dict(
                 savepath=f'./Source/Subjects/{subject_name}/TFR/{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}/',
@@ -132,38 +139,47 @@ if __name__ == '__main__':
         meta = mf.produce_tfrecords((combiner.X, combiner.Y), **import_opt)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
-                n_latent=32,  # number of latent factors ~ optimal
-                # convolutional filter length in time samples ~ increase (its 17 amopng 1000)
+                n_latent=32,
                 filter_length=50,
                 nonlin=tf.keras.activations.elu,
                 padding='SAME',
-                pooling=10,  # pooling factor (5 - 10)
-                stride=10,  # stride parameter for pooling layer
+                pooling=10,
+                stride=10,
                 pool_type='max',
                 model_path=import_opt['savepath'],
                 dropout=.4,
                 l2_scope=["weights"],
-                l2=1e-6  # decrease it
-            )
+                l2=1e-6
+        )
         model = mf.models.LFCNN(dataset, lf_params)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
-        subjects_performance.append(
-            pd.Series(
-                [
-                    train_acc_,
-                    train_loss_,
-                    test_acc_,
-                    test_loss_,
-                    model.v_metric,
-                    model.v_loss
-                ],
-                index=['train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
-                name=subject_name
-            )
+        perf_table_path = os.path.join(
+            perf_tables_path,
+            f'{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}.csv'
         )
-    
-    df = pd.DataFrame(subjects_performance)
-    df.to_csv(os.path.join(perf_tables_path, f'{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}.csv'))
+        processed_df = pd.Series(
+            [
+                n_classes,
+                *classes_samples,
+                sum(classes_samples),
+                train_acc_,
+                train_loss_,
+                test_acc_,
+                test_loss_,
+                model.v_metric,
+                model.v_loss,
+                
+            ],
+            index=['n_classes', *classes_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
+            name=subject_name
+        ).to_frame().T
+        if os.path.exists(perf_table_path):
+            pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
+                .to_csv(os.path.join(perf_tables_path, f'{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}.csv'))
+        else:
+            processed_df\
+            .to_csv(os.path.join(perf_tables_path, f'{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}.csv'))
+        

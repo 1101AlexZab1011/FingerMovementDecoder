@@ -104,6 +104,12 @@ class EpochsCombiner(AbstractCombiner, UserList):
         ]
         self.data = self.__storage['cropped']
         return self
+    
+    def shuffle(self):
+        X = self.X
+        Y = self.Y
+        p = np.random.permutation(Y.shape[0])
+        self._X, self._Y = X[p, :, :], Y[p]
 
     def combine(
             self,
