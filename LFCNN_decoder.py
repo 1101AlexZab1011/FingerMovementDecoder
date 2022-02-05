@@ -117,7 +117,7 @@ if __name__ == '__main__':
             
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
-        classes_samples = classes_samples.to_list()
+        classes_samples = classes_samples.tolist()
         combiner.shuffle()
         check_path(os.path.join(subject_path, 'TFR'))
         import_opt = dict(
