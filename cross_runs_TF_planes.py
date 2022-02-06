@@ -49,8 +49,8 @@ class CrossRunsTFScorer:
 
 
 if __name__ == '__main__':
-    INCLUDED_SESSIONS = ['B1', 'B10']
-    EXCLUDED_SUBJECTS = ['Az_Mar_05', 'Fe_To_08']#, 'Ga_Fed_06']
+    INCLUDED_SESSIONS = [f'B{i+1}' for i in range(10)]
+    EXCLUDED_SUBJECTS = []#['Az_Mar_05', 'Fe_To_08', 'Ga_Fed_06']
     EXCLUDED_LOCKS = ['StimCor']
 
     content_root = './'
