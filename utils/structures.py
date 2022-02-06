@@ -230,7 +230,7 @@ class Pipeline(object):
     def __init__(self, *args: Union[Callable, Deploy]):
         self._run_flow = args
 
-    def __call__(self, *args, kwargs: Optional[Union[dict[str, Any], tuple[dict[str, Any]]]] = None):
+    def __call__(self, *args, kwargs: Optional[Union[Dict[str, Any], Tuple[Dict[str, Any]]]] = None):
         if kwargs is None:
             kwargs = dict()
         if isinstance(kwargs, dict):
