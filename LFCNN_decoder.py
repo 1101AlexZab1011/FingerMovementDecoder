@@ -9,9 +9,28 @@ import tensorflow as tf
 import mneflow as mf
 from combiners import EpochsCombiner
 from utils.console import Silence
+from utils.console.spinner import spinner
 from utils.data_management import dict2str
 from utils.storage_management import check_path
-import time
+import pickle
+from typing import Any, NoReturn
+
+@spinner(prefix='Saving model...')
+def read_model(path: str) -> Any:
+    with open(
+            path,
+            'rb'
+        ) as file:
+        content = pickle.load(
+            file
+        )
+    return content	
+
+@spinner(prefix='Reading model...')
+def save_model(content: Any, path: str) -> NoReturn:
+    if path[-4:] != '.pkl':
+        raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
+    pickle.dump(content, open(path, 'wb'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -121,8 +140,9 @@ if __name__ == '__main__':
         classes_samples = classes_samples.tolist()
         combiner.shuffle()
         check_path(os.path.join(subject_path, 'TFR'))
+        classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
         import_opt = dict(
-                savepath=f'./Source/Subjects/{subject_name}/TFR/{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}/',
+                savepath=f'./Source/Subjects/{subject_name}/TFR/{classification_name_formatted}/',
                 out_name='fingers_movement_epochs',
                 fs=200,
                 input_type='trials',
@@ -157,9 +177,18 @@ if __name__ == '__main__':
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
+        models_path = os.path.join(subject_path, 'Models')
+        check_path(models_path)
+        save_model(
+            model,
+            os.path.join(
+                models_path,
+                f'{classification_name_formatted}.pkl'
+            )
+        )
         perf_table_path = os.path.join(
             perf_tables_path,
-            f'{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}.csv'
+            f'{classification_name_formatted}.csv'
         )
         processed_df = pd.Series(
             [
@@ -179,8 +208,8 @@ if __name__ == '__main__':
         ).to_frame().T
         if os.path.exists(perf_table_path):
             pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
-                .to_csv(os.path.join(perf_tables_path, f'{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}.csv'))
+                .to_csv(perf_table_path)
         else:
             processed_df\
-            .to_csv(os.path.join(perf_tables_path, f'{"_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))}.csv'))
+            .to_csv(perf_table_path)
         
