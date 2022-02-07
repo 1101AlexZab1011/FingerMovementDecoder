@@ -16,10 +16,21 @@ import pickle
 from typing import Any, NoReturn
 
 @spinner(prefix='Saving model...')
-def save_model(model: mf.BaseModel, path: str) -> NoReturn:
-    if path[-4:] != '.h5':
-        raise OSError(f'Pickle file must have extension ".h5", but it has "{path[-3:]}"')
-    model.km.save_weights(path, overwrite=True)
+def read_model(path: str) -> Any:
+    with open(
+            path,
+            'rb'
+        ) as file:
+        content = pickle.load(
+            file
+        )
+    return content	
+
+@spinner(prefix='Reading model...')
+def save_model(content: Any, path: str) -> NoReturn:
+    if path[-4:] != '.pkl':
+        raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
+    pickle.dump(content, open(path, 'wb'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
