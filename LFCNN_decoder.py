@@ -16,7 +16,7 @@ import pickle
 from typing import Any, NoReturn
 
 @spinner(prefix='Saving model...')
-def save_model(model: mf.BaseModel, path: str) -> NoReturn:
+def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
     if path[-4:] != '.h5':
         raise OSError(f'Pickle file must have extension ".h5", but it has "{path[-3:]}"')
     model.km.save_weights(path, overwrite=True)
