@@ -18,7 +18,7 @@ from typing import Any, NoReturn
 @spinner(prefix='Saving model...')
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
     if path[-4:] != '.h5':
-        raise OSError(f'Pickle file must have extension ".h5", but it has "{path[-3:]}"')
+        raise OSError(f'File must have extension ".h5", but it has "{path[-3:]}"')
     model.km.save_weights(path, overwrite=True)
 
 if __name__ == '__main__':
@@ -169,7 +169,7 @@ if __name__ == '__main__':
             model,
             os.path.join(
                 models_path,
-                f'{classification_name_formatted}.pkl'
+                f'{classification_name_formatted}.h5'
             )
         )
         perf_table_path = os.path.join(
