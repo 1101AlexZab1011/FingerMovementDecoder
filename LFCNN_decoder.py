@@ -270,12 +270,12 @@ if __name__ == '__main__':
             norm_spectra='welch',
             class_names=class_names
         )
-        spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+        spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'), dpi=120)
         plt.close(spectra_fig)
         print('Successfully saved')
         wf_fig = plot_waveforms(model, class_names=class_names)
         print('Saving waveforms pictures...')
-        wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+        wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'), dpi=120)
         plt.close(wf_fig)
         print('Successfully saved')
         weights_path = os.path.join(subject_path, 'Weights')
