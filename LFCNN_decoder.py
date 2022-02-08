@@ -17,6 +17,7 @@ import pickle
 from typing import Any, NoReturn
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import copy
 
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
@@ -34,7 +35,7 @@ def save_spatial_parameters(content: Any, path: str) -> NoReturn:
     print('Successfully saved')
 
 
-def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
+def save_model_weights(model: mf.models.BaseModel, path: str) -> NoReturn:
     
     print('Saving model weights')
     
@@ -101,6 +102,29 @@ def plot_waveforms(model, sorting='compwise_loss', tmin=0, class_names=None):
             
         return f
 
+def plot_patterns(patterns, info, cmap='RdBu_r', sensors=True,
+                colorbar=False, res=64,
+                size=1, cbar_fmt='%3.1f', name_format='Latent\nSource %01d',
+                show=True, show_names=False, title=None,
+                outlines='head', contours=6,
+                image_interp='bilinear'):
+    
+    if not title:
+        title=f'All patterns'
+        
+    n_components = patterns.shape[1]
+    info = copy.deepcopy(info)
+    info['sfreq'] = 1.
+    patterns = mne.EvokedArray(patterns, info, tmin=0)
+    
+    return patterns.plot_topomap(
+        times=range(n_components),
+        cmap=cmap, colorbar=colorbar, res=res,
+        cbar_fmt=cbar_fmt, sensors=sensors, units=None, time_unit='s',
+        time_format=name_format, size=size, show_names=show_names,
+        title=title, outlines=outlines,
+        contours=contours, image_interp=image_interp, show=show)
+
 
 if __name__ == '__main__':
     mpl.use('agg')
@@ -160,6 +184,7 @@ if __name__ == '__main__':
         subject_path = os.path.join(subjects_dir, subject_name)
         epochs_path = os.path.join(subject_path, 'Epochs')
         epochs = {case: list() for case in cases}
+        any_info = None
         
         for epochs_file in os.listdir(epochs_path):
             if lock not in epochs_file:
@@ -176,6 +201,10 @@ if __name__ == '__main__':
                         warnings.simplefilter("ignore")
                         epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
                         epochs_.resample(200)
+                        
+                        if any_info is None:
+                            any_info = epochs_.info
+                        
                         epochs[case].append(epochs_)
         
         epochs = dict(
@@ -263,27 +292,26 @@ if __name__ == '__main__':
         check_path(sp_path)
         save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}.pkl'))
         pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
+        patterns_pics_path = os.path.join(pics_path, 'Patterns')
+        filters_pics_path = os.path.join(pics_path, 'Filters')
         spectra_pics_path = os.path.join(pics_path, 'Spectra')
         wf_pics_path = os.path.join(pics_path, 'WaveForms')
-        check_path(pics_path, spectra_pics_path, wf_pics_path)
-        print('Saving spectra pictures...')
-        spectra_fig = model.plot_spectra(
-            sorting='weight_corr',
-            # norm_spectra='welch',
-            class_names=class_names
-        )
+        check_path(pics_path, patterns_pics_path, filters_pics_path, spectra_pics_path, wf_pics_path)
+        patterns_fig = plot_patterns(patterns, any_info)
+        patterns_fig.savefig(os.path.join(patterns_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+        plt.close(patterns_fig)
+        filters_fig = plot_patterns(filters, any_info)
+        filters_fig.savefig(os.path.join(filters_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+        plt.close(filters_fig)
+        spectra_fig = model.plot_spectra(sorting='weight_corr', class_names=class_names)
         spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
         plt.close(spectra_fig)
-        print('Successfully saved')
-        print('Saving waveforms pictures...')
         wf_fig = plot_waveforms(model, class_names=class_names)
-        plt.show()
         wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
         plt.close(wf_fig)
-        print('Successfully saved')
         weights_path = os.path.join(subject_path, 'Weights')
         check_path(weights_path)
-        save_model(
+        save_model_weights(
             model,
             os.path.join(
                 weights_path,
