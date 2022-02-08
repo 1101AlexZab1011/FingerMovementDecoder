@@ -71,7 +71,7 @@ if __name__ == '__main__':
     subjects_performance = list()
     
     for subject_name in os.listdir(subjects_dir):
-        
+        print(f'Reading {subject_name}', end='')
         if subject_name in excluded_subjects:
             continue
         
@@ -91,6 +91,7 @@ if __name__ == '__main__':
                 continue
             
             for case in cases:
+                print(f'.', end='')
                 if case in epochs_file:
                     with Silence(), warnings.catch_warnings():
                         warnings.simplefilter("ignore")
@@ -102,6 +103,9 @@ if __name__ == '__main__':
                         
                         epochs[case].append(epochs_)
                         
+            print('\tOK')
+    
+    print('Concatenating epochs...', end='')
     epochs = dict(
                 zip(
                     epochs.keys(),
@@ -111,7 +115,7 @@ if __name__ == '__main__':
                     )
                 )
             )
-    
+    print('\tOK')
     cases_to_combine_list = list()
     cases_indices_to_combine = list()
     
