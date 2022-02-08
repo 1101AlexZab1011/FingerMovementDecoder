@@ -1,4 +1,5 @@
 import argparse
+from collections import namedtuple
 import os
 import re
 import warnings
@@ -14,6 +15,15 @@ from utils.data_management import dict2str
 from utils.storage_management import check_path
 import pickle
 from typing import Any, NoReturn
+
+
+SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
+
+@spinner(prefix='Saving spatial parameters... ')
+def save_spatial_parameters(content: Any, path: str) -> NoReturn:
+    if path[-4:] != '.pkl':
+        raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
+    pickle.dump(content, open(path, 'wb'))
 
 @spinner(prefix='Saving model...')
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
@@ -45,6 +55,8 @@ if __name__ == '__main__':
                         default='', help='String to append to a task name')
     parser.add_argument('--prefix', type=str,
                         default='', help='String to set in the start of a task name')
+    parser.add_argument('--project_name', type=str,
+                        default='fingers_movement_epochs', help='Name of a project')
     
     excluded_sessions, \
     excluded_subjects, \
@@ -55,7 +67,8 @@ if __name__ == '__main__':
     sessions_name,\
     classification_name,\
     classification_postfix,\
-    classification_prefix = vars(parser.parse_args()).values()
+    classification_prefix, \
+    project_name = vars(parser.parse_args()).values()
     
     if excluded_sessions:
         excluded_sessions = [sessions_name + session if sessions_name not in session else session for session in excluded_sessions]
@@ -127,11 +140,16 @@ if __name__ == '__main__':
         n_classes = len(n_classes)
         classes_samples = classes_samples.tolist()
         combiner.shuffle()
-        check_path(os.path.join(subject_path, 'TFR'))
+        tfr_path = os.path.join(subject_path, 'TFR')
+        check_path(tfr_path)
         classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
+        savepath = os.path.join(
+            tfr_path,
+            classification_name_formatted
+        )
         import_opt = dict(
-                savepath=f'./Source/Subjects/{subject_name}/TFR/{classification_name_formatted}/',
-                out_name='fingers_movement_epochs',
+                savepath=savepath,
+                out_name=project_name,
                 fs=200,
                 input_type='trials',
                 target_type='int',
@@ -165,12 +183,20 @@ if __name__ == '__main__':
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
-        models_path = os.path.join(subject_path, 'Models')
-        check_path(models_path)
+        model.compute_patterns(os.path.join(savepath, f'{project_name}_train_0.tfrecord'))
+        patterns = model.patterns.copy()
+        model.compute_patterns(os.path.join(savepath, f'{project_name}_train_0.tfrecord'), output='filters')
+        filters = model.patterns.copy()
+        sp_path = os.path.join(subject_path, 'Parameters')
+        check_path(sp_path)
+        save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}.pkl'))
+        del patterns, filters
+        weights_path = os.path.join(subject_path, 'Weights')
+        check_path(weights_path)
         save_model(
             model,
             os.path.join(
-                models_path,
+                weights_path,
                 f'{classification_name_formatted}.h5'
             )
         )
