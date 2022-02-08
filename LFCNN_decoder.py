@@ -16,6 +16,7 @@ from utils.storage_management import check_path
 import pickle
 from typing import Any, NoReturn
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
@@ -102,6 +103,7 @@ def plot_waveforms(model, sorting='compwise_loss', tmin=0, class_names=None):
 
 
 if __name__ == '__main__':
+    mpl.use('agg')
     parser = argparse.ArgumentParser(
         description='A script for applying the neural network "LFCNN" to the epoched data from gradiometers related to events for classification'
     )
@@ -264,23 +266,21 @@ if __name__ == '__main__':
         spectra_pics_path = os.path.join(pics_path, 'Spectra')
         wf_pics_path = os.path.join(pics_path, 'WaveForms')
         check_path(pics_path, spectra_pics_path, wf_pics_path)
-        # print('Saving spectra pictures...')
-        # model.plot_spectra(
-        #     sorting='weight_corr',
-        #     norm_spectra='welch',
-        #     class_names=class_names
-        # )
-        plt.plot(np.random.random(100))
+        print('Saving spectra pictures...')
+        spectra_fig = model.plot_spectra(
+            sorting='weight_corr',
+            norm_spectra='welch',
+            class_names=class_names
+        )
+        spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'), dpi=120)
+        plt.close(spectra_fig)
+        print('Successfully saved')
+        print('Saving waveforms pictures...')
+        wf_fig = plot_waveforms(model, class_names=class_names)
         plt.show()
-        # spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'), dpi=120)
-        # plt.close(spectra_fig)
-        # print('Successfully saved')
-        # plot_waveforms(model, class_names=class_names)
-        # plt.show()
-        # print('Saving waveforms pictures...')
-        # wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'), dpi=120)
-        # plt.close(wf_fig)
-        # print('Successfully saved')
+        wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'), dpi=120)
+        plt.close(wf_fig)
+        print('Successfully saved')
         weights_path = os.path.join(subject_path, 'Weights')
         check_path(weights_path)
         save_model(
