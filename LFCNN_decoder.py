@@ -19,7 +19,7 @@ from typing import Any, NoReturn
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
     if path[-3:] != '.h5':
         raise OSError(f'File must have extension ".h5", but it has "{path[-3:]}"')
-    model.km.save(path)
+    model.km.save_weights(path, overwrite=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -89,7 +89,9 @@ if __name__ == '__main__':
                 if case in epochs_file:
                     with Silence(), warnings.catch_warnings():
                         warnings.simplefilter("ignore")
-                        epochs[case].append(mne.read_epochs(os.path.join(epochs_path, epochs_file)))
+                        epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
+                        epochs_.resample(200)
+                        epochs[case].append(epochs_)
         
         epochs = dict(
                     zip(
