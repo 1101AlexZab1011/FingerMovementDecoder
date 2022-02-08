@@ -1,3 +1,10 @@
+import sys
+import os
+current_dir = os.path.dirname(os.path.abspath('./'))
+if not current_dir in sys.path:
+    print(os.path.join(current_dir, 'FingerMovementDecoder', 'dev'))
+    sys.path.append(os.path.join(current_dir, 'FingerMovementDecoder', 'dev'))
+
 import asyncio
 import os
 import random

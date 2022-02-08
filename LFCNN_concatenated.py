@@ -111,7 +111,7 @@ if __name__ == '__main__':
                         
         edit_previous_line(msg + '\tOK')
     
-    print('Concatenating epochs...', end='')
+    print('Concatenating epochs...')
     epochs = dict(
                 zip(
                     epochs.keys(),
@@ -121,7 +121,7 @@ if __name__ == '__main__':
                     )
                 )
             )
-    print('\tOK')
+    print('Epochs are concatenated')
     cases_to_combine_list = list()
     cases_indices_to_combine = list()
     
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     n_classes = len(n_classes)
     classes_samples = classes_samples.tolist()
     combiner.shuffle()
-    pseudo_subject_home = os.path.join('tmp', 'FingerMovementDecoder')
+    pseudo_subject_home = os.path.join('/tmp', 'FingerMovementDecoder')
     subject_path = os.path.join(pseudo_subject_home, 'PseudoSubject')
     subject_name = f'Pse_Udo_{classification_postfix}'
     tfr_path = os.path.join(subject_path, 'TFR')
