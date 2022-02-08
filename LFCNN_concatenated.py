@@ -9,17 +9,22 @@ import pandas as pd
 import tensorflow as tf
 import mneflow as mf
 from combiners import EpochsCombiner
-from utils.console import Silence, edit_previous_line
-from utils.console.spinner import spinner
-from utils.data_management import dict2str
+from utils.console import Silence
 from utils.storage_management import check_path
-import pickle
-from typing import Any, NoReturn
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import copy
 from LFCNN_decoder import SpatialParameters, save_spatial_parameters, save_model_weights, plot_patterns, plot_waveforms
+from typing import Optional
 
+
+def edit_previous_line(text: str, line: Optional[int] = 1, *, return_str: Optional[bool] = False):
+    out = f'\033[{line}F\033[K{text}'
+    for i in range(line-1):
+        out += '\n'
+    if return_str:
+        return out
+    else:
+        print(out)
 
 if __name__ == '__main__':
     mpl.use('agg')
