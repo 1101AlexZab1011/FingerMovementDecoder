@@ -90,8 +90,8 @@ if __name__ == '__main__':
             if session in excluded_sessions:
                 continue
             
+            print(f'.', end='')
             for case in cases:
-                print(f'.', end='')
                 if case in epochs_file:
                     with Silence(), warnings.catch_warnings():
                         warnings.simplefilter("ignore")
