@@ -29,6 +29,8 @@ def save_spatial_parameters(content: Any, path: str) -> NoReturn:
         raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
     
     pickle.dump(content, open(path, 'wb'))
+    
+    print('Successfully saved')
 
 
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
@@ -39,6 +41,8 @@ def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
         raise OSError(f'File must have extension ".h5", but it has "{path[-3:]}"')
     
     model.km.save_weights(path, overwrite=True)
+    
+    print('Successfully saved')
 
 
 def plot_waveforms(model, sorting='compwise_loss', tmin=0, class_names=None):
