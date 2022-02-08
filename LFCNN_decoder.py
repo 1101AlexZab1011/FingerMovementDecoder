@@ -19,7 +19,7 @@ from typing import Any, NoReturn
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
     if path[-3:] != '.h5':
         raise OSError(f'File must have extension ".h5", but it has "{path[-3:]}"')
-    model.km.save_weights(path, overwrite=True)
+    model.km.save(path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
