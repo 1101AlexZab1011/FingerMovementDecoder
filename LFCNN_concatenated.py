@@ -1,5 +1,4 @@
 import argparse
-from collections import namedtuple
 import os
 import re
 import warnings
@@ -14,7 +13,6 @@ from utils.storage_management import check_path
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from LFCNN_decoder import SpatialParameters, save_spatial_parameters, save_model_weights, plot_patterns, plot_waveforms
-from typing import Optional
 
 if __name__ == '__main__':
     mpl.use('agg')
