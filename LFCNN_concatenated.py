@@ -62,18 +62,18 @@ if __name__ == '__main__':
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'perf_tables')
     check_path(perf_tables_path)
     subjects_performance = list()
+    epochs = {case: list() for case in cases}
+    any_info = None
+    train_acc, train_loss, val_acc, val_loss, test_acc, test_loss = (list() for _ in range(6))
     
     for subject_name in os.listdir(subjects_dir):
-        msg = f'Reading {subject_name}'
+        msg = f'Reading {subject_name}\t'
         print(msg)
         if subject_name in excluded_subjects:
             continue
         
-        train_acc, train_loss, val_acc, val_loss, test_acc, test_loss = (list() for _ in range(6))
         subject_path = os.path.join(subjects_dir, subject_name)
         epochs_path = os.path.join(subject_path, 'Epochs')
-        epochs = {case: list() for case in cases}
-        any_info = None
         
         for epochs_file in os.listdir(epochs_path):
             if lock not in epochs_file:
@@ -134,11 +134,12 @@ if __name__ == '__main__':
     n_classes = len(n_classes)
     classes_samples = classes_samples.tolist()
     combiner.shuffle()
-    pseudo_subject_home = os.path.join('/tmp', 'FingerMovementDecoder')
+    tmp_path = os.path.join(os.path.dirname(subjects_dir), 'tmp')
+    pseudo_subject_home = os.path.join(tmp_path, 'FingerMovementDecoder')
     subject_path = os.path.join(pseudo_subject_home, 'PseudoSubject')
     subject_name = f'Pse_Udo_{classification_postfix}'
     tfr_path = os.path.join(subject_path, 'TFR')
-    check_path(pseudo_subject_home, subject_path, tfr_path)
+    check_path(tmp_path, pseudo_subject_home, subject_path, tfr_path)
     classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
     savepath = os.path.join(
         tfr_path,
