@@ -9,7 +9,7 @@ import pandas as pd
 import tensorflow as tf
 import mneflow as mf
 from combiners import EpochsCombiner
-from utils.console import Silence
+from utils.console import Silence, edit_previous_line
 from utils.console.spinner import spinner
 from utils.data_management import dict2str
 from utils.storage_management import check_path
@@ -71,7 +71,8 @@ if __name__ == '__main__':
     subjects_performance = list()
     
     for subject_name in os.listdir(subjects_dir):
-        print(f'Reading {subject_name}', end='')
+        msg = f'Reading {subject_name}'
+        print(msg)
         if subject_name in excluded_subjects:
             continue
         
@@ -89,8 +90,8 @@ if __name__ == '__main__':
             
             if session in excluded_sessions:
                 continue
-            
-            print(f'.', end='')
+            msg += '.'
+            edit_previous_line(msg)
             for case in cases:
                 if case in epochs_file:
                     with Silence(), warnings.catch_warnings():
@@ -103,7 +104,7 @@ if __name__ == '__main__':
                         
                         epochs[case].append(epochs_)
                         
-        print('\tOK')
+        edit_previous_line(msg + '\tOK')
     
     print('Concatenating epochs...', end='')
     epochs = dict(
