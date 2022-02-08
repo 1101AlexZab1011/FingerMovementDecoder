@@ -103,7 +103,7 @@ if __name__ == '__main__':
                         
                         epochs[case].append(epochs_)
                         
-            print('\tOK')
+        print('\tOK')
     
     print('Concatenating epochs...', end='')
     epochs = dict(
