@@ -145,6 +145,7 @@ if __name__ == '__main__':
         tfr_path,
         classification_name_formatted
     )
+    print(f'{"*"*100}\n{savepath}\n{"*"*100}')
     import_opt = dict(
             savepath=savepath,
             out_name=project_name,
@@ -181,9 +182,9 @@ if __name__ == '__main__':
     model.train(n_epochs=25, eval_step=100, early_stopping=5)
     train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
     test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
-    model.compute_patterns(os.path.join(savepath, f'{project_name}_train_0.tfrecord'))
+    model.compute_patterns(meta['train_paths'])
     patterns = model.patterns.copy()
-    model.compute_patterns(os.path.join(savepath, f'{project_name}_train_0.tfrecord'), output='filters')
+    model.compute_patterns(meta['train_paths'], output='filters')
     filters = model.patterns.copy()
     sp_path = os.path.join(subject_path, 'Parameters')
     check_path(sp_path)
@@ -193,7 +194,8 @@ if __name__ == '__main__':
     filters_pics_path = os.path.join(pics_path, 'Filters')
     spectra_pics_path = os.path.join(pics_path, 'Spectra')
     wf_pics_path = os.path.join(pics_path, 'WaveForms')
-    check_path(pics_path, patterns_pics_path, filters_pics_path, spectra_pics_path, wf_pics_path)
+    loss_pics_path = os.path.join(pics_path, 'Loss')
+    check_path(pics_path, patterns_pics_path, filters_pics_path, spectra_pics_path, wf_pics_path, loss_pics_path)
     patterns_fig = plot_patterns(patterns, any_info)
     patterns_fig.savefig(os.path.join(patterns_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
     plt.close(patterns_fig)
@@ -206,6 +208,9 @@ if __name__ == '__main__':
     wf_fig = plot_waveforms(model, class_names=class_names)
     wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
     plt.close(wf_fig)
+    loss_fig = model.plot_hist()
+    loss_fig.savefig(os.path.join(loss_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+    plt.close(loss_fig)
     weights_path = os.path.join(subject_path, 'Weights')
     check_path(weights_path)
     save_model_weights(
