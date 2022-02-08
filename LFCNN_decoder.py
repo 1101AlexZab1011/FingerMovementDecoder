@@ -299,6 +299,7 @@ if __name__ == '__main__':
             index=['n_classes', *class_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
             name=subject_name
         ).to_frame().T
+        
         if os.path.exists(perf_table_path):
             pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
                 .to_csv(perf_table_path)

@@ -4,12 +4,10 @@ from typing import Optional, Callable, Any, Union, Dict
 import os
 
 
-def check_path(path: str) -> bool:
-    if not os.path.isdir(path):
-        os.mkdir(path)
-        return False
-    else:
-        return True
+def check_path(*args: str) -> bool:
+    for path in args:
+        if not os.path.isdir(path):
+            os.mkdir(path)
 
 
 def get_dir_size(start_path: str = './') -> float:
