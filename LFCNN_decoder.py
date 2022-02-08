@@ -265,17 +265,18 @@ if __name__ == '__main__':
         wf_pics_path = os.path.join(pics_path, 'WaveForms')
         check_path(pics_path, spectra_pics_path, wf_pics_path)
         # print('Saving spectra pictures...')
-        model.plot_spectra(
-            sorting='weight_corr',
-            norm_spectra='welch',
-            class_names=class_names
-        )
+        # model.plot_spectra(
+        #     sorting='weight_corr',
+        #     norm_spectra='welch',
+        #     class_names=class_names
+        # )
+        plt.plot(np.random.random(100))
         plt.show()
         # spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'), dpi=120)
         # plt.close(spectra_fig)
         # print('Successfully saved')
-        plot_waveforms(model, class_names=class_names)
-        plt.show()
+        # plot_waveforms(model, class_names=class_names)
+        # plt.show()
         # print('Saving waveforms pictures...')
         # wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'), dpi=120)
         # plt.close(wf_fig)
