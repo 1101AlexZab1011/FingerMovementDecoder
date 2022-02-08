@@ -135,11 +135,11 @@ if __name__ == '__main__':
     classes_samples = classes_samples.tolist()
     combiner.shuffle()
     tmp_path = os.path.join(os.path.dirname(subjects_dir), 'tmp')
-    pseudo_subject_home = os.path.join(tmp_path, 'FingerMovementDecoder')
-    subject_path = os.path.join(pseudo_subject_home, 'PseudoSubject')
+    pseudo_subjects_home = os.path.join(tmp_path, 'Subjects')
+    subject_path = os.path.join(pseudo_subjects_home, 'PseudoSubject')
     subject_name = f'Pse_Udo_{classification_postfix}'
     tfr_path = os.path.join(subject_path, 'TFR')
-    check_path(tmp_path, pseudo_subject_home, subject_path, tfr_path)
+    check_path(tmp_path, pseudo_subjects_home, subject_path, tfr_path)
     classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
     savepath = os.path.join(
         tfr_path,
