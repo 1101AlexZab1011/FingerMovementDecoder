@@ -249,7 +249,7 @@ if __name__ == '__main__':
             classification_name_formatted
         )
         import_opt = dict(
-                savepath=savepath,
+                savepath=savepath+'/',
                 out_name=project_name,
                 fs=200,
                 input_type='trials',
