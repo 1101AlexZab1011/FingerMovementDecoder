@@ -23,6 +23,8 @@ SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
 
 def save_spatial_parameters(content: Any, path: str) -> NoReturn:
     
+    print('Saving spatial parameters...')
+    
     if path[-4:] != '.pkl':
         raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
     
@@ -30,6 +32,8 @@ def save_spatial_parameters(content: Any, path: str) -> NoReturn:
 
 
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
+    
+    print('Saving model weights')
     
     if path[-3:] != '.h5':
         raise OSError(f'File must have extension ".h5", but it has "{path[-3:]}"')
