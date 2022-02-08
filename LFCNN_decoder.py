@@ -25,7 +25,7 @@ def save_spatial_parameters(content: Any, path: str) -> NoReturn:
         raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
     pickle.dump(content, open(path, 'wb'))
 
-@spinner(prefix='Saving model...')
+@spinner(prefix='Saving model weights...')
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
     if path[-3:] != '.h5':
         raise OSError(f'File must have extension ".h5", but it has "{path[-3:]}"')
