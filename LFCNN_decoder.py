@@ -15,21 +15,85 @@ from utils.data_management import dict2str
 from utils.storage_management import check_path
 import pickle
 from typing import Any, NoReturn
+import matplotlib.pyplot as plt
 
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
 
+
 @spinner(prefix='Saving spatial parameters... ')
 def save_spatial_parameters(content: Any, path: str) -> NoReturn:
+    
     if path[-4:] != '.pkl':
         raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
+    
     pickle.dump(content, open(path, 'wb'))
+
 
 @spinner(prefix='Saving model weights...')
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
+    
     if path[-3:] != '.h5':
         raise OSError(f'File must have extension ".h5", but it has "{path[-3:]}"')
+    
     model.km.save_weights(path, overwrite=True)
+
+
+def plot_waveforms(model, sorting='compwise_loss', tmin=0, class_names=None):
+    
+    fs = model.dataset.h_params['fs']
+    
+    if not hasattr(model, 'lat_tcs'):
+        model.compute_patterns(model.dataset)
+
+    if not hasattr(model, 'uorder'):
+        order, _ = model._sorting(sorting)
+        model.uorder = order.ravel()
+    
+    if np.any(model.uorder):
+        
+        for jj, uo in enumerate(model.uorder):
+            f, ax = plt.subplots(2, 2)
+            f.set_size_inches([16, 16])
+            nt = model.dataset.h_params['n_t']
+            model.waveforms = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]).mean(1))
+            tstep = 1/float(fs)
+            times = tmin + tstep*np.arange(nt)
+            scaling = 3*np.mean(np.std(model.waveforms, -1))
+            [ax[0, 0].plot(times, wf + scaling*i) for i, wf in enumerate(model.waveforms) if i not in model.uorder]
+            ax[0, 0].plot(times, model.waveforms[uo] + scaling*uo, 'k', linewidth=5.)
+            ax[0, 0].set_title('Latent component waveforms')
+            bias = model.tconv.b.numpy()[uo]
+            ax[0, 1].stem(model.filters.T[uo], use_line_collection=True)
+            ax[0, 1].hlines(bias, 0, len(model.filters.T[uo]), linestyle='--', label='Bias')
+            ax[0, 1].legend()
+            ax[0, 1].set_title('Filter coefficients')
+            conv = np.convolve(model.filters.T[uo], model.waveforms[uo], mode='same')
+            vmin = conv.min()
+            vmax = conv.max()
+            ax[1, 0].plot(times + 0.5*model.specs['filter_length']/float(fs), conv)
+            tstep = float(model.specs['stride'])/fs
+            strides = np.arange(times[0], times[-1] + tstep/2, tstep)[1:-1]
+            pool_bins = np.arange(times[0], times[-1] + tstep, model.specs['pooling']/fs)[1:]
+            ax[1, 0].vlines(strides, vmin, vmax, linestyle='--', color='c', label='Strides')
+            ax[1, 0].vlines(pool_bins, vmin, vmax, linestyle='--', color='m', label='Pooling')
+            ax[1, 0].set_xlim(times[0], times[-1])
+            ax[1, 0].legend()
+            ax[1, 0].set_title('Convolution output')
+            strides1 = np.linspace(times[0], times[-1]+tstep/2, model.F.shape[1])
+            ax[1, 1].pcolor(strides1, np.arange(model.specs['n_latent']), model.F)
+            ax[1, 1].hlines(uo, strides1[0], strides1[-1], color='r')
+            ax[1, 1].set_title('Feature relevance map')
+            
+            if class_names:
+                comp_name = class_names[jj]
+            else:
+                comp_name = "Class " + str(jj)
+                
+            f.suptitle(comp_name, fontsize=16)
+            
+        return f
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -130,10 +194,10 @@ if __name__ == '__main__':
                 
             i += 1
         
-        classes_names = ['&'.join(cases_combination) for cases_combination in cases_to_combine]
+        class_names = ['&'.join(cases_combination) for cases_combination in cases_to_combine]
         
         if classification_name is None:
-            classification_name = '_vs_'.join(classes_names)
+            classification_name = '_vs_'.join(class_names)
             
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
@@ -191,6 +255,21 @@ if __name__ == '__main__':
         check_path(sp_path)
         save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}.pkl'))
         del patterns, filters
+        pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
+        spectra_pics_path = os.path.join(pics_path, 'Spectra')
+        wf_pics_path = os.path.join(pics_path, 'WaveForms')
+        check_path(pics_path, spectra_pics_path, wf_pics_path)
+        spectra_fig = model.plot_spectra(
+            sorting='weight_corr',
+            norm_spectra='welch',
+            class_names=class_names
+        )
+        plt.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+        plt.close()
+        wf_fig = plot_waveforms(model, class_names=class_names)
+        plt.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+        plt.close()
+        del spectra_fig, wf_fig
         weights_path = os.path.join(subject_path, 'Weights')
         check_path(weights_path)
         save_model(
@@ -217,7 +296,7 @@ if __name__ == '__main__':
                 model.v_loss,
                 
             ],
-            index=['n_classes', *classes_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
+            index=['n_classes', *class_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
             name=subject_name
         ).to_frame().T
         if os.path.exists(perf_table_path):
