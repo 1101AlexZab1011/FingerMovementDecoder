@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
 
 
-@spinner(prefix='Saving spatial parameters... ')
 def save_spatial_parameters(content: Any, path: str) -> NoReturn:
     
     if path[-4:] != '.pkl':
@@ -30,7 +29,6 @@ def save_spatial_parameters(content: Any, path: str) -> NoReturn:
     pickle.dump(content, open(path, 'wb'))
 
 
-@spinner(prefix='Saving model weights...')
 def save_model(model: mf.models.BaseModel, path: str) -> NoReturn:
     
     if path[-3:] != '.h5':
