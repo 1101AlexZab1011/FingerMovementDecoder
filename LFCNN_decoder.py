@@ -260,11 +260,11 @@ if __name__ == '__main__':
         sp_path = os.path.join(subject_path, 'Parameters')
         check_path(sp_path)
         save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}.pkl'))
-        del patterns, filters
         pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
         spectra_pics_path = os.path.join(pics_path, 'Spectra')
         wf_pics_path = os.path.join(pics_path, 'WaveForms')
         check_path(pics_path, spectra_pics_path, wf_pics_path)
+        print('Saving spectra pictures...')
         spectra_fig = model.plot_spectra(
             sorting='weight_corr',
             norm_spectra='welch',
@@ -272,10 +272,12 @@ if __name__ == '__main__':
         )
         spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
         plt.close(spectra_fig)
+        print('Successfully saved')
         wf_fig = plot_waveforms(model, class_names=class_names)
+        print('Saving waveforms pictures...')
         wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
         plt.close(wf_fig)
-        del spectra_fig, wf_fig
+        print('Successfully saved')
         weights_path = os.path.join(subject_path, 'Weights')
         check_path(weights_path)
         save_model(
