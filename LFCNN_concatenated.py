@@ -145,7 +145,6 @@ if __name__ == '__main__':
         tfr_path,
         classification_name_formatted
     )
-    print(f'{"*"*100}\n{savepath}\n{"*"*100}')
     import_opt = dict(
             savepath=savepath,
             out_name=project_name,
@@ -197,6 +196,24 @@ if __name__ == '__main__':
     loss_pics_path = os.path.join(pics_path, 'Loss')
     acc_pics_path = os.path.join(pics_path, 'Accuracy')
     check_path(pics_path, patterns_pics_path, filters_pics_path, spectra_pics_path, wf_pics_path, loss_pics_path, acc_pics_path)
+    
+    plt.plot(model.t_hist.history['loss'])
+    plt.plot(model.t_hist.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.savefig(os.path.join(loss_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+    plt.close()
+    plt.plot(model.t_hist.history['cat_ACC'])
+    plt.plot(model.t_hist.history['val_cat_ACC'])
+    plt.title('model acc')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.savefig(os.path.join(acc_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
+    plt.close()
+    
     patterns_fig = plot_patterns(patterns, any_info)
     patterns_fig.savefig(os.path.join(patterns_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
     plt.close(patterns_fig)
@@ -209,22 +226,6 @@ if __name__ == '__main__':
     wf_fig = plot_waveforms(model, class_names=class_names)
     wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
     plt.close(wf_fig)
-    plt.plot(model.t_hist.history['loss'])
-    plt.plot(model.t_hist.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'validation'], loc='upper left')
-    plt.savefig(os.path.join(loss_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-    plt.close()
-    plt.plot(model.t_hist.history['cat_ACC'])
-    plt.plot(model.t_hist.history['val_cat_ACC'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'validation'], loc='upper left')
-    plt.savefig(os.path.join(acc_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-    plt.close()
     weights_path = os.path.join(subject_path, 'Weights')
     check_path(weights_path)
     save_model_weights(
