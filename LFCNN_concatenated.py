@@ -187,7 +187,7 @@ if __name__ == '__main__':
     filters = model.patterns.copy()
     sp_path = os.path.join(subject_path, 'Parameters')
     check_path(sp_path)
-    save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}.pkl'))
+    save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'))
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
     patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
     filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
