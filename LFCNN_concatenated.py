@@ -189,13 +189,27 @@ if __name__ == '__main__':
     check_path(sp_path)
     save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}.pkl'))
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
-    patterns_pics_path = os.path.join(pics_path, 'Patterns')
-    filters_pics_path = os.path.join(pics_path, 'Filters')
-    spectra_pics_path = os.path.join(pics_path, 'Spectra')
-    wf_pics_path = os.path.join(pics_path, 'WaveForms')
-    loss_pics_path = os.path.join(pics_path, 'Loss')
-    acc_pics_path = os.path.join(pics_path, 'Accuracy')
-    check_path(pics_path, patterns_pics_path, filters_pics_path, spectra_pics_path, wf_pics_path, loss_pics_path, acc_pics_path)
+    patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
+    filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
+    spectra_pics_path = os.path.join(pics_path, 'Spectra', classification_name_formatted)
+    wf_pics_path = os.path.join(pics_path, 'WaveForms', classification_name_formatted)
+    loss_pics_path = os.path.join(pics_path, 'Loss', classification_name_formatted)
+    acc_pics_path = os.path.join(pics_path, 'Accuracy', classification_name_formatted)
+    check_path(
+        pics_path,
+        os.path.join(pics_path, 'Patterns'),
+        os.path.join(pics_path, 'Filters'),
+        os.path.join(pics_path, 'Spectra'),
+        os.path.join(pics_path, 'WaveForms'),
+        os.path.join(pics_path, 'Loss'),
+        os.path.join(pics_path, 'Accuracy'),
+        patterns_pics_path,
+        filters_pics_path,
+        spectra_pics_path,
+        wf_pics_path,
+        loss_pics_path,
+        acc_pics_path
+    )
     
     plt.plot(model.t_hist.history['loss'])
     plt.plot(model.t_hist.history['val_loss'])
