@@ -14,18 +14,50 @@ from utils.console.spinner import spinner
 from utils.data_management import dict2str
 from utils.storage_management import check_path
 import pickle
-from typing import Any, NoReturn
+from typing import Any, NoReturn, Optional
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import copy
+import scipy.signal as sl
 
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
+TemporalParameters = namedtuple('TemporalParameters', 'franges finputs foutputs fresponces')
+ComponentsOrder = namedtuple('ComponentsOrder', 'l2 commpwise_loss weight output_corr weight_corr')
 
 
-def save_spatial_parameters(content: Any, path: str) -> NoReturn:
+def compute_temporal_parameters(model, *, fs=None):
     
-    print('Saving spatial parameters...')
+    if fs is None:
+        
+        if model.dataset.h_params['fs']:
+            fs = model.dataset.h_params['fs']
+        else:
+            print('Sampling frequency not specified, setting to 1.')
+            fs = 1.
+
+    out_filters = model.filters
+    _, psd = sl.welch(model.lat_tcs, fs=fs, nperseg=fs*2)
+    finputs = psd[:, :-1]
+    franges = None
+    foutputs = list()
+    fresponces = list()
+    
+    for i, flt in enumerate(out_filters.T):
+        w, h = (lambda w, h: (w, np.abs(h)))(*sl.freqz(flt, 1, worN=fs))
+        foutputs.append(np.abs(finputs[i, :]*h))
+        
+        if franges is None:
+            franges = w/np.pi*fs/2
+        fresponces.append(h)
+        
+    return franges, finputs, foutputs, fresponces
+
+
+def save_parameters(content: Any, path: str, parameters_type: Optional[str] = '') -> NoReturn:
+    
+    parameters_type = parameters_type + ' ' if parameters_type else parameters_type
+    print(f'Saving {parameters_type}parameters...')
     
     if path[-4:] != '.pkl':
         raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
@@ -279,18 +311,44 @@ if __name__ == '__main__':
                 l2_scope=["weights"],
                 l2=1e-6
         )
+        
         model = mf.models.LFCNN(dataset, lf_params)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
+        
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
         model.compute_patterns(meta['train_paths'])
         patterns = model.patterns.copy()
         model.compute_patterns(meta['train_paths'], output='filters')
         filters = model.patterns.copy()
+        franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+        
         sp_path = os.path.join(subject_path, 'Parameters')
         check_path(sp_path)
-        save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'))
+        
+        save_parameters(
+            SpatialParameters(patterns, filters),
+            os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
+            'spatial'
+        )
+        save_parameters(
+            TemporalParameters(franges, finputs, foutputs, fresponces),
+            os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
+            'temporal'
+        )
+        save_parameters(
+            ComponentsOrder(
+                model._sorting('l2'),
+                model._sorting('commpwise_loss'),
+                model._sorting('weight'),
+                model._sorting('output_corr'),
+                model._sorting('weight_corr'),
+            ),
+            os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
+            'sorting'
+        )
+        
         pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
         patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
         filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
@@ -298,6 +356,7 @@ if __name__ == '__main__':
         wf_pics_path = os.path.join(pics_path, 'WaveForms', classification_name_formatted)
         loss_pics_path = os.path.join(pics_path, 'Loss', classification_name_formatted)
         acc_pics_path = os.path.join(pics_path, 'Accuracy', classification_name_formatted)
+        
         check_path(
             pics_path,
             os.path.join(pics_path, 'Patterns'),

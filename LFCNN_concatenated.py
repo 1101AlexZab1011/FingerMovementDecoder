@@ -12,7 +12,7 @@ from utils.console import Silence, edit_previous_line
 from utils.storage_management import check_path
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from LFCNN_decoder import SpatialParameters, save_spatial_parameters, save_model_weights, plot_patterns, plot_waveforms
+from LFCNN_decoder import SpatialParameters, TemporalParameters, ComponentsOrder, compute_temporal_parameters, save_parameters, save_model_weights, plot_patterns, plot_waveforms
 
 if __name__ == '__main__':
     mpl.use('agg')
@@ -176,18 +176,44 @@ if __name__ == '__main__':
             l2_scope=["weights"],
             l2=1e-6
     )
+    
     model = mf.models.LFCNN(dataset, lf_params)
     model.build()
     model.train(n_epochs=25, eval_step=100, early_stopping=5)
+    
     train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
     test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
     model.compute_patterns(meta['train_paths'])
     patterns = model.patterns.copy()
     model.compute_patterns(meta['train_paths'], output='filters')
     filters = model.patterns.copy()
+    franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+    
     sp_path = os.path.join(subject_path, 'Parameters')
     check_path(sp_path)
-    save_spatial_parameters(SpatialParameters(patterns, filters), os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'))
+    
+    save_parameters(
+        SpatialParameters(patterns, filters),
+        os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
+        'spatial'
+    )
+    save_parameters(
+        TemporalParameters(franges, finputs, foutputs, fresponces),
+        os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
+        'temporal'
+    )
+    save_parameters(
+        ComponentsOrder(
+            model._sorting('l2'),
+            model._sorting('commpwise_loss'),
+            model._sorting('weight'),
+            model._sorting('output_corr'),
+            model._sorting('weight_corr'),
+        ),
+        os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
+        'sorting'
+    )
+    
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
     patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
     filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
@@ -240,8 +266,10 @@ if __name__ == '__main__':
     wf_fig = plot_waveforms(model, class_names=class_names)
     wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
     plt.close(wf_fig)
+    
     weights_path = os.path.join(subject_path, 'Weights')
     check_path(weights_path)
+    
     save_model_weights(
         model,
         os.path.join(
