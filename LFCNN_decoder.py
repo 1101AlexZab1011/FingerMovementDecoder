@@ -382,7 +382,7 @@ if __name__ == '__main__':
         plt.close()
         plt.plot(model.t_hist.history['cat_ACC'])
         plt.plot(model.t_hist.history['val_cat_ACC'])
-        plt.title('model loss')
+        plt.title('model acc')
         plt.ylabel('loss')
         plt.xlabel('epoch')
         plt.legend(['train', 'validation'], loc='upper left')
