@@ -5,7 +5,7 @@ import time
 import warnings
 from dataclasses import dataclass
 from typing import Dict, List, Union, Optional
-
+import argparse
 import mne
 import numpy as np
 from mne.decoding import CSP
@@ -122,12 +122,27 @@ if __name__ == '__main__':
     logging.getLogger(__name__).setLevel(logging.CRITICAL)
     logging.getLogger('mne').setLevel(logging.CRITICAL)
     bar = ProgressBar()
-    INCLUDED_SESSIONS = ['B1', 'B10']
+    EXCLUDED_SESSIONS = ['B1', 'B10']
     EXCLUDED_SUBJECTS = [] #['Az_Mar_05', 'Ga_Fed_06']
     EXCLUDED_LOCKS = ['StimCor']
+    
+    parser = argparse.ArgumentParser(
+        description='A script for applying the neural network "LFCNN" to the epoched data from gradiometers related to events for classification'
+    )
+    parser.add_argument('-es', '--exclude-sessions', type=str, nargs='+',
+                        default=[], help='Sessions to exclude')
+    parser.add_argument('-ep', '--exclude-participants', type=str, nargs='+',
+                        default=[], help='IDs of subjects to exclude')
+    parser.add_argument('-el', '--exclude-locks', type=str, nargs='+',
+                        default=[], help='IDs of subjects to exclude')
+    
+    
+    EXCLUDED_SESSIONS, \
+    EXCLUDED_SUBJECTS, \
+    EXCLUDED_LOCKS = vars(parser.parse_args()).values()
 
     content_root = './'
-    subjects_folder_path = os.path.join(content_root, 'Source/Subjects')
+    subjects_folder_path = os.path.join(content_root, 'Source', 'Subjects')
 
     for subject_name in os.listdir(subjects_folder_path):
         if subject_name in EXCLUDED_SUBJECTS:
@@ -151,7 +166,7 @@ if __name__ == '__main__':
             epochs = dict()
             for epoch in os.listdir(subject_epochs):
                 session = re.findall(r'(_B\d\d?)', epoch)[0][1:]
-                if session not in INCLUDED_SESSIONS:
+                if session in EXCLUDED_SESSIONS:
                     continue
                 if not session in epochs:
                     epochs.update({
@@ -206,7 +221,7 @@ if __name__ == '__main__':
                                 (
                                         # left vs right
                                         EpochsCombiner(resp_lock_lm_epochs, resp_lock_li_epochs, resp_lock_rm_epochs,
-                                                       resp_lock_ri_epochs),
+                                                        resp_lock_ri_epochs),
                                         # one finger two sides
                                         EpochsCombiner(resp_lock_lm_epochs, resp_lock_li_epochs),
                                         EpochsCombiner(resp_lock_rm_epochs, resp_lock_ri_epochs)
