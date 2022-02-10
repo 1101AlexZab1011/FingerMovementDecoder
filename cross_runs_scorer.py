@@ -294,9 +294,8 @@ if __name__ == '__main__':
                             for i in range(n_iters)
                         ]
                         n_progress = bar.add_progress(
-                            Progress(n_iters, prefix=f'Processing {name} case for subject {subject_name}: '),
+                            Progress(n_iters, prefix=f'Processing {name} case for subject {subject_name}: ', length=50),
                             return_index=True,
-                            length=50
                         )
                         handler = Handler(processes, 5)
                         try:
