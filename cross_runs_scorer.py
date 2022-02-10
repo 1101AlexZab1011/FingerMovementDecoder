@@ -19,7 +19,7 @@ from combiners import EpochsCombiner
 from cross_runs_TF_planes import CrossRunsTFScorer
 from utils.console import Silence
 from utils.console.asynchrony import Handler, async_generator, closed_async
-from utils.console.colored import warn, alarm, ColoredText
+from utils.console.colored import success, warn, alarm, ColoredText
 from utils.console.progress_bar import run_spinner, Spinner, ProgressBar, SpinnerRunner, Progress
 from utils.storage_management import check_path
 import re
@@ -300,7 +300,7 @@ if __name__ == '__main__':
                         handler = Handler(processes, 5)
                         try:
                             for i, tasks in enumerate(async_generator(handler=handler)):
-                                print(f'{i} processed')
+                                success(f'Iteration {i} processed')
                                 for task in list(tasks):
                                     cross_tf_scores.append(
                                         task.result()
