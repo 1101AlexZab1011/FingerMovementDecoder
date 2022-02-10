@@ -205,7 +205,7 @@ if __name__ == '__main__':
     save_parameters(
         ComponentsOrder(
             model._sorting('l2'),
-            model._sorting('commpwise_loss'),
+            model._sorting('compwise_loss'),
             model._sorting('weight'),
             model._sorting('output_corr'),
             model._sorting('weight_corr'),
