@@ -74,7 +74,7 @@ def score_planes(
                 if w_tmin > w_tmax:
                     raise ValueError(f'w_tmin is greater than w_tmax: {w_tmin=}, {w_tmax=}')
 
-                print(f'{identifier}: {w_tmin}-{w_tmax}ms at {fmin}-{fmax}Hz')
+                # print(f'{identifier}: {w_tmin}-{w_tmax}ms at {fmin}-{fmax}Hz')
                 
                 combiner \
                     .switch_data('filtered') \
@@ -188,10 +188,12 @@ if __name__ == '__main__':
                 for case in ['LI', 'LM', 'RI', 'RM']:
                     if case in epoch:
                         if case not in epochs[session][current_lock]:
+                            print(f'Reading {session} {current_lock} {case} epochs...', end='')
                             with Silence(), warnings.catch_warnings():
                                 warnings.simplefilter("ignore")
                                 epochs[session][current_lock].update(
                                     {case: mne.read_epochs(os.path.join(subject_epochs, epoch))})
+                            print(' OK')
                         else:
                             alarm(f'\nThe case \"{case}\" already in epoch {epoch}, skipping via the conflict\n')
 

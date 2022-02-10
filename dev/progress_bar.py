@@ -13,7 +13,7 @@ import random
 import re
 import sys
 import time
-from asyncio import Task
+from asyncio import Task, all_tasks
 from dataclasses import dataclass
 from typing import Optional, Callable, Union, NoReturn, Any, Coroutine
 from utils.console import delete_previous_line, edit_previous_line, add_line_above
@@ -299,6 +299,7 @@ if __name__ == '__main__':
     start = time.time()
     bar = ProgressBar()
     all_tasks = processes + spinners
+    # all_tasks = spinners
     random.shuffle(all_tasks)
     # spr = SpinnerRunner(
     #     Spinner(prefix=f'Overall spinner process:', suffix='0.00%', report_message=f'Overall spinner process: Done'),
