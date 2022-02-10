@@ -202,13 +202,14 @@ if __name__ == '__main__':
         os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
         'temporal'
     )
+    get_order = lambda order, ts: order.ravel()
     save_parameters(
         ComponentsOrder(
-            model._sorting('l2'),
-            model._sorting('compwise_loss'),
-            model._sorting('weight'),
-            model._sorting('output_corr'),
-            model._sorting('weight_corr'),
+            get_order(model._sorting('l2')),
+            get_order(model._sorting('commpwise_loss')),
+            get_order(model._sorting('weight')),
+            get_order(model._sorting('output_corr')),
+            get_order(model._sorting('weight_corr')),
         ),
         os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
         'sorting'
