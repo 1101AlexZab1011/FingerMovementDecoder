@@ -41,7 +41,8 @@ def score_planes(
         csp_cache: Optional[dict] = None,
         tf_acc_cache: Optional[dict] = None,
         clf: Optional[Union[BaseEstimator, ClassifierMixin, RegressorMixin]] = LogisticRegression(),
-        cv: Optional[_BaseKFold] = StratifiedKFold(n_splits=5, shuffle=True)
+        cv: Optional[_BaseKFold] = StratifiedKFold(n_splits=5, shuffle=True),
+        identifier: Optional[str] = 'Current task'
 ) -> np.ndarray:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -73,6 +74,8 @@ def score_planes(
                 if w_tmin > w_tmax:
                     raise ValueError(f'w_tmin is greater than w_tmax: {w_tmin=}, {w_tmax=}')
 
+                print(f'{identifier}: {w_tmin}-{w_tmax}ms at {fmin}-{fmax}Hz')
+                
                 combiner \
                     .switch_data('filtered') \
                     .crop(tmin=w_tmin, tmax=w_tmax) \
@@ -279,7 +282,8 @@ if __name__ == '__main__':
                                     tmin,
                                     tmax,
                                     csp_cache,
-                                    tf_acc_cache
+                                    tf_acc_cache,
+                                    identifier=f'Iteration {i}'
                                 ),
                                 Spinner(prefix=f'Iteration {i}:', report_message=f'Spinner {i}: Done'),
                                 delete_final=True,
@@ -291,16 +295,6 @@ if __name__ == '__main__':
                             Progress(n_iters, prefix=f'Processing {name} case for subject {subject_name}: '),
                             return_index=True
                         )
-                        # spr = SpinnerRunner(
-                        #     Spinner(prefix=f'Processing subject {subject_name}:', suffix='0.00%',
-                        #             report_message=f'Processing subject {subject_name}: Done'),
-                        #     bar,
-                        #     delete_final=True
-                        # )
-                        # processes = [
-                        #     spr,
-                        #     *[lambda: time.sleep(.02) for _ in range(5)]
-                        # ] + processes
                         handler = Handler(processes, 5)
                         try:
                             for i, tasks in enumerate(async_generator(handler=handler)):
@@ -310,32 +304,10 @@ if __name__ == '__main__':
                                         task.result()
                                     )
                                 bar(n_progress)
-                                # spr.update_spinner_msg(
-                                #     suffix=f'{(i + 1) / (len(processes) - 5) : .2f}%, {(i + 1)} of {len(processes) - 5}'
-                                # )
-                                # if (i + 1) / (len(processes) - 5) == 1 and not spr.done:
-                                #     spr.done = True
+                                
                         except KeyboardInterrupt:
+                            print()
                             os._exit(0)
-                        # for i in range(n_iters):
-                        #     cross_tf_scores.append(
-                        #         score_planes(
-                        #             combiner,
-                        #             first_class_indices,
-                        #             second_class_indices,
-                        #             n_freqs,
-                        #             n_windows,
-                        #             n_cycles,
-                        #             freq_ranges,
-                        #             centered_w_times,
-                        #             tmin,
-                        #             tmax,
-                        #             csp_cache,
-                        #             tf_acc_cache
-                        #         )
-                        #     )
-
-                        cross_tf_scores_np = np.array(cross_tf_scores)
 
                         crtfs = CrossRunsTFScorer(np.array(cross_tf_scores), tf_acc_cache, csp_cache)
                         with open(out_path, 'wb') as f:
