@@ -193,7 +193,7 @@ if __name__ == '__main__':
                                 warnings.simplefilter("ignore")
                                 epochs[session][current_lock].update(
                                     {case: mne.read_epochs(os.path.join(subject_epochs, epoch))})
-                            print(' OK')
+                            success(' OK')
                         else:
                             alarm(f'\nThe case \"{case}\" already in epoch {epoch}, skipping via the conflict\n')
 
