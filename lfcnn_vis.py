@@ -255,6 +255,7 @@ def plot_tempospectral(
                     
                 else:
                     subject_info = copy.deepcopy(info[tracker.subject])
+                    subject_info._unlock()
                     subject_info['sfreq'] = 1.
                     data = spatial_parameters[tracker.subject].patterns
                     patterns = mne.EvokedArray(data, subject_info, tmin=0)
