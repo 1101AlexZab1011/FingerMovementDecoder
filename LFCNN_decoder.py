@@ -134,7 +134,7 @@ def plot_waveforms(model, sorting='compwise_loss', tmin=0, class_names=None):
             
         return f
 
-def plot_patterns(patterns, info, cmap='RdBu_r', sensors=True,
+def plot_patterns(patterns, info, order=None, cmap='RdBu_r', sensors=True,
                 colorbar=False, res=64,
                 size=1, cbar_fmt='%3.1f', name_format='Latent\nSource %01d',
                 show=True, show_names=False, title=None,
@@ -149,8 +149,10 @@ def plot_patterns(patterns, info, cmap='RdBu_r', sensors=True,
     info['sfreq'] = 1.
     patterns = mne.EvokedArray(patterns, info, tmin=0)
     
+    order = range(n_components) if order is None else order
+    
     return patterns.plot_topomap(
-        times=range(n_components),
+        times=order,
         cmap=cmap, colorbar=colorbar, res=res,
         cbar_fmt=cbar_fmt, sensors=sensors, units=None, time_unit='s',
         time_format=name_format, size=size, show_names=show_names,
