@@ -23,7 +23,7 @@ import scipy.signal as sl
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
 TemporalParameters = namedtuple('TemporalParameters', 'franges finputs foutputs fresponces')
-ComponentsOrder = namedtuple('ComponentsOrder', 'l2 commpwise_loss weight output_corr weight_corr')
+ComponentsOrder = namedtuple('ComponentsOrder', 'l2 compwise_loss weight output_corr weight_corr')
 
 
 def compute_temporal_parameters(model, *, fs=None):
