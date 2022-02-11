@@ -20,7 +20,7 @@ from utils.data_management import dict2str
 from utils.storage_management import check_path
 
 
-@spinner(prefix=lambda path: f'Reading info file of {path.split("/")[-3]}... ')
+@spinner(prefix=lambda path: f'Reading {path}... ')
 def read_pkl(path: str) -> Any:
     with open(
             path,
@@ -31,7 +31,7 @@ def read_pkl(path: str) -> Any:
         )
     return content	
 
-@spinner(prefix=lambda _, path: f'Saving info file for {path.split("/")[-3]}... ')
+@spinner(prefix=lambda _, path: f'Saving file into {path}... ')
 def save_pkl(content: Any, path: str) -> NoReturn:
     if path[-4:] != '.pkl':
         raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')

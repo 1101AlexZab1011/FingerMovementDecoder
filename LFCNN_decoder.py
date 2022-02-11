@@ -263,7 +263,7 @@ if __name__ == '__main__':
                 
             i += 1
         
-        class_names = ['&'.join(cases_combination) for cases_combination in cases_to_combine]
+        class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
         
         if classification_name is None:
             classification_name = '_vs_'.join(class_names)
@@ -340,11 +340,11 @@ if __name__ == '__main__':
         get_order = lambda order, ts: order.ravel()
         save_parameters(
             ComponentsOrder(
-                get_order(model._sorting('l2')),
-                get_order(model._sorting('commpwise_loss')),
-                get_order(model._sorting('weight')),
-                get_order(model._sorting('output_corr')),
-                get_order(model._sorting('weight_corr')),
+                get_order(*model._sorting('l2')),
+                get_order(*model._sorting('commpwise_loss')),
+                get_order(*model._sorting('weight')),
+                get_order(*model._sorting('output_corr')),
+                get_order(*model._sorting('weight_corr')),
             ),
             os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
             'sorting'
