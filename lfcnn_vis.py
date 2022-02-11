@@ -139,6 +139,7 @@ def plot_tempospectral(
     xlim: Optional[Union[int, float]] = None,
     ylim: Optional[Union[int, float]] = None,
     legend: Optional[Union[int, float]] = None,
+    spatial_data_type: Optional[str] = 'patterns',
     topomap_kwargs: Optional[dict] = None
 ) -> mp.figure.Figure:
     
@@ -257,7 +258,12 @@ def plot_tempospectral(
                     subject_info = copy.deepcopy(info[tracker.subject])
                     subject_info._unlock()
                     subject_info['sfreq'] = 1.
-                    data = spatial_parameters[tracker.subject].patterns
+                    
+                    if spatial_data_type == 'patterns':
+                        data = spatial_parameters[tracker.subject].patterns
+                    elif spatial_data_type == 'filters':
+                        data = spatial_parameters[tracker.subject].filters
+                        
                     patterns = mne.EvokedArray(data, subject_info, tmin=0)
                     
                     topomap_parameters = dict(
@@ -314,6 +320,8 @@ if __name__ == '__main__':
                         default='', help='String to append to a task name')
     parser.add_argument('--prefix', type=str,
                         default='', help='String to set in the start of a task name')
+    parser.add_argument('--filters', help='Delete all files that are no longer needed',
+                        action='store_true')
     
     sort, \
     excluded_subjects, \
@@ -321,7 +329,10 @@ if __name__ == '__main__':
     subjects_dir, \
     classification_name,\
     classification_postfix,\
-    classification_prefix = vars(parser.parse_args()).values()
+    classification_prefix, \
+    filters = vars(parser.parse_args()).values()
+    
+    spatial_data_type = 'filters' if filters else 'patterns'
     
     if sort not in ['l2', 'compwise_loss', 'weight', 'output_corr', 'weight_corr']:
         raise ValueError(f'Wrong option for sorting: {sort}. Sortings can be \'l2\', \'compwise_loss\', \'weight\', \'output_corr\', \'weight_corr\'')
@@ -376,6 +387,6 @@ if __name__ == '__main__':
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
     tempospectral_pics_path = os.path.join(pics_path, 'TempoSpectral')
     check_path(pics_path, tempospectral_pics_path)
-    fig = plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects)
+    fig = plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects, spatial_data_type=spatial_data_type)
     fig.savefig(os.path.join(tempospectral_pics_path, f'{classification_name_formatted}_{sort}.png'))
     
