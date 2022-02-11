@@ -370,7 +370,7 @@ if __name__ == '__main__':
         all_info.append(info)
         all_spatial_parameters.append(read_pkl(os.path.join(parametes_path, f'{classification_name_formatted}_spatial.pkl')))
         all_temporal_parameters.append(read_pkl(os.path.join(parametes_path, f'{classification_name_formatted}_temporal.pkl')))
-        all_sortings.append(read_pkl(os.path.join(parametes_path, f'{classification_name_formatted}_sorting.pkl'))._asdict()[sort][0].ravel())
+        all_sortings.append(read_pkl(os.path.join(parametes_path, f'{classification_name_formatted}_sorting.pkl'))._asdict()[sort])
     
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
     tempospectral_pics_path = os.path.join(pics_path, 'TempoSpectral')
