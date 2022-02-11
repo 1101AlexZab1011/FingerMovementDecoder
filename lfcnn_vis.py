@@ -322,6 +322,9 @@ if __name__ == '__main__':
     classification_postfix,\
     classification_prefix = vars(parser.parse_args()).values()
     
+    if sort not in ['l2', 'compwise_loss', 'weight', 'output_corr', 'weight_corr']:
+        raise ValueError(f'Wrong option for sorting: {sort}. Sortings can be \'l2\', \'compwise_loss\', \'weight\', \'output_corr\', \'weight_corr\'')
+    
     cases_to_combine = [case.split(' ') for case in cases_to_combine]
     
     class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
