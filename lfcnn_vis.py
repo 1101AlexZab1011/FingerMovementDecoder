@@ -256,7 +256,6 @@ def plot_tempospectral(
                     
                 else:
                     subject_info = copy.deepcopy(info[tracker.subject])
-                    subject_info._unlock()
                     subject_info['sfreq'] = 1.
                     
                     if spatial_data_type == 'patterns':
@@ -388,5 +387,5 @@ if __name__ == '__main__':
     tempospectral_pics_path = os.path.join(pics_path, 'TempoSpectral')
     check_path(pics_path, tempospectral_pics_path)
     fig = plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects, spatial_data_type=spatial_data_type)
-    fig.savefig(os.path.join(tempospectral_pics_path, f'{classification_name_formatted}_{sort}.png'))
+    fig.savefig(os.path.join(tempospectral_pics_path, f'{classification_name_formatted}_{spatial_data_type}_{sort}.png'))
     
