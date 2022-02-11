@@ -341,7 +341,7 @@ if __name__ == '__main__':
         save_parameters(
             ComponentsOrder(
                 get_order(*model._sorting('l2')),
-                get_order(*model._sorting('commpwise_loss')),
+                get_order(*model._sorting('compwise_loss')),
                 get_order(*model._sorting('weight')),
                 get_order(*model._sorting('output_corr')),
                 get_order(*model._sorting('weight_corr')),

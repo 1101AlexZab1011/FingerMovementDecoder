@@ -368,7 +368,10 @@ if __name__ == '__main__':
         all_spatial_parameters.append(read_pkl(os.path.join(parametes_path, f'{classification_name_formatted}_spatial.pkl')))
         all_temporal_parameters.append(read_pkl(os.path.join(parametes_path, f'{classification_name_formatted}_temporal.pkl')))
         all_sortings.append(read_pkl(os.path.join(parametes_path, f'{classification_name_formatted}_sorting.pkl'))._asdict()[sort][0].ravel())
-    import matplotlib
-    # matplotlib.use('TkAgg')
-    plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects)
-    plt.show()
+    
+    pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
+    tempospectral_pics_path = os.path.join(pics_path, 'TempoSpectral')
+    check_path(pics_path, tempospectral_pics_path)
+    fig = plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects)
+    fig.savefig(os.path.join(tempospectral_pics_path, f'{classification_name_formatted}_{sort}.png'))
+    
