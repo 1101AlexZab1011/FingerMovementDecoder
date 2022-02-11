@@ -384,8 +384,8 @@ if __name__ == '__main__':
         all_sortings.append(read_pkl(os.path.join(parametes_path, f'{classification_name_formatted}_sorting.pkl'))._asdict()[sort])
     
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
-    tempospectral_pics_path = os.path.join(pics_path, 'TempoSpectral')
-    check_path(pics_path, tempospectral_pics_path)
+    spatiospectral_pics_path = os.path.join(pics_path, 'SpatioSpectral')
+    check_path(pics_path, spatiospectral_pics_path)
     fig = plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects, spatial_data_type=spatial_data_type)
-    fig.savefig(os.path.join(tempospectral_pics_path, f'{classification_name_formatted}_{spatial_data_type}_{sort}.png'))
+    fig.savefig(os.path.join(spatiospectral_pics_path, f'{classification_name_formatted}_{spatial_data_type}_{sort}.png'))
     
