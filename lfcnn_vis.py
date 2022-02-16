@@ -71,9 +71,6 @@ def plot_spectra(temporal_parameters, order, title='', xlim=None, ylim=None, leg
     if not len(order)%3:
         n_cols = 3
         n_rows = len(order)//3
-    elif not len(order)%2:
-        n_cols = 2
-        n_rows = len(order)//2
     elif len(order) == 3:
         n_rows = 1
         n_cols = 3
@@ -190,12 +187,18 @@ def plot_tempospectral(
     if not n_components%3:
         n_cols = 3
         n_rows = n_components//3
-    elif not n_components%2:
-        n_cols = 2
-        n_rows = n_components//2
     elif n_components == 3:
         n_rows = 1
         n_cols = 3
+    elif n_components == 4:
+        n_rows = 1
+        n_cols = 4
+    elif not n_components%4:
+        n_cols = 4
+        n_rows = n_components//4
+    elif not n_components%2:
+        n_cols = 2
+        n_rows = n_components//2
     else:
         n_rows = n_components//3+1
         n_cols = 3
