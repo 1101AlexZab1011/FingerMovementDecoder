@@ -135,6 +135,7 @@ def plot_tempospectral(
     orders: Union[np.ndarray, list[np.ndarray]],
     info: mne.Info,
     subject_names: Optional[Union[str, list[str]]] = None,
+    class_names: Optional[Union[str, list[str]]] = None,
     title: Optional[str] = None,
     xlim: Optional[Union[int, float]] = None,
     ylim: Optional[Union[int, float]] = None,
@@ -175,6 +176,16 @@ def plot_tempospectral(
         
         if len(subject_names) != n_subjects:
             raise ValueError('Not all subjects have names provided')
+        
+    
+    if class_names is None:
+        class_names = [f'Class {i}' for i in range(n_components)]
+    elif isinstance(class_names, str):
+        subject_names = [f'{class_names} {i}' for i in range(n_components)]
+    elif isinstance(class_names, list):
+        
+        if len(class_names) != n_components:
+            raise ValueError('Not all classes have names provided')
     
     if not n_components%3:
         n_cols = 3
@@ -235,7 +246,7 @@ def plot_tempospectral(
                     axs[i, j].set_ylabel(subject_names[tracker.subject])
                     
                 if not i%2:
-                    axs[i, j].set_title(f'Latent Source {orders[tracker.subject][tracker.top]}')
+                    axs[i, j].set_title(f'Latent Source {orders[tracker.subject][tracker.top]} ({class_names[tracker.top]})')
                     axs[i, j].plot(
                         temporal_parameters[tracker.subject].franges,
                         temporal_parameters[tracker.subject].finputs[orders[tracker.subject][tracker.top]],
@@ -387,6 +398,6 @@ if __name__ == '__main__':
     spatiospectral_pics_path = os.path.join(pics_path, 'SpatioSpectral')
     spatispectral_case_path = os.path.join(spatiospectral_pics_path, classification_name_formatted)
     check_path(pics_path, spatiospectral_pics_path, spatispectral_case_path)
-    fig = plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects, spatial_data_type=spatial_data_type)
+    fig = plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects, class_names, spatial_data_type=spatial_data_type)
     fig.savefig(os.path.join(spatispectral_case_path, f'{spatial_data_type}_{sort}.png'))
     
