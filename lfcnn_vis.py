@@ -385,7 +385,8 @@ if __name__ == '__main__':
     
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
     spatiospectral_pics_path = os.path.join(pics_path, 'SpatioSpectral')
-    check_path(pics_path, spatiospectral_pics_path)
+    spatispectral_case_path = os.path.join(spatiospectral_pics_path, classification_name_formatted)
+    check_path(pics_path, spatiospectral_pics_path, spatispectral_case_path)
     fig = plot_tempospectral(all_spatial_parameters, all_temporal_parameters, all_sortings, all_info, all_subjects, spatial_data_type=spatial_data_type)
-    fig.savefig(os.path.join(spatiospectral_pics_path, f'{classification_name_formatted}_{spatial_data_type}_{sort}.png'))
+    fig.savefig(os.path.join(spatispectral_case_path, f'{spatial_data_type}_{sort}.png'))
     
