@@ -310,7 +310,7 @@ if __name__ == '__main__':
     parser.add_argument('-ep', '--exclude-participants', type=str, nargs='+',
                         default=[], help='IDs of subjects to exclude')
     parser.add_argument('-cmb', '--combine-cases', type=str, nargs='+',
-                        default=None, help='Cases to consider (must be the number of strings in which classes to combine are written separated by a space, indices corresponds to order of "--cases" parameter)')
+                        default=['LI', 'LM', 'RI', 'RM'], help='Cases to consider (must be the number of strings in which classes to combine are written separated by a space, indices corresponds to order of "--cases" parameter)')
     parser.add_argument('-sd', '--subjects-dir', type=str,
                         default=os.path.join(os.getcwd(), 'Source', 'Subjects'), help='Path to the subjects directory')
     parser.add_argument('--name', type=str,
