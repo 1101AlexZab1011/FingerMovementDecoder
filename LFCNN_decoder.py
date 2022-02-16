@@ -205,6 +205,25 @@ if __name__ == '__main__':
     
     cases_to_combine = [case.split(' ') for case in cases] if cases_to_combine is None else [case.split(' ') for case in cases_to_combine]
     cases = list(filter(lambda case: any([case in cmb for cmb in cases_to_combine]), cases))
+    # cases_to_combine = sorted(cases_to_combine, reverse=True)
+    class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
+    cases_to_combine_list = list()
+    cases_indices_to_combine = list()
+    
+    i = 0
+    for combination in cases_to_combine:
+        cases_indices_to_combine.append(list())
+        
+        for j, case in enumerate(combination):
+            i += j
+            cases_indices_to_combine[-1].append(i)
+            cases_to_combine_list.append(epochs[case])
+            
+        i += 1
+    
+    if classification_name is None:
+        classification_name = '_vs_'.join(class_names)
+    
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'perf_tables')
     check_path(perf_tables_path)
     subjects_performance = list()
@@ -251,24 +270,6 @@ if __name__ == '__main__':
                     )
                 )
         
-        cases_to_combine_list = list()
-        cases_indices_to_combine = list()
-        
-        i = 0
-        for combination in cases_to_combine:
-            cases_indices_to_combine.append(list())
-            
-            for j, case in enumerate(combination):
-                i += j
-                cases_indices_to_combine[-1].append(i)
-                cases_to_combine_list.append(epochs[case])
-                
-            i += 1
-        
-        class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
-        
-        if classification_name is None:
-            classification_name = '_vs_'.join(class_names)
             
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)

@@ -338,8 +338,8 @@ if __name__ == '__main__':
     
     cases_to_combine = [case.split(' ') for case in cases_to_combine]
     
+    # cases_to_combine = sorted(cases_to_combine, reverse=True)
     class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
-        
     if classification_name is None:
         classification_name = '_vs_'.join(class_names)
         
