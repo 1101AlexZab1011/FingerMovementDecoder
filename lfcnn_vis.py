@@ -318,7 +318,7 @@ def plot_spatial_weights(
     spatial_parameters: SpatialParameters,
     temporal_parameters: TemporalParameters,
     info: mne.Info,
-    summarize: Optional[str] = 'sum',
+    summarize: Optional[Union[str, list[float]]] = 'sum',
     title: Optional[str] = 'Spatial Patterns',
     show: Optional[bool] = True,
     logscale: Optional[bool] = False
@@ -410,8 +410,7 @@ def plot_spatial_weights(
                 ax1.lines.remove(ax1.lines[i])
                 
         _, iy = event.xdata, event.ydata
-        
-        if event.xdata is not None and event.ydata is not None and 0 < event.xdata < x_lim and 0 < event.ydata < y_lim:
+        if (event.inaxes == ax1 or event.inaxes == ax2) and event.xdata is not None and event.ydata is not None and 0 < event.xdata < x_lim and -.5 < event.ydata < y_lim:
             iy = int(np.rint(iy))
             color = colors[sorting_callback._sorted_indices[iy]]
             line = mp.lines.Line2D([0, x_lim], [iy, iy], color=color, linewidth=16, alpha=.4)
@@ -432,7 +431,6 @@ def plot_spatial_weights(
             ax22.spines['right'].set_alpha(.2)
             ax22.spines['left'].set_alpha(.2)
             ax22.spines['bottom'].set_alpha(.2)
-            # ax22.set_xticks()
             ax22.tick_params(axis='both', which='both',length=5, color='#00000050')
             ax22.set_xlabel('Frequency (Hz)')
             ax22.set_ylabel('Amplitude (μV)')
@@ -460,6 +458,8 @@ def plot_spatial_weights(
         sums = np.sum(np.abs(data), axis=0)
     elif summarize == 'abssum':
         sums = np.abs(np.sum(data, axis=0))
+    elif isinstance(summarize, list) and len(summarize) == y_lim:
+        sums = np.array(summarize)
     else:
         raise NotImplementedError(f'The "{summarize}" method not implemented. Available methods: "sum", "sumabs", "abssum"')
     colors = np.array(['#f2827a' if sum_ >= 0 else '#8bbae5' for sum_ in sums])
