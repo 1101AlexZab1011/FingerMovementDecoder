@@ -59,12 +59,20 @@ def plot_spatial_weights(
         ax1.spines['right'].set_visible(False)
         ax1.set_xlabel('Channels')
         ax1.set_ylabel('Latent Sources')
+        ax1.spines['left'].set_alpha(0.2)
+        ax1.spines['bottom'].set_alpha(0.2)
+        ax1.spines['top'].set_alpha(0.2)
+        ax1.axes.yaxis.set_alpha(0.2)
         ax1.set_yticks(np.arange(y_lim))
         ax1.set_yticklabels(labels = [i+1 for i in sorting_callback.sorted_indices])
+        ax1.tick_params(axis='both', which='both',length=5, color='#00000050')
 
         ax2.axes.yaxis.set_visible(False)
         ax2.axes.xaxis.set_visible(False)
         ax2.spines['left'].set_visible(False)
+        ax2.spines['top'].set_alpha(0.2)
+        ax2.spines['right'].set_alpha(0.2)
+        ax2.spines['bottom'].set_alpha(0.2)
         
     class SortingCallback:
             
@@ -135,8 +143,14 @@ def plot_spatial_weights(
                                 temporal_parameters.fresponces[sorting_callback.sorted_indices[iy]],
                             )
             ax22.legend(['Filter input', 'Filter output', 'Filter responce'], loc='upper right')      
-            ax22.spines['top'].set_visible(False)
-            ax22.spines['right'].set_visible(False)
+            ax22.spines['top'].set_alpha(.2)
+            ax22.spines['right'].set_alpha(.2)
+            ax22.spines['left'].set_alpha(.2)
+            ax22.spines['bottom'].set_alpha(.2)
+            # ax22.set_xticks()
+            ax22.tick_params(axis='both', which='both',length=5, color='#00000050')
+            ax22.set_xlabel('Frequency (Hz)')
+            ax22.set_ylabel('Amplitude (μV)')
             
             if logscale:
                 ax22.set_aspect(25)  
@@ -201,4 +215,4 @@ if __name__ == '__main__':
     )
     
     plot_spatial_weights(spatial_parameters, temporal_parameters, info, summarize='sum', logscale=False)
-    
+
