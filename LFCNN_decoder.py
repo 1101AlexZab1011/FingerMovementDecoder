@@ -422,6 +422,7 @@ if __name__ == '__main__':
         )
         print('#'*10)
         print(['n_classes', *class_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'])
+        print(classes_samples)
         print('#'*10)
         processed_df = pd.Series(
             [
@@ -434,7 +435,6 @@ if __name__ == '__main__':
                 test_loss_,
                 model.v_metric,
                 model.v_loss,
-                
             ],
             index=['n_classes', *class_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
             name=subject_name
