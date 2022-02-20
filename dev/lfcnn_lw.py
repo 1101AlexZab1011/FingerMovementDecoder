@@ -5,7 +5,8 @@ import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
-
+from dataclasses import dataclass
+from utils.storage_management import check_path
 from combiners import EpochsCombiner
 from typing import *
 import mne
@@ -51,9 +52,10 @@ combiner.combine(first_class_indices, second_class_indices, shuffle=True)
 # combiner.combine(0, 1, shuffle=True)
 
 
-from dataclasses import dataclass
 
-savepath = '../Source/Subjects/Az_Mar_05/TFR/left_vs_right/'
+
+savepath = '../Source/Subjects/tmp/TFR/'
+check_path(savepath)
 project_name = 'fake_name'
 
 import_opt = dict(
