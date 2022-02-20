@@ -415,7 +415,7 @@ if __name__ == '__main__':
                 f'{classification_name_formatted}.h5'
             )
         )
-        model.km.save(os.path.join(models_path, classification_name_formatted))
+        model.km.save(os.path.join(models_path, f'{classification_name_formatted}.h5'))
         perf_table_path = os.path.join(
             perf_tables_path,
             f'{classification_name_formatted}.csv'
