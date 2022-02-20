@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 mne.set_log_level('CRITICAL')
 
-content_root = '../'
+content_root = './'
 subjects_folder_path = os.path.join(content_root, 'Source/Subjects')
 subject_path = os.path.join(subjects_folder_path, 'Ga_Fed_06')
 info_path = os.path.join(subject_path, 'Info',
