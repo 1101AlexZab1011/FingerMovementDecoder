@@ -61,8 +61,6 @@ if __name__ == '__main__':
     cases = list(filter(lambda case: any([case in cmb for cmb in cases_to_combine]), cases))
     # cases_to_combine = sorted(cases_to_combine, reverse=True)
     class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
-    cases_to_combine_list = list()
-    cases_indices_to_combine = list()
     
     if classification_name is None:
         classification_name = '_vs_'.join(class_names)
@@ -120,6 +118,8 @@ if __name__ == '__main__':
     print('Epochs are concatenated')
     
     i = 0
+    cases_to_combine_list = list()
+    cases_indices_to_combine = list()
     for combination in cases_to_combine:
         cases_indices_to_combine.append(list())
         

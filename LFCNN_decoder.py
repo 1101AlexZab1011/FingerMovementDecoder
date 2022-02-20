@@ -207,9 +207,6 @@ if __name__ == '__main__':
     cases = list(filter(lambda case: any([case in cmb for cmb in cases_to_combine]), cases))
     # cases_to_combine = sorted(cases_to_combine, reverse=True)
     class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
-    print(class_names)
-    cases_to_combine_list = list()
-    cases_indices_to_combine = list()
     
     if classification_name is None:
         classification_name = '_vs_'.join(class_names)
@@ -261,6 +258,8 @@ if __name__ == '__main__':
                 )
         
         i = 0
+        cases_indices_to_combine = list()
+        cases_to_combine_list = list()
         for combination in cases_to_combine:
             cases_indices_to_combine.append(list())
             
@@ -270,7 +269,7 @@ if __name__ == '__main__':
                 cases_to_combine_list.append(epochs[case])
                 
             i += 1
-            
+        print(cases_indices_to_combine)
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)
