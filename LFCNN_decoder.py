@@ -301,7 +301,7 @@ if __name__ == '__main__':
         
         X, Y = combiner.X, combiner.Y
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, Y, test_size=.8)
-        
+        X_test = np.transpose(np.expand_dims(X_test, axis = 1), (0, 1, 3, 2))
         meta = mf.produce_tfrecords((X_train, y_train), **import_opt)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
