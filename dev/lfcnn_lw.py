@@ -54,7 +54,7 @@ combiner.combine(first_class_indices, second_class_indices, shuffle=True)
 
 
 
-savepath = '../Source/Subjects/tmp/TFR/'
+savepath = '../Source/tmp/TFR/'
 check_path(savepath)
 project_name = 'fake_name'
 
