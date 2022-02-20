@@ -25,7 +25,7 @@ import sklearn
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
 TemporalParameters = namedtuple('TemporalParameters', 'franges finputs foutputs fresponces')
 ComponentsOrder = namedtuple('ComponentsOrder', 'l2 compwise_loss weight output_corr weight_corr')
-Prediction = namedtuple('Prediction', 'y_p y_true')
+Predictions = namedtuple('Prediction', 'y_p y_true')
 
 def compute_temporal_parameters(model, *, fs=None):
     
@@ -297,7 +297,6 @@ if __name__ == '__main__':
                 n_folds=5,
                 overwrite=True,
                 segment=False,
-                # test_set='holdout'
             )
         
         X, Y = combiner.X, combiner.Y
@@ -325,7 +324,7 @@ if __name__ == '__main__':
         yp_path = os.path.join(subject_path, 'Predictions')
         check_path(yp_path)
         save_parameters(
-            Prediction(
+            Predictions(
                 model.km(X_test).numpy(),
                 y_test
             ),

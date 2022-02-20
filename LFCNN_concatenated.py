@@ -12,7 +12,7 @@ from utils.console import Silence, edit_previous_line
 from utils.storage_management import check_path
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from LFCNN_decoder import SpatialParameters, TemporalParameters, ComponentsOrder, compute_temporal_parameters, save_parameters, save_model_weights, plot_patterns, plot_waveforms
+from LFCNN_decoder import Predictions, SpatialParameters, TemporalParameters, ComponentsOrder, compute_temporal_parameters, save_parameters, save_model_weights, plot_patterns, plot_waveforms
 
 if __name__ == '__main__':
     mpl.use('agg')
@@ -159,8 +159,7 @@ if __name__ == '__main__':
             scale_interval=(0, 60),
             n_folds=5,
             overwrite=True,
-            segment=False,
-            test_set='holdout'
+            segment=False
         )
     
     X, Y = combiner.X, combiner.Y
