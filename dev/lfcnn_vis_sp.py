@@ -218,7 +218,7 @@ if __name__ == '__main__':
         spatial_parameters,
         temporal_parameters,
         info,
-        # summarize = [np.random.random()*2 + 1 for _ in range(32)],
+        # summarize = [np.random.random()*2 - 1 for _ in range(32)],
         summarize='sum',
         logscale=False
     )
