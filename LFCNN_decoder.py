@@ -207,6 +207,7 @@ if __name__ == '__main__':
     cases = list(filter(lambda case: any([case in cmb for cmb in cases_to_combine]), cases))
     # cases_to_combine = sorted(cases_to_combine, reverse=True)
     class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
+    print(class_names)
     cases_to_combine_list = list()
     cases_indices_to_combine = list()
     
@@ -420,6 +421,9 @@ if __name__ == '__main__':
             perf_tables_path,
             f'{classification_name_formatted}.csv'
         )
+        print('#'*10)
+        print(class_names)
+        print('#'*10)
         processed_df = pd.Series(
             [
                 n_classes,
