@@ -421,7 +421,7 @@ if __name__ == '__main__':
             f'{classification_name_formatted}.csv'
         )
         print('#'*10)
-        print(class_names)
+        print(['n_classes', *class_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'])
         print('#'*10)
         processed_df = pd.Series(
             [
