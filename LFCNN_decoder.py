@@ -25,7 +25,7 @@ import sklearn
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
 TemporalParameters = namedtuple('TemporalParameters', 'franges finputs foutputs fresponces')
 ComponentsOrder = namedtuple('ComponentsOrder', 'l2 compwise_loss weight output_corr weight_corr')
-Predictions = namedtuple('Prediction', 'y_p y_true')
+Predictions = namedtuple('Predictions', 'y_p y_true')
 
 def compute_temporal_parameters(model, *, fs=None):
     
