@@ -19,12 +19,13 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import copy
 import scipy.signal as sl
+import sklearn
 
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
 TemporalParameters = namedtuple('TemporalParameters', 'franges finputs foutputs fresponces')
 ComponentsOrder = namedtuple('ComponentsOrder', 'l2 compwise_loss weight output_corr weight_corr')
-
+Prediction = namedtuple('Prediction', 'y_p y_true')
 
 def compute_temporal_parameters(model, *, fs=None):
     
@@ -298,7 +299,11 @@ if __name__ == '__main__':
                 segment=False,
                 # test_set='holdout'
             )
-        meta = mf.produce_tfrecords((combiner.X, combiner.Y), **import_opt)
+        
+        X, Y = combiner.X, combiner.Y
+        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, Y, test_size=.8)
+        
+        meta = mf.produce_tfrecords((X_train, y_train), **import_opt)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
                 n_latent=32,
@@ -317,7 +322,16 @@ if __name__ == '__main__':
         model = mf.models.LFCNN(dataset, lf_params)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
-        
+        yp_path = os.path.join(subject_path, 'Predictions')
+        check_path(yp_path)
+        save_parameters(
+            Prediction(
+                model.km(X_test).numpy(),
+                y_test
+            ),
+            os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
+            'predictions'
+        )
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
         model.compute_patterns(meta['train_paths'])
@@ -420,10 +434,6 @@ if __name__ == '__main__':
             perf_tables_path,
             f'{classification_name_formatted}.csv'
         )
-        print('#'*10)
-        print(['n_classes', *class_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'])
-        print(classes_samples)
-        print('#'*10)
         processed_df = pd.Series(
             [
                 n_classes,
