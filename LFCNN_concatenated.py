@@ -12,6 +12,7 @@ from utils.console import Silence, edit_previous_line
 from utils.storage_management import check_path
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import sklearn
 from LFCNN_decoder import Predictions, SpatialParameters, TemporalParameters, ComponentsOrder, compute_temporal_parameters, save_parameters, save_model_weights, plot_patterns, plot_waveforms
 
 if __name__ == '__main__':
@@ -184,15 +185,17 @@ if __name__ == '__main__':
     model.build()
     model.train(n_epochs=25, eval_step=100, early_stopping=5)
     yp_path = os.path.join(subject_path, 'Predictions')
-        check_path(yp_path)
-        save_parameters(
-            Prediction(
-                model.km(X_test).numpy(),
-                y_test
-            ),
-            os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
-            'predictions'
-        )
+    y_true_train, y_pred_train = model.predict(model.dataset.train)
+    y_true_val, y_pred_val = model.predict()
+    check_path(yp_path)
+    save_parameters(
+        Predictions(
+            np.concatenate([y_pred_train, y_pred_val], axis=0),
+            np.concatenate([y_true_train, y_true_val], axis=0),
+        ),
+        os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
+        'predictions'
+    )
     train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
     test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
     model.compute_patterns(meta['train_paths'])

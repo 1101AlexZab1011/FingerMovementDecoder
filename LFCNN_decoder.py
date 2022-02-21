@@ -270,7 +270,6 @@ if __name__ == '__main__':
                 cases_to_combine_list.append(epochs[case])
                 
             i += 1
-        print(cases_indices_to_combine)
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)
@@ -322,11 +321,13 @@ if __name__ == '__main__':
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         yp_path = os.path.join(subject_path, 'Predictions')
+        y_true_train, y_pred_train = model.predict(model.dataset.train)
+        y_true_val, y_pred_val = model.predict()
         check_path(yp_path)
         save_parameters(
             Predictions(
-                model.km(X_test).numpy(),
-                y_test
+                np.concatenate([y_pred_train, y_pred_val], axis=0),
+                np.concatenate([y_true_train, y_true_val], axis=0),
             ),
             os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
             'predictions'
