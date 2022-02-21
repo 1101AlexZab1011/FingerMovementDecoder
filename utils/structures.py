@@ -1,5 +1,5 @@
 from typing import *
-from collections import UserDict, UserList
+from collections import UserDict, UserList, namedtuple
 from utils.console.colored import alarm, ColoredText
 
 
@@ -318,3 +318,113 @@ class NumberedDict(UserDict):
             self.data.update(kwargs)
         else:
             raise TypeError('append() missing any arguments')
+
+
+class Expandable(object):
+    def __init__(self):
+        self.__data = dict()
+        self.__field_properties = namedtuple('FieldPropertes', 'readonly writable')(list(), list())
+    
+    def __setattr__(self, name: str, value: Union[Any, tuple[Any, str]]):
+        
+        if hasattr(self, '_Expandable__field_properties'): 
+            
+            value, mode = self.__check_item(name, value)
+
+            if mode == 'writable':
+                
+                if name in self.__field_properties.readonly:
+                    self.__field_properties.readonly.remove(name)
+                
+                if name not in self.__field_properties.writable:
+                    self.__field_properties.writable.append(name)
+                
+            elif mode == 'readonly':
+                
+                if name in self.__field_properties.writable:
+                    self.__field_properties.writable.remove(name)
+                
+                if name not in self.__field_properties.readonly:
+                    self.__field_properties.readonly.append(name)
+                
+            self.__data[name] = value
+            
+        if self.__is_allowed_name(name):
+            self.__dict__[name] = value
+            
+    
+    def __getitem__(self, key: Any) -> Any:
+        return self.__data[key]
+
+    def __setitem__(self, key: Any, item: Any) -> NoReturn:
+        
+        self.__setattr__(key, item)
+    
+    def __contains__(self, item: Any) -> bool:
+        return item in self.__data
+    
+    def __iter__(self):
+        return iter(self.__data)
+    
+    @staticmethod
+    def __is_allowed_name(name: Any) -> bool:
+        
+        if not isinstance(name, str):
+            name = str(name)
+        
+        for i, char in enumerate(name):
+            
+            if i == 0 and not char.isalpha() and not char == '_':
+                return False
+            elif not char.isalpha() and not char.isdigit() and not char == '_':
+                return False
+        
+        return True
+    
+    def __check_item(self, name: Any, value: Any) -> tuple[Any, str]:
+        deployed = False
+        
+        if isinstance(value, tuple):
+            value, mode = value
+            
+            if mode in self.__field_properties._fields:
+                deployed = True
+            else:
+                value = (value, mode)
+                
+        if not deployed:
+            
+            if name in self.__field_properties.readonly:
+                raise AttributeError(f'Impossible to set a new value for a read-only field "{name}"')
+            
+            mode = 'writable'
+        
+        return value, mode
+    
+    def keys(self, mode: Optional[str] = 'all') -> list[Any]:
+        
+        if mode == 'all':
+            return list(self.__data.keys())
+        elif mode == 'writable':
+            return self.__field_properties.writable
+        elif mode == 'readonly':
+            return self.__field_properties.readonly
+    
+    def values(self, mode: Optional[str] = 'all') -> list[Any]:
+        
+        if mode == 'all':
+            return list(self.__data.values())
+        elif mode == 'writable':
+            return [self.__data[key] for key in self.__field_properties.writable]
+        elif mode == 'readonly':
+            return [self.__data[key] for key in self.__field_properties.readonly]
+    
+    def items(self, mode: Optional[str] = 'all') -> list[tuple[Any, Any]]:
+        
+        return list(zip(self.keys(mode), self.values(mode)))
+    
+    def is_writable(self, key: Any) -> bool:
+        return key in self.__field_properties.writable
+    
+    def is_readonly(self, key: Any) -> bool:
+        return key in self.__field_properties.readonly
