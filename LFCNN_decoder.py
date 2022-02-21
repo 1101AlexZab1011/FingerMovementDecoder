@@ -13,6 +13,7 @@ from utils.console import Silence
 from utils.console.spinner import spinner
 from utils.data_management import dict2str
 from utils.storage_management import check_path
+from utils.machine_learning import one_hot_decoder
 import pickle
 from typing import Any, NoReturn, Optional
 import matplotlib.pyplot as plt
@@ -323,6 +324,10 @@ if __name__ == '__main__':
         yp_path = os.path.join(subject_path, 'Predictions')
         y_true_train, y_pred_train = model.predict(model.dataset.train)
         y_true_val, y_pred_val = model.predict()
+        
+        print('test-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)))
+        print('val-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_val), one_hot_decoder(y_pred_val)))
+        
         check_path(yp_path)
         save_parameters(
             Predictions(
