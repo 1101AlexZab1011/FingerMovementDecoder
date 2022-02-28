@@ -61,7 +61,8 @@ if __name__ == '__main__':
     subject_path = os.path.join(subjects_dir, subject_name)
     epochs_path = os.path.join(subject_path, 'Epochs')
     concatenated_epochs_path = os.path.join(subject_path, 'ConcatenatedEpochs')
-    savepath = os.path.join(concatenated_epochs_path, f'{classification_prefix}_{classification_name}_{classification_postfix}')
+    classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
+    savepath = os.path.join(concatenated_epochs_path, classification_name_formatted)
     check_path(concatenated_epochs_path, savepath)
     
     epochs = {case: list() for case in cases}
