@@ -85,9 +85,6 @@ if __name__ == '__main__':
                     epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
                     epochs_.resample(200)
                     
-                    if any_info is None:
-                        any_info = epochs_.info
-                    
                     epochs[case].append(epochs_)
                     
     edit_previous_line(msg + '\tOK')
