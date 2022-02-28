@@ -32,7 +32,7 @@ if __name__ == '__main__':
                         default=os.path.join(os.getcwd(), 'Source', 'Subjects'), help='Path to the subjects directory')
     parser.add_argument('--trials-name', type=str,
                         default='B', help='Name of trials')
-    parser.add_argument('--name', str_type=,
+    parser.add_argument('--name', type=str,
                         default='concatenated_epochs', help='Name of a task')
     parser.add_argument('--postfix', type=str,
                         default='', help='String to append to a task name')
