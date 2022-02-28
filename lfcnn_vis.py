@@ -434,6 +434,7 @@ def plot_spatial_weights(
             ax22.tick_params(axis='both', which='both',length=5, color='#00000050')
             ax22.set_xlabel('Frequency (Hz)')
             ax22.set_ylabel('Amplitude (μV)')
+            ax22.set_ylim(top=1.2)
             
             if logscale:
                 ax22.set_aspect(25)  
