@@ -103,5 +103,6 @@ if __name__ == '__main__':
     print('Epochs are concatenated')
     
     for case, epoch in epochs.items():
+        print(epoch.info)
         epoch.save(os.path.join(savepath, f'{project_name}_{case}.fif'))
     
