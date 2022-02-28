@@ -22,8 +22,8 @@ if __name__ == '__main__':
     )
     parser.add_argument('-es', '--exclude-sessions', type=str, nargs='+',
                         default=[], help='Sessions to exclude')
-    parser.add_argument('-s', '--subjects', type=str, nargs='+',
-                        default=[], help='IDs of subject to concatenate epochs')
+    parser.add_argument('-s', '--subject', type=str,
+                        default=None, help='ID of subject to concatenate epochs')
     parser.add_argument('-l', '--lock', type=str,
                         default='RespCor', help='Stimulus lock to consider')
     parser.add_argument('-c', '--cases', type=str, nargs='+',
@@ -51,6 +51,9 @@ if __name__ == '__main__':
     classification_postfix,\
     classification_prefix, \
     project_name = vars(parser.parse_args()).values()
+    
+    if subject_name is None:
+        raise ValueError('Subject name is not specified')
     
     if excluded_sessions:
         excluded_sessions = [sessions_name + session if sessions_name not in session else session for session in excluded_sessions]
