@@ -341,6 +341,7 @@ if __name__ == '__main__':
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
         model.compute_patterns(meta['train_paths'])
+        nt = model.dataset.h_params['n_t']
         time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]).mean(1))
         times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
         patterns = model.patterns.copy()
