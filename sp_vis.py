@@ -20,6 +20,7 @@ if __name__ == '__main__':
                         default='', help='String to append to a task name')
     parser.add_argument('--prefix', type=str,
                         default='', help='String to set in the start of a task name')
+    parser.add_argument('--log', action='store_true', help='Apply logaritmic scale')
     
     sort, \
     subject_name, \
@@ -27,7 +28,8 @@ if __name__ == '__main__':
     subjects_dir, \
     classification_name,\
     classification_postfix,\
-    classification_prefix = vars(parser.parse_args()).values()
+    classification_prefix, \
+    logscale = vars(parser.parse_args()).values()
     
     cases_to_combine = [case.split(' ') for case in cases_to_combine]
     
@@ -60,5 +62,5 @@ if __name__ == '__main__':
         temporal_parameters,
         info,
         summarize = sort,
-        logscale=False
+        logscale=logscale
     )

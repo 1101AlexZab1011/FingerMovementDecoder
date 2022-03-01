@@ -13,7 +13,7 @@ from utils.storage_management import check_path
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import sklearn
-from LFCNN_decoder import Predictions, SpatialParameters, TemporalParameters, ComponentsOrder, compute_temporal_parameters, save_parameters, save_model_weights, plot_patterns, plot_waveforms
+from LFCNN_decoder import Predictions, SpatialParameters, TemporalParameters, ComponentsOrder, WaveForms, compute_temporal_parameters, save_parameters, save_model_weights, plot_patterns, plot_waveforms
 
 if __name__ == '__main__':
     mpl.use('agg')
@@ -199,6 +199,9 @@ if __name__ == '__main__':
     train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
     test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
     model.compute_patterns(meta['train_paths'])
+    nt = model.dataset.h_params['n_t']
+    time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]).mean(1))
+    times = (1/float(model.dataset.h_params['fs']))*np.arange(nt)
     patterns = model.patterns.copy()
     model.compute_patterns(meta['train_paths'], output='filters')
     filters = model.patterns.copy()
@@ -206,6 +209,12 @@ if __name__ == '__main__':
     
     sp_path = os.path.join(subject_path, 'Parameters')
     check_path(sp_path)
+    
+    save_parameters(
+        WaveForms(time_courses, times),
+        os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
+        'WaveForms'
+    )
     
     save_parameters(
         SpatialParameters(patterns, filters),
