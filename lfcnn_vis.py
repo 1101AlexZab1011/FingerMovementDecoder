@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import matplotlib as mp
 from typing import *
 import copy
+import scipy as sp
 import argparse
 from collections import namedtuple
 import os
@@ -431,7 +432,8 @@ def plot_spatial_weights(
             # fig2, (ax21, ax23) = plt.subplots(ncols=2, nrows=1)
             plot_patterns(data, info, sorting_callback.sorted_indices[iy], ax21, name_format='', title='')
             print(waveforms.tcs.shape)
-            ax22.plot(waveforms.times, waveforms.tcs_evo[iy], 'k')
+            
+            ax22.plot(waveforms.evoked[iy], 'k')
             ax23.plot(
                                 temporal_parameters.franges,
                                 temporal_parameters.finputs[sorting_callback.sorted_indices[iy]],
