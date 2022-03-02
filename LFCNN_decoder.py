@@ -291,7 +291,7 @@ if __name__ == '__main__':
                     plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_filtered_epo.png'))
                     plt.close()
                     fig = epochs[case].plot_psd(show=False)
-                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_unfiltered_epo_psd.png'))
+                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_filtered_epo_psd.png'))
                     plt.close()
                 
             i += 1
