@@ -3,7 +3,7 @@ import numpy as np
 import mne
 import pickle
 from typing import *
-from LFCNN_decoder import SpatialParameters, TemporalParameters, ComponentsOrder
+from LFCNN_decoder import SpatialParameters, TemporalParameters, ComponentsOrder, WaveForms
 from dataclasses import dataclass
 import matplotlib as mp
 from typing import *
@@ -317,6 +317,7 @@ def plot_tempospectral(
 def plot_spatial_weights(
     spatial_parameters: SpatialParameters,
     temporal_parameters: TemporalParameters,
+    waveforms: WaveForms,
     info: mne.Info,
     summarize: Optional[Union[str, list[float]]] = 'sum',
     title: Optional[str] = 'Spatial Patterns',
@@ -416,9 +417,21 @@ def plot_spatial_weights(
             line = mp.lines.Line2D([0, x_lim], [iy, iy], color=color, linewidth=16, alpha=.4)
             ax1.add_line(line)
             fig1.canvas.draw()
-            fig2, (ax21, ax22) = plt.subplots(ncols=2, nrows=1)
+            fig2 = plt.figure(constrained_layout=False)
+            gs2 = fig2.add_gridspec(
+                nrows=3,
+                ncols=3,
+                bottom=.1,
+                wspace=.05,
+                hspace=.1
+            )
+            ax21 = fig2.add_subplot(gs2[:, :-1])
+            ax22 = fig2.add_subplot(gs2[0, -1])
+            ax23 = fig2.add_subplot(gs2[1:3, -1])
+            # fig2, (ax21, ax23) = plt.subplots(ncols=2, nrows=1)
             plot_patterns(data, info, sorting_callback.sorted_indices[iy], ax21, name_format='', title='')
-            ax22.plot(
+            ax22.plot( waveforms.times, waveforms.tcs[iy], 'k')
+            ax23.plot(
                                 temporal_parameters.franges,
                                 temporal_parameters.finputs[sorting_callback.sorted_indices[iy]],
                                 temporal_parameters.franges,
@@ -426,21 +439,30 @@ def plot_spatial_weights(
                                 temporal_parameters.franges,
                                 temporal_parameters.fresponces[sorting_callback.sorted_indices[iy]],
                             )
-            ax22.legend(['Filter input', 'Filter output', 'Filter responce'], loc='upper right')      
+            ax22.set_ylim(top=1, bottom=-1)
             ax22.spines['top'].set_alpha(.2)
             ax22.spines['right'].set_alpha(.2)
             ax22.spines['left'].set_alpha(.2)
             ax22.spines['bottom'].set_alpha(.2)
             ax22.tick_params(axis='both', which='both',length=5, color='#00000050')
-            ax22.set_xlabel('Frequency (Hz)')
+            ax22.set_xlabel('Time (s)')
             ax22.set_ylabel('Amplitude (μV)')
-            ax22.set_ylim(top=1.2)
+            ax23.set_ylim(top=1.2)
+            ax23.legend(['Filter input', 'Filter output', 'Filter responce'], loc='upper right')      
+            ax23.spines['top'].set_alpha(.2)
+            ax23.spines['right'].set_alpha(.2)
+            ax23.spines['left'].set_alpha(.2)
+            ax23.spines['bottom'].set_alpha(.2)
+            ax23.tick_params(axis='both', which='both',length=5, color='#00000050')
+            ax23.set_xlabel('Frequency (Hz)')
+            ax23.set_ylabel('Amplitude (μV)')
+            ax23.set_ylim(top=1.2)
             
             if logscale:
-                ax22.set_aspect(25)  
-                ax22.set_yscale('log')
+                ax23.set_aspect(25)  
+                ax23.set_yscale('log')
             else:
-                ax22.set_aspect(75)  
+                ax23.set_aspect(75)  
                 
             fig2.suptitle(f'Latent source {sorting_callback.sorted_indices[iy] + 1}')
             plt.show()

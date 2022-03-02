@@ -45,6 +45,7 @@ if __name__ == '__main__':
     
     spatial_parameters = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_spatial.pkl'))
     temporal_parameters = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_temporal.pkl'))
+    waveforms = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_waveforms.pkl'))
     orders = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_sorting.pkl'))
     info = read_pkl(os.path.join(subject_info_path, os.listdir(subject_info_path)[0]))
 
@@ -56,10 +57,13 @@ if __name__ == '__main__':
             )
         )
     )
-    
+    print(f'weight {orders.weight + 1}')
+    print(f'weight_corr {orders.weight_corr + 1 }')
+    print(f'output_corr {orders.output_corr + 1 }')
     plot_spatial_weights(
         spatial_parameters,
         temporal_parameters,
+        waveforms,
         info,
         summarize = sort,
         logscale=logscale
