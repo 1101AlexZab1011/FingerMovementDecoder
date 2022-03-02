@@ -430,7 +430,7 @@ def plot_spatial_weights(
             ax23 = fig2.add_subplot(gs2[1:3, -1])
             # fig2, (ax21, ax23) = plt.subplots(ncols=2, nrows=1)
             plot_patterns(data, info, sorting_callback.sorted_indices[iy], ax21, name_format='', title='')
-            ax22.plot( waveforms.times, waveforms.tcs[iy], 'k')
+            ax22.plot(waveforms.times, waveforms.tcs_evo[iy], 'k')
             ax23.plot(
                                 temporal_parameters.franges,
                                 temporal_parameters.finputs[sorting_callback.sorted_indices[iy]],
@@ -439,7 +439,7 @@ def plot_spatial_weights(
                                 temporal_parameters.franges,
                                 temporal_parameters.fresponces[sorting_callback.sorted_indices[iy]],
                             )
-            ax22.set_ylim(top=1, bottom=-1)
+            # ax22.set_ylim(top=1, bottom=-1)
             ax22.spines['top'].set_alpha(.2)
             ax22.spines['right'].set_alpha(.2)
             ax22.spines['left'].set_alpha(.2)
