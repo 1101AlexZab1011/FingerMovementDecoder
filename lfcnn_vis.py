@@ -429,7 +429,6 @@ def plot_spatial_weights(
             ax21 = fig2.add_subplot(gs2[:, :-1])
             ax22 = fig2.add_subplot(gs2[0, -1])
             ax23 = fig2.add_subplot(gs2[1:3, -1])
-            # fig2, (ax21, ax23) = plt.subplots(ncols=2, nrows=1)
             plot_patterns(data, info, sorting_callback.sorted_indices[iy], ax21, name_format='', title='')
             ax22_t = ax22.twinx()
             ax22_t.plot(waveforms.evoked[iy], '#454545')
@@ -445,6 +444,12 @@ def plot_spatial_weights(
                                 temporal_parameters.franges,
                                 temporal_parameters.fresponces[sorting_callback.sorted_indices[iy]],
                             )
+            ax22_t.set_ylabel('Amplitude (μV)', labelpad=12.5, rotation=270)
+            ax22_t.spines['top'].set_alpha(.2)
+            ax22_t.spines['right'].set_alpha(.2)
+            ax22_t.spines['left'].set_alpha(.2)
+            ax22_t.spines['bottom'].set_alpha(.2)
+            ax22_t.tick_params(axis='both', which='both',length=5, color='#00000050')
             ax22.spines['top'].set_alpha(.2)
             ax22.spines['right'].set_alpha(.2)
             ax22.spines['left'].set_alpha(.2)
