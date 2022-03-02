@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import mneflow as mf
+import scipy as sp
 from combiners import EpochsCombiner
 from utils.console import Silence, edit_previous_line
 from utils.storage_management import check_path
