@@ -269,25 +269,9 @@ if __name__ == '__main__':
             
             for j, case in enumerate(combination):
                 
-                if i == 0:
-                    epo_sample_pics_path = os.path.join(pics_path, 'Epo_Samples')
-                    check_path(epo_sample_pics_path)
-                    fig = epochs[case].plot(show=False)
-                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_unfiltered_epo.png'))
-                    plt.close()
-                    
-                
                 i += j
                 cases_indices_to_combine[-1].append(i)
                 cases_to_combine_list.append(epochs[case].filter(3, None))
-                
-                if i == 0:
-                    epo_sample_pics_path = os.path.join(pics_path, 'Epo_Samples')
-                    check_path(epo_sample_pics_path)
-                    fig = epochs[case].plot(show=False)
-                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_filtered_epo.png'))
-                    plt.close()
-                    
                 
             i += 1
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
