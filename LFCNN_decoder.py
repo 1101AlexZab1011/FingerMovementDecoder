@@ -215,7 +215,8 @@ if __name__ == '__main__':
         classification_name = '_vs_'.join(class_names)
     
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'perf_tables')
-    check_path(perf_tables_path)
+    pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
+    check_path(perf_tables_path, pics_path)
     subjects_performance = list()
     
     for subject_name in os.listdir(subjects_dir):
@@ -254,16 +255,6 @@ if __name__ == '__main__':
                     zip(
                         epochs.keys(),
                         map(
-                            lambda epoch: epoch.filter(3, None),
-                            list(epochs.values())
-                        )
-                    )
-                )
-        
-        epochs = dict(
-                    zip(
-                        epochs.keys(),
-                        map(
                             mne.concatenate_epochs,
                             list(epochs.values())
                         )
@@ -277,9 +268,26 @@ if __name__ == '__main__':
             cases_indices_to_combine.append(list())
             
             for j, case in enumerate(combination):
+                
+                if i == 0:
+                    epo_sample_pics_path = os.path.join(epochs_path, 'Epo_Samples')
+                    check_path(epo_sample_pics_path)
+                    fig = epochs[case].plot(show=False)
+                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_unfiltered_epo.png'))
+                    plt.close()
+                    
+                
                 i += j
                 cases_indices_to_combine[-1].append(i)
-                cases_to_combine_list.append(epochs[case])
+                cases_to_combine_list.append(epochs[case].filter(3, None))
+                
+                if i == 0:
+                    epo_sample_pics_path = os.path.join(epochs_path, 'Epo_Samples')
+                    check_path(epo_sample_pics_path)
+                    fig = epochs[case].plot(show=False)
+                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_filtered_epo.png'))
+                    plt.close()
+                    
                 
             i += 1
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
