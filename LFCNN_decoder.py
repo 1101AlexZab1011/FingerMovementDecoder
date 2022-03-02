@@ -254,6 +254,16 @@ if __name__ == '__main__':
                     zip(
                         epochs.keys(),
                         map(
+                            lambda epoch: epoch.filter(3, None),
+                            list(epochs.values())
+                        )
+                    )
+                )
+        
+        epochs = dict(
+                    zip(
+                        epochs.keys(),
+                        map(
                             mne.concatenate_epochs,
                             list(epochs.values())
                         )
@@ -269,7 +279,7 @@ if __name__ == '__main__':
             for j, case in enumerate(combination):
                 i += j
                 cases_indices_to_combine[-1].append(i)
-                cases_to_combine_list.append(epochs[case].filter(3, None))
+                cases_to_combine_list.append(epochs[case])
                 
             i += 1
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
