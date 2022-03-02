@@ -210,8 +210,17 @@ if __name__ == '__main__':
     sp_path = os.path.join(subject_path, 'Parameters')
     check_path(sp_path)
     
+    induced = list()
+    for tc in time_courses:
+        ls_induced = list()
+        for lc in tc:
+            widths = np.arange(1, 71)
+            ls_induced.append(sp.signal.cwt(lc, sp.signal.ricker, widths))
+        induced.append(np.array(ls_induced).mean(axis=0))
+    induced = np.array(induced)
+    
     save_parameters(
-        WaveForms(time_courses, times),
+        WaveForms(time_courses.mean(1), induced, times, time_courses),
         os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
         'WaveForms'
     )

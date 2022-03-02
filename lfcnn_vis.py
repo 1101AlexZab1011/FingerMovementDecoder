@@ -431,9 +431,12 @@ def plot_spatial_weights(
             ax23 = fig2.add_subplot(gs2[1:3, -1])
             # fig2, (ax21, ax23) = plt.subplots(ncols=2, nrows=1)
             plot_patterns(data, info, sorting_callback.sorted_indices[iy], ax21, name_format='', title='')
-            print(waveforms.tcs.shape)
-            
-            ax22.plot(waveforms.evoked[iy], 'k')
+            ax22_t = ax22.twinx()
+            ax22_t.plot(waveforms.evoked[iy], '#454545')
+            ax22.imshow(np.flip(waveforms.induced[iy, :, :], axis=0), cmap='RdBu_r')
+            ax22.set_aspect('auto')
+            ax22_t.set_aspect('auto')
+            ax22_t.set_ylim(top=1, bottom=-1)
             ax23.plot(
                                 temporal_parameters.franges,
                                 temporal_parameters.finputs[sorting_callback.sorted_indices[iy]],
@@ -442,14 +445,20 @@ def plot_spatial_weights(
                                 temporal_parameters.franges,
                                 temporal_parameters.fresponces[sorting_callback.sorted_indices[iy]],
                             )
-            # ax22.set_ylim(top=1, bottom=-1)
             ax22.spines['top'].set_alpha(.2)
             ax22.spines['right'].set_alpha(.2)
             ax22.spines['left'].set_alpha(.2)
             ax22.spines['bottom'].set_alpha(.2)
             ax22.tick_params(axis='both', which='both',length=5, color='#00000050')
+            times = np.unique(np.round(waveforms.times, 1))
+            ranges = np.linspace(0, len(waveforms.times), len(times)).astype(int)
+            ax22.set_xticks(ranges)
+            ax22.set_xticklabels(times)
+            freqs = [0] + [(i+1) for i in range(waveforms.induced.shape[-2]) if (i+1)%10==0]
+            ax22.set_yticks(freqs)
+            ax22.set_yticklabels(sorted(freqs, reverse=True))
             ax22.set_xlabel('Time (s)')
-            ax22.set_ylabel('Amplitude (μV)')
+            ax22.set_ylabel('Frequency (Hz)')
             ax23.set_ylim(top=1.2)
             ax23.legend(['Filter input', 'Filter output', 'Filter responce'], loc='upper right')      
             ax23.spines['top'].set_alpha(.2)
