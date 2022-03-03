@@ -431,7 +431,6 @@ def plot_spatial_weights(
             ax23 = fig2.add_subplot(gs2[1:3, -1])
             plot_patterns(data, info, sorting_callback.sorted_indices[iy], ax21, name_format='', title='')
             ax22_t = ax22.twinx()
-            print(waveforms.evoked.shape, waveforms.tcs.shape)
             ax22_t.plot(waveforms.evoked[iy], '#454545')
             ax22.imshow(np.flip(waveforms.induced[iy, :, :], axis=0), cmap='RdBu_r')
             ax22.set_aspect('auto')
