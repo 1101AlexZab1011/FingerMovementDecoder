@@ -223,7 +223,7 @@ stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
 
 km.fit(dataset.train,
       validation_data=dataset.val,
-      epochs=300, steps_per_epoch=eval_step,
+      epochs=100, steps_per_epoch=eval_step,
       shuffle=True, 
       validation_steps=dataset.validation_steps,
       callbacks=[stop_early], verbose=2)
