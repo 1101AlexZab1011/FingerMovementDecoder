@@ -9,9 +9,7 @@ import matplotlib.pyplot as plt
 import mne
 
 
-
 LayerContent = namedtuple('LayerContent', 'name data weights biases shape original_shape')
-
 
 class ModelAnalyzer(object):
     def __init__(self, model: tf.keras.Model):
@@ -22,7 +20,7 @@ class ModelAnalyzer(object):
             
             if len(layer.weights):
                 
-                if len(layer.weights) == 2:
+                if len(layer.weights) <= 3:
                     w = layer.weights[0].numpy()
                     w_shape = w.shape
                     
@@ -46,15 +44,22 @@ class ModelAnalyzer(object):
                     # convert biases to the form of a one-dimensional matrix (to protect the summation of weights and biases), e.g. (n,) -> (1, n)
                     b = layer.weights[1].numpy()
                     b_shape = b.shape
-                    b = b.reshape(1, -1)
                     
                     # each layer has name, data (weights + biases), weights, biases, current shape of weights and biases, initial shape of weights and biases
-                    self._layers.append(
-                        layer.name, LayerContent(layer.name, w+b, w, b, (w.shape, b.shape), (w_shape, b_shape))
-                    )
+                    
+                    if len(layer.weights) == 2:
+                        b = b.reshape(1, -1)
+                        self._layers.append(
+                            layer.name, LayerContent(layer.name, w+b, w, b, (w.shape, b.shape), (w_shape, b_shape))
+                        )
+                    else:
+                        print(layer.weights[0].numpy().shape, layer.weights[1].numpy().shape, layer.weights[2].numpy().shape)
+                        self._layers.append(
+                            layer.name, LayerContent(layer.name, (w, b, layer.weights[2].numpy()), w, b, (w.shape, b.shape), (w_shape, b_shape))
+                        )
                 else:
                     raise ValueError(f'The layer {layer.name} has unexpected number of trainable variables: {len(layer.weights)}')
-    
+                
     @property
     def layers(self):
         return self._layers
