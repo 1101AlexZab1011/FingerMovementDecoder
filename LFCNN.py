@@ -141,20 +141,10 @@ out_dim = len(np.unique(combiner.Y))
 n_samples, _, n_times, n_channels = X.shape
 
 inputs = tf.keras.Input(shape=(1, n_times, n_channels))
+
 kmd = ModelDesign(
     tf.keras.Input(shape=(1, n_times, n_channels)),
-    LayerDesign(tf.squeeze, axis=1),
-    tf.keras.layers.LSTM(
-        32,
-        return_sequences=True,
-        kernel_regularizer='l2',
-        recurrent_regularizer='l1',
-        bias_regularizer='l1',
-        dropout=0.2,
-        recurrent_dropout=0.4
-    ),
-    LayerDesign(tf.expand_dims, axis=1),
-    # DeMixing(size=specs['n_latent'], nonlin=tf.identity, axis=3, specs=specs),
+    DeMixing(size=specs['n_latent'], nonlin=tf.identity, axis=3, specs=specs),
     LFTConv(
         size=specs['n_latent'],
         nonlin=specs['nonlin'],
@@ -171,6 +161,41 @@ kmd = ModelDesign(
     tf.keras.layers.Dropout(specs['dropout'], noise_shape=None),
     Dense(size=out_dim, nonlin=tf.identity, specs=specs)
 )
+
+
+# kmd = ModelDesign(
+#     tf.keras.Input(shape=(1, n_times, n_channels)),
+#     LayerDesign(tf.squeeze, axis=1),
+#     tf.keras.layers.LSTM(
+#         32,
+#         return_sequences=True,
+#         kernel_regularizer='l2',
+#         recurrent_regularizer='l1',
+#         bias_regularizer='l1',
+#         dropout=0.2,
+#         recurrent_dropout=0.4
+#     ),
+#     LayerDesign(tf.expand_dims, axis=1),
+#     # DeMixing(size=specs['n_latent'], nonlin=tf.identity, axis=3, specs=specs),
+#     LFTConv(
+#         size=specs['n_latent'],
+#         nonlin=specs['nonlin'],
+#         filter_length=specs['filter_length'],
+#         padding=specs['padding'],
+#         specs=specs
+#     ),
+#     TempPooling(
+#         pooling=specs['pooling'],
+#         pool_type=specs['pool_type'],
+#         stride=specs['stride'],
+#         padding=specs['padding'],
+#     ),
+#     tf.keras.layers.Dropout(specs['dropout'], noise_shape=None),
+#     Dense(size=out_dim, nonlin=tf.identity, specs=specs)
+# )
+
+
+
 print('input: ', (1, n_times, n_channels))
 print(kmd().shape)
 
