@@ -100,7 +100,7 @@ combiner = EpochsCombiner(epochs['LI'], epochs['LM'], epochs['RI'], epochs['RM']
 
 Y = combiner.Y.copy()
 Y = one_hot_encoder(Y)
-X = combiner.X
+X = combiner.X.copy()
 X = np.transpose(np.expand_dims(X, axis = 1), (0, 1, 3, 2))
 
 specs = dict()
@@ -170,9 +170,6 @@ kmd = ModelDesign(
     ),
     tf.keras.layers.Dropout(specs['dropout'], noise_shape=None),
     Dense(size=out_dim, nonlin=tf.identity, specs=specs)
-    # tf.keras.layers.DepthwiseConv2D((1, 37), padding='valid', activation='relu', kernel_regularizer='l1'),
-    # tf.keras.layers.Flatten(),
-    # tf.keras.layers.Dense(out_dim),
 )
 print('input: ', (1, n_times, n_channels))
 print(kmd().shape)
@@ -212,7 +209,7 @@ import_opt = dict(savepath='../tfr/',
 
 
 #write TFRecord files and metadata file to disk
-meta = mneflow.produce_tfrecords((original_X, original_Y), **import_opt)  
+meta = mneflow.produce_tfrecords((combiner.X, combiner.Y), **import_opt)  
 dataset = mneflow.Dataset(meta, train_batch=100)
 
 train_size = dataset.h_params['train_size']
