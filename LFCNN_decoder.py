@@ -322,6 +322,7 @@ if __name__ == '__main__':
                 n_folds=5,
                 overwrite=True,
                 segment=False,
+                test_set='holdout'
             )
         
         X, Y = combiner.X, combiner.Y
@@ -347,7 +348,7 @@ if __name__ == '__main__':
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         yp_path = os.path.join(subject_path, 'Predictions')
-        y_true_train, y_pred_train = model.predict(model.dataset.train)
+        y_true_train, y_pred_train = model.predict(meta['test_paths'])
         y_true_val, y_pred_val = model.predict()
         
         print('test-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)))
