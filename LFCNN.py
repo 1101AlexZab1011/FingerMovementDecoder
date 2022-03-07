@@ -23,6 +23,9 @@ import sklearn
 import mneflow as mf
 import tensorflow as tf
 from mneflow.layers import DeMixing, LFTConv, TempPooling, Dense
+import matplotlib
+matplotlib.use('agg')
+
 
 mne.set_log_level(verbose='CRITICAL')
 fname_raw = os.path.join(multimodal.data_path(), 'multimodal_raw.fif')
