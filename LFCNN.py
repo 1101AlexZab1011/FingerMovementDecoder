@@ -24,36 +24,83 @@ import mneflow as mf
 import tensorflow as tf
 from mneflow.layers import DeMixing, LFTConv, TempPooling, Dense
 import matplotlib
+import argparse
+from collections import namedtuple
+import os
+import re
+import warnings
+import mne
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import mneflow as mf
+from combiners import EpochsCombiner
+from utils.console import Silence
+from utils.console.spinner import spinner
+from utils.data_management import dict2str
+from utils.storage_management import check_path
+from utils.machine_learning import one_hot_decoder
+import pickle
+from typing import Any, NoReturn, Optional
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import copy
+import scipy.signal as sl
+import sklearn
 matplotlib.use('agg')
 
 
 mne.set_log_level(verbose='CRITICAL')
-fname_raw = os.path.join(multimodal.data_path(), 'multimodal_raw.fif')
-raw = mne.io.read_raw_fif(fname_raw)
-cond = raw.acqparser.get_condition(raw, None)
-condition_names = [k for c in cond for k,v in c['event_id'].items()]
-epochs_list = [mne.Epochs(raw, **c) for c in cond]
-epochs = mne.concatenate_epochs(epochs_list)
-epochs = epochs.pick_types(meg='grad')
-X = np.array([])
-Y = list()
-for i, epochs in enumerate(epochs_list):
-    data = epochs.get_data()
-    if i == 0:
-        X = data.copy()
-    else:
-        X = np.append(X, data, axis=0)
-    Y += [i for _ in range(data.shape[0])]
+lock = 'RespCor'
+excluded_sessions = ['B9', 'B10', 'B11', 'B12']
+cases = ['LI', 'LM', 'RI', 'RM']
+sessions_name = 'B'
+subjects_dir=os.path.join(os.getcwd(), 'Source', 'Subjects')
+subject_name = 'Az_Mar_05'
+subject_path = os.path.join(subjects_dir, subject_name)
 
-Y = np.array(Y)
-X = np.array([X[i, epochs._channel_type_idx['grad'], :] for i, _ in enumerate(X)])
-original_X = X.copy()
-original_Y = Y.copy()
+epochs_path = os.path.join(subject_path, 'Epochs')
+epochs = {case: list() for case in cases}
+any_info = None
 
-Y = original_Y.copy()
+
+for epochs_file in os.listdir(epochs_path):
+    if lock not in epochs_file:
+        continue
+    
+    session = re.findall(r'_{0}\d\d?'.format(sessions_name), epochs_file)[0][1:]
+    
+    if session in excluded_sessions:
+        continue
+    
+    for case in cases:
+        if case in epochs_file:
+            with Silence(), warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
+                epochs_.resample(200)
+                
+                if any_info is None:
+                    any_info = epochs_.info
+                
+                epochs[case].append(epochs_)
+
+epochs = dict(
+            zip(
+                epochs.keys(),
+                map(
+                    mne.concatenate_epochs,
+                    list(epochs.values())
+                )
+            )
+        )
+
+combiner = EpochsCombiner(epochs['LI'], epochs['LM'], epochs['RI'], epochs['RM']).combine(0, 1, 2, 3)
+
+
+Y = combiner.Y.copy()
 Y = one_hot_encoder(Y)
-
-X = original_X.copy()
+X = combiner.X
 X = np.transpose(np.expand_dims(X, axis = 1), (0, 1, 3, 2))
 
 specs = dict()
@@ -89,15 +136,25 @@ specs['stride'] = 5
 specs['l1'] = 3e-3
 
 
-out_dim = len(np.unique(original_Y))
+out_dim = len(np.unique(combiner.Y))
 
 n_samples, _, n_times, n_channels = X.shape
 
 inputs = tf.keras.Input(shape=(1, n_times, n_channels))
-
 kmd = ModelDesign(
     tf.keras.Input(shape=(1, n_times, n_channels)),
-    DeMixing(size=specs['n_latent'], nonlin=tf.identity, axis=3, specs=specs),
+    LayerDesign(tf.squeeze, axis=1),
+    tf.keras.layers.LSTM(
+        32,
+        return_sequences=True,
+        kernel_regularizer='l2',
+        recurrent_regularizer='l1',
+        bias_regularizer='l1',
+        dropout=0.2,
+        recurrent_dropout=0.4
+    ),
+    LayerDesign(tf.expand_dims, axis=1),
+    # DeMixing(size=specs['n_latent'], nonlin=tf.identity, axis=3, specs=specs),
     LFTConv(
         size=specs['n_latent'],
         nonlin=specs['nonlin'],
@@ -113,7 +170,12 @@ kmd = ModelDesign(
     ),
     tf.keras.layers.Dropout(specs['dropout'], noise_shape=None),
     Dense(size=out_dim, nonlin=tf.identity, specs=specs)
+    # tf.keras.layers.DepthwiseConv2D((1, 37), padding='valid', activation='relu', kernel_regularizer='l1'),
+    # tf.keras.layers.Flatten(),
+    # tf.keras.layers.Dense(out_dim),
 )
+print('input: ', (1, n_times, n_channels))
+print(kmd().shape)
 
 print(kmd().shape)
 
