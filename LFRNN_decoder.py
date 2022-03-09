@@ -22,146 +22,202 @@ import copy
 import scipy.signal as sl
 import sklearn
 import scipy as sp
+from LFCNN_decoder import SpatialParameters, TemporalParameters,\
+    ComponentsOrder, Predictions, WaveForms,\
+    compute_temporal_parameters, save_parameters
+from mneflow.models import BaseModel, LFCNN
+from utils.machine_learning.designer import ModelDesign, ParallelDesign, LayerDesign
+from utils.machine_learning.analyzer import ModelAnalyzer
+from mneflow.layers import DeMixing, LFTConv, TempPooling, Dense
+from scipy.signal import freqz, welch
+from scipy.stats import spearmanr
 
 
-SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
-TemporalParameters = namedtuple('TemporalParameters', 'franges finputs foutputs fresponces')
-ComponentsOrder = namedtuple('ComponentsOrder', 'l2 compwise_loss weight output_corr weight_corr')
-Predictions = namedtuple('Predictions', 'y_p y_true')
-WaveForms = namedtuple('WaveForms', 'evoked induced times tcs')
-
-def compute_temporal_parameters(model, *, fs=None):
-    
-    if fs is None:
+class LFRNN(BaseModel):
+    def __init__(self, Dataset, specs=dict()):
+        self.scope = 'lfcnn'
+        specs.setdefault('filter_length', 7)
+        specs.setdefault('n_latent', 32)
+        specs.setdefault('pooling', 2)
+        specs.setdefault('stride', 2)
+        specs.setdefault('padding', 'SAME')
+        specs.setdefault('pool_type', 'max')
+        specs.setdefault('nonlin', tf.nn.relu)
+        specs.setdefault('l1', 3e-4)
+        specs.setdefault('l2', 0)
+        specs.setdefault('l1_scope', ['fc', 'demix', 'lf_conv'])
+        specs.setdefault('l2_scope', [])
+        specs.setdefault('maxnorm_scope', [])
         
-        if model.dataset.h_params['fs']:
-            fs = model.dataset.h_params['fs']
-        else:
-            print('Sampling frequency not specified, setting to 1.')
-            fs = 1.
+        super(LFRNN, self).__init__(Dataset, specs)
 
-    out_filters = model.filters
-    _, psd = sl.welch(model.lat_tcs, fs=fs, nperseg=fs*2)
-    finputs = psd[:, :-1]
-    franges = None
-    foutputs = list()
-    fresponces = list()
-    
-    for i, flt in enumerate(out_filters.T):
-        w, h = (lambda w, h: (w, np.abs(h)))(*sl.freqz(flt, 1, worN=fs))
-        foutputs.append(np.abs(finputs[i, :]*h))
+    def build_graph(self):
         
-        if franges is None:
-            franges = w/np.pi*fs/2
-        fresponces.append(h)
-        
-    return franges, finputs, foutputs, fresponces
+        self.design = ModelDesign(
+            self.inputs,
+            LayerDesign(tf.squeeze, axis=1),
+            tf.keras.layers.Bidirectional(
+                tf.keras.layers.LSTM(
+                    self.specs['n_latent'],
+                    bias_regularizer='l1',
+                    return_sequences=True,
+                    kernel_regularizer=tf.keras.regularizers.L1(.01),
+                    recurrent_regularizer=tf.keras.regularizers.L1(.01),
+                    dropout=0.4,
+                    recurrent_dropout=0.4,
+                ),
+                merge_mode='sum'
+            ),
+            LayerDesign(tf.expand_dims, axis=1),
+            LFTConv(
+                size=self.specs['n_latent'],
+                nonlin=self.specs['nonlin'],
+                filter_length=self.specs['filter_length'],
+                padding=self.specs['padding'],
+                specs=self.specs
+            ),
+            TempPooling(
+                pooling=self.specs['pooling'],
+                pool_type=self.specs['pool_type'],
+                stride=self.specs['stride'],
+                padding=self.specs['padding'],
+            ),
+            tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
+            Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
+        )
 
+        return self.design()
+    
+    def _get_spatial_covariance(self, dataset):
+        n1_covs = []
+        for x, y in dataset.take(5):
+            n1cov = tf.tensordot(x[0,0], x[0,0], axes=[[0], [0]])
+            n1_covs.append(n1cov)
 
-def save_parameters(content: Any, path: str, parameters_type: Optional[str] = '') -> NoReturn:
-    
-    parameters_type = parameters_type + ' ' if parameters_type else parameters_type
-    print(f'Saving {parameters_type}parameters...')
-    
-    if path[-4:] != '.pkl':
-        raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
-    
-    pickle.dump(content, open(path, 'wb'))
-    
-    print('Successfully saved')
+        cov = tf.reduce_mean(tf.stack(n1_covs, axis=0), axis=0)
 
+        return cov
+    
+    def get_component_relevances(self, X, y):
+        model_weights = self.km.get_weights()
+        base_loss, base_performance = self.km.evaluate(X, y, verbose=0)
+        #if len(base_performance > 1):
+        #    base_performance = bbase_performance[0]
+        feature_relevances_loss = []
+        n_out_t = self.out_weights.shape[0]
+        n_out_y = self.out_weights.shape[-1]
+        zeroweights = np.zeros((n_out_t,))
+        for i in range(self.specs["n_latent"]):
+            loss_per_class = []
+            for jj in range(n_out_y):
+                new_weights = self.out_weights.copy()
+                new_bias = self.out_biases.copy()
+                new_weights[:, i, jj] = zeroweights
+                new_bias[jj] = 0
+                new_weights = np.reshape(new_weights, self.out_w_flat.shape)
+                model_weights[-2] = new_weights
+                model_weights[-1] = new_bias
+                self.km.set_weights(model_weights)
+                loss = self.km.evaluate(X, y, verbose=0)[0]
+                loss_per_class.append(base_loss - loss)
+            feature_relevances_loss.append(np.array(loss_per_class))
+            self.component_relevance_loss = np.array(feature_relevances_loss)
+    
+    
+    def get_output_correlations(self, y_true):
+        corr_to_output = []
+        y_true = y_true.numpy()
+        flat_feats = self.tc_out.reshape(self.tc_out.shape[0], -1)
 
-def save_model_weights(model: mf.models.BaseModel, path: str) -> NoReturn:
-    
-    print('Saving model weights')
-    
-    if path[-3:] != '.h5':
-        raise OSError(f'File must have extension ".h5", but it has "{path[-3:]}"')
-    
-    model.km.save_weights(path, overwrite=True)
-    
-    print('Successfully saved')
+        if self.dataset.h_params['target_type'] in ['float', 'signal']:
+            for y_ in y_true.T:
 
+                rfocs = np.array([spearmanr(y_, f)[0] for f in flat_feats.T])
+                corr_to_output.append(rfocs.reshape(self.out_weights.shape[:-1]))
 
-def plot_waveforms(model, sorting='compwise_loss', tmin=0, class_names=None):
-    
-    fs = model.dataset.h_params['fs']
-    
-    if not hasattr(model, 'lat_tcs'):
-        model.compute_patterns(model.dataset)
+        elif self.dataset.h_params['target_type'] == 'int':
+            y_true = y_true/np.linalg.norm(y_true, ord=1, axis=0)[None, :]
+            flat_div = np.linalg.norm(flat_feats, 1, axis=0)[None, :]
+            flat_feats = flat_feats/flat_div
+            #print("ff:", flat_feats.shape)
+            #print("y_true:", y_true.shape)
+            for y_ in y_true.T:
+                #print('y.T:', y_.shape)
+                rfocs = 2. - np.sum(np.abs(flat_feats - y_[:, None]), 0)
+                corr_to_output.append(rfocs.reshape(self.out_weights.shape[:-1]))
 
-    if not hasattr(model, 'uorder'):
-        order, _ = model._sorting(sorting)
-        model.uorder = order.ravel()
+        corr_to_output = np.dstack(corr_to_output)
+
+        if np.any(np.isnan(corr_to_output)):
+            corr_to_output[np.isnan(corr_to_output)] = 0
+        return corr_to_output
     
-    if np.any(model.uorder):
-        
-        for jj, uo in enumerate(model.uorder):
-            f, ax = plt.subplots(2, 2)
-            f.set_size_inches([16, 16])
-            nt = model.dataset.h_params['n_t']
-            model.waveforms = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]).mean(1))
-            tstep = 1/float(fs)
-            times = tmin + tstep*np.arange(nt)
-            scaling = 3*np.mean(np.std(model.waveforms, -1))
-            [ax[0, 0].plot(times, wf + scaling*i) for i, wf in enumerate(model.waveforms) if i not in model.uorder]
-            ax[0, 0].plot(times, model.waveforms[uo] + scaling*uo, 'k', linewidth=5.)
-            ax[0, 0].set_title('Latent component waveforms')
-            bias = model.tconv.b.numpy()[uo]
-            ax[0, 1].stem(model.filters.T[uo], use_line_collection=True)
-            ax[0, 1].hlines(bias, 0, len(model.filters.T[uo]), linestyle='--', label='Bias')
-            ax[0, 1].legend()
-            ax[0, 1].set_title('Filter coefficients')
-            conv = np.convolve(model.filters.T[uo], model.waveforms[uo], mode='same')
-            vmin = conv.min()
-            vmax = conv.max()
-            ax[1, 0].plot(times + 0.5*model.specs['filter_length']/float(fs), conv)
-            tstep = float(model.specs['stride'])/fs
-            strides = np.arange(times[0], times[-1] + tstep/2, tstep)[1:-1]
-            pool_bins = np.arange(times[0], times[-1] + tstep, model.specs['pooling']/fs)[1:]
-            ax[1, 0].vlines(strides, vmin, vmax, linestyle='--', color='c', label='Strides')
-            ax[1, 0].vlines(pool_bins, vmin, vmax, linestyle='--', color='m', label='Pooling')
-            ax[1, 0].set_xlim(times[0], times[-1])
-            ax[1, 0].legend()
-            ax[1, 0].set_title('Convolution output')
-            strides1 = np.linspace(times[0], times[-1]+tstep/2, model.F.shape[1])
-            ax[1, 1].pcolor(strides1, np.arange(model.specs['n_latent']), model.F)
-            ax[1, 1].hlines(uo, strides1[0], strides1[-1], color='r')
-            ax[1, 1].set_title('Feature relevance map')
-            
-            if class_names:
-                comp_name = class_names[jj]
+    
+    def compute_patterns(self, data_path=None, output='patterns'):
+        #vis_dict = None
+        if not data_path: 
+            print("Computing patterns: No path specified, using validation dataset (Default)")
+            ds = self.dataset.val
+        elif isinstance(data_path, str) or isinstance(data_path, (list, tuple)):
+            ds = self.dataset._build_dataset(data_path, 
+                                            split=False, 
+                                            test_batch=None, 
+                                            repeat=True)
+        elif isinstance(data_path, mneflow.data.Dataset):
+            if hasattr(data_path, 'test'):
+                ds = data_path.test
             else:
-                comp_name = "Class " + str(jj)
-                
-            f.suptitle(comp_name, fontsize=16)
-            
-        return f
+                ds = data_path.val
+        elif isinstance(data_path, tf.data.Dataset):
+            ds = data_path
+        else:
+            raise AttributeError('Specify dataset or data path.')
 
-def plot_patterns(patterns, info, order=None, cmap='RdBu_r', sensors=True,
-                colorbar=False, res=64,
-                size=1, cbar_fmt='%3.1f', name_format='Latent\nSource %01d',
-                show=True, show_names=False, title=None,
-                outlines='head', contours=6,
-                image_interp='bilinear'):
-    
-    if not title:
-        title=f'All patterns'
+        X, y = [row for row in ds.take(1)][0]
+
+        self.fin_fc = self.design[-1]
+        self.dmx_size = self.design[1].forward_layer.weights[1].shape[0]
+        self.dmx = self.design[1]
+        self.tconv = self.design[3]
+        self.pool = self.design[4]
         
-    n_components = patterns.shape[1]
-    info = copy.deepcopy(info)
-    info['sfreq'] = 1.
-    patterns = mne.EvokedArray(patterns, info, tmin=0)
-    
-    order = range(n_components) if order is None else order
-    
-    return patterns.plot_topomap(
-        times=order,
-        cmap=cmap, colorbar=colorbar, res=res,
-        cbar_fmt=cbar_fmt, sensors=sensors, units=None, time_unit='s',
-        time_format=name_format, size=size, show_names=show_names,
-        title=title, outlines=outlines,
-        contours=contours, image_interp=image_interp, show=show)
+        self.out_w_flat = self.fin_fc.w.numpy()
+        self.out_weights = np.reshape(self.out_w_flat, [-1, self.dmx_size,
+                                            self.out_dim])
+        self.out_biases = self.fin_fc.b.numpy()
+        self.feature_relevances = self.get_component_relevances(X, y)
+        
+        #compute temporal convolution layer outputs for vis_dics
+        # tc_out = self.pool(self.tconv(self.design[1](self.dmx(self.design[0](X)))).numpy())
+        tc_out = ModelDesign(None, *model.design[:5])(X).numpy()
+
+        #compute data covariance
+        X = X - tf.reduce_mean(X, axis=-2, keepdims=True)
+        X = tf.transpose(X, [3, 0, 1, 2])
+        X = tf.reshape(X, [X.shape[0], -1])
+        self.dcov = tf.matmul(X, tf.transpose(X))
+
+        # get spatial extraction fiter weights
+        
+        fw, fa, fb = (w.numpy() for w in self.design[1].forward_layer.weights)
+        bw, ba, bb = (w.numpy() for w in self.design[1].backward_layer.weights)
+
+        # fwd + bcwd
+        # (kernel weights + kernel biases) * recurrent weights
+        demx = (((fw + fb)@fa.T) + ((bw + bb)@ba.T))
+        self.lat_tcs = np.dot(demx.T, X)
+        del X
+
+        if 'patterns' in output:
+            self.patterns = np.dot(self.dcov, demx)
+
+        else:
+            self.patterns = demx
+
+        kern = self.tconv.filters.numpy()
+        self.filters = np.squeeze(kern)
+        self.tc_out = np.squeeze(tc_out)
+        self.corr_to_output = self.get_output_correlations(y)
 
 
 if __name__ == '__main__':
@@ -345,7 +401,7 @@ if __name__ == '__main__':
         model = mf.models.LFCNN(dataset, lf_params)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
-        network_out_path = os.path.join(subject_path, 'LFCNN')
+        network_out_path = os.path.join(subject_path, 'LFRNN')
         check_path(network_out_path)
         yp_path = os.path.join(network_out_path, 'Predictions')
         y_true_train, y_pred_train = model.predict(meta['train_paths'])
@@ -402,18 +458,18 @@ if __name__ == '__main__':
             os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
             'temporal'
         )
-        get_order = lambda order, ts: order.ravel()
-        save_parameters(
-            ComponentsOrder(
-                get_order(*model._sorting('l2')),
-                get_order(*model._sorting('compwise_loss')),
-                get_order(*model._sorting('weight')),
-                get_order(*model._sorting('output_corr')),
-                get_order(*model._sorting('weight_corr')),
-            ),
-            os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
-            'sorting'
-        )
+        # get_order = lambda order, ts: order.ravel()
+        # save_parameters(
+        #     ComponentsOrder(
+        #         get_order(*model._sorting('l2')),
+        #         get_order(*model._sorting('compwise_loss')),
+        #         get_order(*model._sorting('weight')),
+        #         get_order(*model._sorting('output_corr')),
+        #         get_order(*model._sorting('weight_corr')),
+        #     ),
+        #     os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
+        #     'sorting'
+        # )
         
         pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
         patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
