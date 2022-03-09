@@ -419,45 +419,45 @@ if __name__ == '__main__':
             os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
             'predictions'
         )
-        train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
-        test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
-        model.compute_patterns(meta['train_paths'])
-        nt = model.dataset.h_params['n_t']
-        time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
-        times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
-        patterns = model.patterns.copy()
-        model.compute_patterns(meta['train_paths'], output='filters')
-        filters = model.patterns.copy()
-        franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+        # train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
+        # test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
+        # model.compute_patterns(meta['train_paths'])
+        # nt = model.dataset.h_params['n_t']
+        # time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
+        # times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
+        # patterns = model.patterns.copy()
+        # model.compute_patterns(meta['train_paths'], output='filters')
+        # filters = model.patterns.copy()
+        # franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
         
-        sp_path = os.path.join(network_out_path, 'Parameters')
-        check_path(sp_path)
+        # sp_path = os.path.join(network_out_path, 'Parameters')
+        # check_path(sp_path)
         
-        induced = list()
-        for tc in time_courses:
-            ls_induced = list()
-            for lc in tc:
-                widths = np.arange(1, 71)
-                ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
-            induced.append(np.array(ls_induced).mean(axis=0))
-        induced = np.array(induced)
+        # induced = list()
+        # for tc in time_courses:
+        #     ls_induced = list()
+        #     for lc in tc:
+        #         widths = np.arange(1, 71)
+        #         ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
+        #     induced.append(np.array(ls_induced).mean(axis=0))
+        # induced = np.array(induced)
         
-        save_parameters(
-            WaveForms(time_courses.mean(1), induced, times, time_courses),
-            os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
-            'WaveForms'
-        )
+        # save_parameters(
+        #     WaveForms(time_courses.mean(1), induced, times, time_courses),
+        #     os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
+        #     'WaveForms'
+        # )
         
-        save_parameters(
-            SpatialParameters(patterns, filters),
-            os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
-            'spatial'
-        )
-        save_parameters(
-            TemporalParameters(franges, finputs, foutputs, fresponces),
-            os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
-            'temporal'
-        )
+        # save_parameters(
+        #     SpatialParameters(patterns, filters),
+        #     os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
+        #     'spatial'
+        # )
+        # save_parameters(
+        #     TemporalParameters(franges, finputs, foutputs, fresponces),
+        #     os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
+        #     'temporal'
+        # )
         # get_order = lambda order, ts: order.ravel()
         # save_parameters(
         #     ComponentsOrder(
@@ -471,29 +471,29 @@ if __name__ == '__main__':
         #     'sorting'
         # )
         
-        pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
-        patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
-        filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
-        spectra_pics_path = os.path.join(pics_path, 'Spectra', classification_name_formatted)
-        wf_pics_path = os.path.join(pics_path, 'WaveForms', classification_name_formatted)
-        loss_pics_path = os.path.join(pics_path, 'Loss', classification_name_formatted)
-        acc_pics_path = os.path.join(pics_path, 'Accuracy', classification_name_formatted)
+        # pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
+        # patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
+        # filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
+        # spectra_pics_path = os.path.join(pics_path, 'Spectra', classification_name_formatted)
+        # wf_pics_path = os.path.join(pics_path, 'WaveForms', classification_name_formatted)
+        # loss_pics_path = os.path.join(pics_path, 'Loss', classification_name_formatted)
+        # acc_pics_path = os.path.join(pics_path, 'Accuracy', classification_name_formatted)
         
-        check_path(
-            pics_path,
-            os.path.join(pics_path, 'Patterns'),
-            os.path.join(pics_path, 'Filters'),
-            os.path.join(pics_path, 'Spectra'),
-            os.path.join(pics_path, 'WaveForms'),
-            os.path.join(pics_path, 'Loss'),
-            os.path.join(pics_path, 'Accuracy'),
-            patterns_pics_path,
-            filters_pics_path,
-            spectra_pics_path,
-            wf_pics_path,
-            loss_pics_path,
-            acc_pics_path
-        )
+        # check_path(
+        #     pics_path,
+        #     os.path.join(pics_path, 'Patterns'),
+        #     os.path.join(pics_path, 'Filters'),
+        #     os.path.join(pics_path, 'Spectra'),
+        #     os.path.join(pics_path, 'WaveForms'),
+        #     os.path.join(pics_path, 'Loss'),
+        #     os.path.join(pics_path, 'Accuracy'),
+        #     patterns_pics_path,
+        #     filters_pics_path,
+        #     spectra_pics_path,
+        #     wf_pics_path,
+        #     loss_pics_path,
+        #     acc_pics_path
+        # )
         # plt.plot(model.t_hist.history['loss'])
         # plt.plot(model.t_hist.history['val_loss'])
         # plt.title('model loss')
