@@ -220,7 +220,7 @@ class ConfusionEstimator(object):
     @mcc.setter
     def mcc(self, value):
         raise AttributeError('Matthews Correlation Coefficient can not be set, '
-                             'it must be computed from confusion matrix')
+                            'it must be computed from confusion matrix')
 
     @property
     def fm(self):
@@ -245,6 +245,38 @@ class ConfusionEstimator(object):
     @mk.setter
     def mk(self, value):
         raise AttributeError('Markedness can not be set, it must be computed from confusion matrix')
+    
+    @property
+    def lr_plus(self):
+        return self._lr_plus
+
+    @lr_plus.setter
+    def lr_plus(self, value):
+        raise AttributeError('Positive likelihood ratio can not be set, it must be computed from confusion matrix')
+    
+    @property
+    def lr_minus(self):
+        return self._lr_minus
+
+    @lr_minus.setter
+    def lr_minus(self, value):
+        raise AttributeError('Negative likelihood ratio can not be set, it must be computed from confusion matrix')
+    
+    @property
+    def dor(self):
+        return self._dor
+
+    @dor.setter
+    def dor(self, value):
+        raise AttributeError('Diagnostic odds ratio can not be set, it must be computed from confusion matrix')
+    
+    @property
+    def prev(self):
+        return self._prev
+
+    @prev.setter
+    def prev(self, value):
+        raise AttributeError('Prevalence can not be set, it must be computed from confusion matrix')
 
     def __init_params(self):
         self._acc = (self.tp + self.tn) / (self.tp + self.tn + self.fp + self.fn)
@@ -262,9 +294,13 @@ class ConfusionEstimator(object):
         self._f1 = 2 * (self.ppv * self.tpr) / (self.ppv + self.tpr)
         self._mcc = (self.tp * self.tn - self.fp * self.fn) / \
                     np.sqrt((self.tp + self.fp) * (self.tp + self.fn) * (self.tn + self.fp) * (self.tn + self.fn))
-        self._fm = np.sqrt(self.ppv*self.tpr)
+        self._fm = np.sqrt(self.ppv * self.tpr)
         self._bm = self.tpr + self.tnr - 1
         self._mk = self.ppv + self.npv - 1
+        self._lr_plus = self.tpr / self.fpr
+        self._lr_minus = self.fnr / self.tnr
+        self._dor = self.lr_plus / self.lr_minus
+        self._prev = (self.tp + self.fp) / (self.tp + self.fp + self.fn + self.tn)
 
     def get_confusion(self):
         return self.tp, self.tn, self.fp, self.fn

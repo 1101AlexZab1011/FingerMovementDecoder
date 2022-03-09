@@ -326,9 +326,7 @@ if __name__ == '__main__':
             )
         
         X, Y = combiner.X, combiner.Y
-        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, Y, test_size=.8)
-        X_test = np.transpose(np.expand_dims(X_test, axis = 1), (0, 1, 3, 2))
-        meta = mf.produce_tfrecords((X_train, y_train), **import_opt)
+        meta = mf.produce_tfrecords((X, Y), **import_opt)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
                 n_latent=32,
@@ -348,17 +346,17 @@ if __name__ == '__main__':
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         yp_path = os.path.join(subject_path, 'Predictions')
-        y_true_train, y_pred_train = model.predict(meta['test_paths'])
-        y_true_val, y_pred_val = model.predict()
+        y_true_train, y_pred_train = model.predict(meta['train_paths'])
+        y_true_test, y_pred_test = model.predict(meta['test_paths'])
         
-        print('test-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)))
-        print('val-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_val), one_hot_decoder(y_pred_val)))
+        print('train-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)))
+        print('test-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_test), one_hot_decoder(y_pred_test)))
         
         check_path(yp_path)
         save_parameters(
             Predictions(
-                np.concatenate([y_pred_train, y_pred_val], axis=0),
-                np.concatenate([y_true_train, y_true_val], axis=0),
+                y_pred_test,
+                y_true_test
             ),
             os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
             'predictions'
@@ -382,7 +380,7 @@ if __name__ == '__main__':
             ls_induced = list()
             for lc in tc:
                 widths = np.arange(1, 71)
-                ls_induced.append(sp.signal.cwt(lc, sp.signal.ricker, widths))
+                ls_induced.append(sp.signal.cwt(lc, sp.signal.ricker, widths).abs())
             induced.append(np.array(ls_induced).mean(axis=0))
         induced = np.array(induced)
         

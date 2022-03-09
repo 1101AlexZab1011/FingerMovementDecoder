@@ -433,6 +433,7 @@ def plot_spatial_weights(
             ax22_t = ax22.twinx()
             ax22_t.plot(waveforms.evoked[iy], '#454545')
             ax22.imshow(np.flip(waveforms.induced[iy, :, :], axis=0), cmap='RdBu_r')
+            print(np.flip(waveforms.induced[iy, :, :], axis=0))
             ax22.set_aspect('auto')
             ax22_t.set_aspect('auto')
             ax22_t.set_ylim(top=1, bottom=-1)
