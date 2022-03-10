@@ -134,6 +134,41 @@ class LFRNN(BaseModel):
             tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
             Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
         )
+        # self.design = ModelDesign(
+        #     self.inputs,
+        #     DeMixing(size=self.specs['n_latent'], nonlin=tf.identity, axis=3, specs=self.specs),
+        #     ParallelDesign(
+        #         LFTConv(
+        #             size=self.specs['n_latent'],
+        #             nonlin=self.specs['nonlin'],
+        #             filter_length=self.specs['filter_length']//2,
+        #             padding=self.specs['padding'],
+        #             specs=self.specs
+        #         ),
+        #         LFTConv(
+        #             size=self.specs['n_latent'],
+        #             nonlin=self.specs['nonlin'],
+        #             filter_length=self.specs['filter_length'],
+        #             padding=self.specs['padding'],
+        #             specs=self.specs
+        #         ),
+        #         LFTConv(
+        #             size=self.specs['n_latent'],
+        #             nonlin=self.specs['nonlin'],
+        #             filter_length=self.specs['filter_length']*2,
+        #             padding=self.specs['padding'],
+        #             specs=self.specs
+        #         ),
+        #     ),
+        #     TempPooling(
+        #         pooling=self.specs['pooling'],
+        #         pool_type=self.specs['pool_type'],
+        #         stride=self.specs['stride'],
+        #         padding=self.specs['padding'],
+        #     ),
+        #     tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
+        #     Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
+        # )
 
         return self.design()
     
