@@ -53,6 +53,38 @@ class LFRNN(BaseModel):
 
     def build_graph(self):
         
+        # self.design = ModelDesign(
+        #     self.inputs,
+        #     LayerDesign(tf.squeeze, axis=1),
+        #     tf.keras.layers.Bidirectional(
+        #         tf.keras.layers.LSTM(
+        #             self.specs['n_latent'],
+        #             bias_regularizer='l1',
+        #             return_sequences=True,
+        #             kernel_regularizer=tf.keras.regularizers.L1(.01),
+        #             recurrent_regularizer=tf.keras.regularizers.L1(.01),
+        #             dropout=0.4,
+        #             recurrent_dropout=0.4,
+        #         ),
+        #         merge_mode='sum'
+        #     ),
+        #     LayerDesign(tf.expand_dims, axis=1),
+        #     LFTConv(
+        #         size=self.specs['n_latent'],
+        #         nonlin=self.specs['nonlin'],
+        #         filter_length=self.specs['filter_length'],
+        #         padding=self.specs['padding'],
+        #         specs=self.specs
+        #     ),
+        #     TempPooling(
+        #         pooling=self.specs['pooling'],
+        #         pool_type=self.specs['pool_type'],
+        #         stride=self.specs['stride'],
+        #         padding=self.specs['padding'],
+        #     ),
+        #     tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
+        #     Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
+        # )
         self.design = ModelDesign(
             self.inputs,
             LayerDesign(tf.squeeze, axis=1),
@@ -69,13 +101,30 @@ class LFRNN(BaseModel):
                 merge_mode='sum'
             ),
             LayerDesign(tf.expand_dims, axis=1),
-            LFTConv(
-                size=self.specs['n_latent'],
-                nonlin=self.specs['nonlin'],
-                filter_length=self.specs['filter_length'],
-                padding=self.specs['padding'],
-                specs=self.specs
+            ParallelDesign(
+                LFTConv(
+                    size=self.specs['n_latent'],
+                    nonlin=self.specs['nonlin'],
+                    filter_length=self.specs['filter_length']//2,
+                    padding=self.specs['padding'],
+                    specs=self.specs
+                ),
+                LFTConv(
+                    size=self.specs['n_latent'],
+                    nonlin=self.specs['nonlin'],
+                    filter_length=self.specs['filter_length'],
+                    padding=self.specs['padding'],
+                    specs=self.specs
+                ),
+                LFTConv(
+                    size=self.specs['n_latent'],
+                    nonlin=self.specs['nonlin'],
+                    filter_length=self.specs['filter_length']*2,
+                    padding=self.specs['padding'],
+                    specs=self.specs
+                ),
             ),
+            
             TempPooling(
                 pooling=self.specs['pooling'],
                 pool_type=self.specs['pool_type'],
