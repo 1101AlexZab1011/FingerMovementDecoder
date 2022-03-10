@@ -171,19 +171,17 @@ class LFRNN(BaseModel):
         #     Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
         # )
         # sLFCNN
-        print(self.inputs.shape, self.inputs.shape[2])
         self.design = ModelDesign(
             self.inputs,
             DeMixing(size=self.specs['n_latent'], nonlin=tf.identity, axis=3, specs=self.specs),
-            LayerDesign(tf.expand_dims, axis=1),
             LFTConv(
-                    size=self.specs['n_latent'],
-                    nonlin=self.specs['nonlin'],
-                    filter_length=self.specs['filter_length'],
-                    padding=self.specs['padding'],
-                    specs=self.specs
-                ),
-            tf.keras.layers.DepthwiseConv2D((1, 200), padding='valid', activation='relu', kernel_regularizer='l1'),
+                size=self.specs['n_latent'],
+                nonlin=self.specs['nonlin'],
+                filter_length=self.specs['filter_length'],
+                padding=self.specs['padding'],
+                specs=self.specs
+            ),
+            tf.keras.layers.DepthwiseConv2D((1, self.inputs.shape[2]), padding='valid', activation='relu', kernel_regularizer='l1'),
             tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(self.out_dim, kernel_regularizer='l1'),
