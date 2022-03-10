@@ -182,7 +182,7 @@ class LFRNN(BaseModel):
                     padding=self.specs['padding'],
                     specs=self.specs
                 ),
-            tf.keras.layers.DepthwiseConv2D((1, self.inputs.shape[2]), padding='valid', activation='relu', kernel_regularizer='l1'),
+            tf.keras.layers.DepthwiseConv2D((1, self.inputs.shape[3]), padding='valid', activation='relu', kernel_regularizer='l1'),
             tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(self.out_dim, kernel_regularizer='l1'),
