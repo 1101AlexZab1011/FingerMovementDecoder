@@ -171,7 +171,7 @@ class LFRNN(BaseModel):
         #     Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
         # )
         # sLFCNN
-        print(self.inputs.shape, self.inputs.shape[3])
+        print(self.inputs.shape, self.inputs.shape[2])
         self.design = ModelDesign(
             self.inputs,
             DeMixing(size=self.specs['n_latent'], nonlin=tf.identity, axis=3, specs=self.specs),
@@ -179,7 +179,7 @@ class LFRNN(BaseModel):
             LFTConv(
                     size=self.specs['n_latent'],
                     nonlin=self.specs['nonlin'],
-                    filter_length=self.specs['filter_length']*2,
+                    filter_length=self.specs['filter_length'],
                     padding=self.specs['padding'],
                     specs=self.specs
                 ),
