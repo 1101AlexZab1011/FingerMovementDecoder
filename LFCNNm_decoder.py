@@ -523,8 +523,8 @@ if __name__ == '__main__':
                 filter_length=50,
                 nonlin=tf.keras.activations.elu,
                 padding='SAME',
-                pooling=3,
-                stride=3,
+                pooling=2,
+                stride=2,
                 pool_type='max',
                 model_path=import_opt['savepath'],
                 dropout=.4,
@@ -532,7 +532,7 @@ if __name__ == '__main__':
                 l2=1e-6
         )
         
-        model = Deep4(dataset, lf_params)
+        model = LFRNN(dataset, lf_params)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         network_out_path = os.path.join(subject_path, 'LFRNN')
