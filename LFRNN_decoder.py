@@ -26,7 +26,7 @@ import mneflow
 from LFCNN_decoder import SpatialParameters, TemporalParameters,\
     ComponentsOrder, Predictions, WaveForms,\
     compute_temporal_parameters, save_parameters
-from mneflow.models import BaseModel, LFCNN
+from mneflow.models import BaseModel, LFCNN, VARCNN
 from utils.machine_learning.designer import ModelDesign, ParallelDesign, LayerDesign
 from utils.machine_learning.analyzer import ModelAnalyzer
 from mneflow.layers import DeMixing, LFTConv, TempPooling, Dense
@@ -532,7 +532,7 @@ if __name__ == '__main__':
                 l2=1e-6
         )
         
-        model = LFRNN(dataset, lf_params)
+        model = VARCNN(dataset, lf_params)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         network_out_path = os.path.join(subject_path, 'LFRNN')
