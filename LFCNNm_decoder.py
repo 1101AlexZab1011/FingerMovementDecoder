@@ -26,7 +26,7 @@ import mneflow
 from LFCNN_decoder import SpatialParameters, TemporalParameters,\
     ComponentsOrder, Predictions, WaveForms,\
     compute_temporal_parameters, save_parameters
-from mneflow.models import BaseModel, LFCNN, VARCNN
+from mneflow.models import BaseModel, LFCNN, VARCNN, Deep4
 from utils.machine_learning.designer import ModelDesign, ParallelDesign, LayerDesign
 from utils.machine_learning.analyzer import ModelAnalyzer
 from mneflow.layers import DeMixing, LFTConv, TempPooling, Dense
@@ -496,7 +496,7 @@ if __name__ == '__main__':
             classification_name_formatted
         )
         import_opt = dict(
-                savepath=savepath+'/',
+                savepath=savepath + '/',
                 out_name=project_name,
                 fs=200,
                 input_type='trials',
@@ -523,8 +523,8 @@ if __name__ == '__main__':
                 filter_length=50,
                 nonlin=tf.keras.activations.elu,
                 padding='SAME',
-                pooling=10,
-                stride=10,
+                pooling=2,
+                stride=2,
                 pool_type='max',
                 model_path=import_opt['savepath'],
                 dropout=.4,
@@ -532,7 +532,7 @@ if __name__ == '__main__':
                 l2=1e-6
         )
         
-        model = VARCNN(dataset, lf_params)
+        model = LFCNN(dataset, lf_params)
         model.scope = 'varcnn'
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
@@ -556,120 +556,6 @@ if __name__ == '__main__':
         )
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
-        # model.compute_patterns(meta['train_paths'])
-        # nt = model.dataset.h_params['n_t']
-        # time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
-        # times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
-        # patterns = model.patterns.copy()
-        # model.compute_patterns(meta['train_paths'], output='filters')
-        # filters = model.patterns.copy()
-        # franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
-        
-        # sp_path = os.path.join(network_out_path, 'Parameters')
-        # check_path(sp_path)
-        
-        # induced = list()
-        # for tc in time_courses:
-        #     ls_induced = list()
-        #     for lc in tc:
-        #         widths = np.arange(1, 71)
-        #         ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
-        #     induced.append(np.array(ls_induced).mean(axis=0))
-        # induced = np.array(induced)
-        
-        # save_parameters(
-        #     WaveForms(time_courses.mean(1), induced, times, time_courses),
-        #     os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
-        #     'WaveForms'
-        # )
-        
-        # save_parameters(
-        #     SpatialParameters(patterns, filters),
-        #     os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
-        #     'spatial'
-        # )
-        # save_parameters(
-        #     TemporalParameters(franges, finputs, foutputs, fresponces),
-        #     os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
-        #     'temporal'
-        # )
-        # get_order = lambda order, ts: order.ravel()
-        # save_parameters(
-        #     ComponentsOrder(
-        #         get_order(*model._sorting('l2')),
-        #         get_order(*model._sorting('compwise_loss')),
-        #         get_order(*model._sorting('weight')),
-        #         get_order(*model._sorting('output_corr')),
-        #         get_order(*model._sorting('weight_corr')),
-        #     ),
-        #     os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
-        #     'sorting'
-        # )
-        
-        # pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
-        # patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
-        # filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
-        # spectra_pics_path = os.path.join(pics_path, 'Spectra', classification_name_formatted)
-        # wf_pics_path = os.path.join(pics_path, 'WaveForms', classification_name_formatted)
-        # loss_pics_path = os.path.join(pics_path, 'Loss', classification_name_formatted)
-        # acc_pics_path = os.path.join(pics_path, 'Accuracy', classification_name_formatted)
-        
-        # check_path(
-        #     pics_path,
-        #     os.path.join(pics_path, 'Patterns'),
-        #     os.path.join(pics_path, 'Filters'),
-        #     os.path.join(pics_path, 'Spectra'),
-        #     os.path.join(pics_path, 'WaveForms'),
-        #     os.path.join(pics_path, 'Loss'),
-        #     os.path.join(pics_path, 'Accuracy'),
-        #     patterns_pics_path,
-        #     filters_pics_path,
-        #     spectra_pics_path,
-        #     wf_pics_path,
-        #     loss_pics_path,
-        #     acc_pics_path
-        # )
-        # plt.plot(model.t_hist.history['loss'])
-        # plt.plot(model.t_hist.history['val_loss'])
-        # plt.title('model loss')
-        # plt.ylabel('loss')
-        # plt.xlabel('epoch')
-        # plt.legend(['train', 'validation'], loc='upper left')
-        # plt.savefig(os.path.join(loss_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close()
-        # plt.plot(model.t_hist.history['cat_ACC'])
-        # plt.plot(model.t_hist.history['val_cat_ACC'])
-        # plt.title('model acc')
-        # plt.ylabel('loss')
-        # plt.xlabel('epoch')
-        # plt.legend(['train', 'validation'], loc='upper left')
-        # plt.savefig(os.path.join(acc_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close()
-        
-        # patterns_fig = plot_patterns(patterns, any_info)
-        # patterns_fig.savefig(os.path.join(patterns_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close(patterns_fig)
-        # filters_fig = plot_patterns(filters, any_info)
-        # filters_fig.savefig(os.path.join(filters_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close(filters_fig)
-        # spectra_fig = model.plot_spectra(sorting='weight_corr', class_names=class_names)
-        # spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close(spectra_fig)
-        # wf_fig = plot_waveforms(model, class_names=class_names)
-        # wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close(wf_fig)
-        
-        # weights_path = os.path.join(subject_path, 'Weights')
-        # models_path = os.path.join(subject_path, 'Models')
-        # check_path(weights_path, models_path)
-        # save_model_weights(
-        #     model,
-        #     os.path.join(
-        #         weights_path,
-        #         f'{classification_name_formatted}.h5'
-        #     )
-        # )
-        # model.km.save(os.path.join(models_path, f'{classification_name_formatted}.h5'))
         perf_table_path = os.path.join(
             perf_tables_path,
             f'{classification_name_formatted}.csv'
