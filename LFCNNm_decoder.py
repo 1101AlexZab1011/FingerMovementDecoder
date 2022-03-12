@@ -32,7 +32,8 @@ from utils.machine_learning.analyzer import ModelAnalyzer
 from mneflow.layers import DeMixing, LFTConv, TempPooling, Dense
 from scipy.signal import freqz, welch
 from scipy.stats import spearmanr
-
+import tensorflow.keras.regularizers as k_reg
+from tensorflow.keras.initializers import Constant
 
 class LFRNN(BaseModel):
     def __init__(self, Dataset, specs=dict()):
@@ -54,38 +55,38 @@ class LFRNN(BaseModel):
 
     def build_graph(self):
         # LFRNN
-        self.design = ModelDesign(
-            self.inputs,
-            LayerDesign(tf.squeeze, axis=1),
-            tf.keras.layers.Bidirectional(
-                tf.keras.layers.LSTM(
-                    self.specs['n_latent'],
-                    bias_regularizer='l1',
-                    return_sequences=True,
-                    kernel_regularizer=tf.keras.regularizers.L1(.01),
-                    recurrent_regularizer=tf.keras.regularizers.L1(.01),
-                    dropout=0.4,
-                    recurrent_dropout=0.4,
-                ),
-                merge_mode='sum'
-            ),
-            LayerDesign(tf.expand_dims, axis=1),
-            LFTConv(
-                size=self.specs['n_latent'],
-                nonlin=self.specs['nonlin'],
-                filter_length=self.specs['filter_length'],
-                padding=self.specs['padding'],
-                specs=self.specs
-            ),
-            TempPooling(
-                pooling=self.specs['pooling'],
-                pool_type=self.specs['pool_type'],
-                stride=self.specs['stride'],
-                padding=self.specs['padding'],
-            ),
-            tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
-            Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
-        )
+        # self.design = ModelDesign(
+        #     self.inputs,
+        #     LayerDesign(tf.squeeze, axis=1),
+        #     tf.keras.layers.Bidirectional(
+        #         tf.keras.layers.LSTM(
+        #             self.specs['n_latent'],
+        #             bias_regularizer='l1',
+        #             return_sequences=True,
+        #             kernel_regularizer=tf.keras.regularizers.L1(.01),
+        #             recurrent_regularizer=tf.keras.regularizers.L1(.01),
+        #             dropout=0.4,
+        #             recurrent_dropout=0.4,
+        #         ),
+        #         merge_mode='sum'
+        #     ),
+        #     LayerDesign(tf.expand_dims, axis=1),
+        #     LFTConv(
+        #         size=self.specs['n_latent'],
+        #         nonlin=self.specs['nonlin'],
+        #         filter_length=self.specs['filter_length'],
+        #         padding=self.specs['padding'],
+        #         specs=self.specs
+        #     ),
+        #     TempPooling(
+        #         pooling=self.specs['pooling'],
+        #         pool_type=self.specs['pool_type'],
+        #         stride=self.specs['stride'],
+        #         padding=self.specs['padding'],
+        #     ),
+        #     tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
+        #     Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
+        # )
         # resLFRNN
         # self.design = ModelDesign(
         #     self.inputs,
@@ -216,139 +217,49 @@ class LFRNN(BaseModel):
         #     tf.keras.layers.Flatten(),
         #     tf.keras.layers.Dense(self.out_dim, kernel_regularizer='l1'),
         # )
+        
+        #deep4
+        ModelDesign(
+            self.inputs,
+            LayerDesign(tf.transpose, [0,3,2,1]),
+            tf.keras.layers.DepthwiseConv2D(
+                kernel_size=(1, self.specs['filter_length']),
+                depth_multiplier = self.specs['n_latent'],
+                strides=1,
+                padding=self.specs['padding'],
+                activation = tf.identity,
+                kernel_initializer="he_uniform",
+                bias_initializer=Constant(0.1),
+                data_format="channels_last",
+                kernel_regularizer=k_reg.l2(self.specs['l2'])
+                #kernel_constraint="maxnorm"
+            ),
+            *[ModelDesign(
+                tf.keras.layers.Conv2D(
+                    filters=self.specs['n_latent'],
+                    kernel_size=(self.dataset.h_params['n_ch'], 1),
+                    strides=1,
+                    padding=self.specs['padding'],
+                    activation=self.specs['nonlin'],
+                    kernel_initializer="he_uniform",
+                    bias_initializer=Constant(0.1),
+                    data_format="channels_last",
+                    #data_format="channels_first",
+                    kernel_regularizer=k_reg.l2(self.specs['l2'])
+                ),
+                TempPooling(
+                    pooling=self.specs['pooling'],
+                    pool_type="avg",
+                    stride=self.specs['stride'],
+                    padding='SAME',
+                )
+            ) for _ in range(4)],
+            Dense(size=self.out_dim, nonlin=tf.softmax)
+        )
 
         return self.design()
     
-    def _get_spatial_covariance(self, dataset):
-        n1_covs = []
-        for x, y in dataset.take(5):
-            n1cov = tf.tensordot(x[0,0], x[0,0], axes=[[0], [0]])
-            n1_covs.append(n1cov)
 
-        cov = tf.reduce_mean(tf.stack(n1_covs, axis=0), axis=0)
-
-        return cov
-    
-    def get_component_relevances(self, X, y):
-        model_weights = self.km.get_weights()
-        base_loss, base_performance = self.km.evaluate(X, y, verbose=0)
-        #if len(base_performance > 1):
-        #    base_performance = bbase_performance[0]
-        feature_relevances_loss = []
-        n_out_t = self.out_weights.shape[0]
-        n_out_y = self.out_weights.shape[-1]
-        zeroweights = np.zeros((n_out_t,))
-        for i in range(self.specs["n_latent"]):
-            loss_per_class = []
-            for jj in range(n_out_y):
-                new_weights = self.out_weights.copy()
-                new_bias = self.out_biases.copy()
-                new_weights[:, i, jj] = zeroweights
-                new_bias[jj] = 0
-                new_weights = np.reshape(new_weights, self.out_w_flat.shape)
-                model_weights[-2] = new_weights
-                model_weights[-1] = new_bias
-                self.km.set_weights(model_weights)
-                loss = self.km.evaluate(X, y, verbose=0)[0]
-                loss_per_class.append(base_loss - loss)
-            feature_relevances_loss.append(np.array(loss_per_class))
-            self.component_relevance_loss = np.array(feature_relevances_loss)
-    
-    
-    def get_output_correlations(self, y_true):
-        corr_to_output = []
-        y_true = y_true.numpy()
-        flat_feats = self.tc_out.reshape(self.tc_out.shape[0], -1)
-
-        if self.dataset.h_params['target_type'] in ['float', 'signal']:
-            for y_ in y_true.T:
-
-                rfocs = np.array([spearmanr(y_, f)[0] for f in flat_feats.T])
-                corr_to_output.append(rfocs.reshape(self.out_weights.shape[:-1]))
-
-        elif self.dataset.h_params['target_type'] == 'int':
-            y_true = y_true/np.linalg.norm(y_true, ord=1, axis=0)[None, :]
-            flat_div = np.linalg.norm(flat_feats, 1, axis=0)[None, :]
-            flat_feats = flat_feats/flat_div
-            #print("ff:", flat_feats.shape)
-            #print("y_true:", y_true.shape)
-            for y_ in y_true.T:
-                #print('y.T:', y_.shape)
-                rfocs = 2. - np.sum(np.abs(flat_feats - y_[:, None]), 0)
-                corr_to_output.append(rfocs.reshape(self.out_weights.shape[:-1]))
-
-        corr_to_output = np.dstack(corr_to_output)
-
-        if np.any(np.isnan(corr_to_output)):
-            corr_to_output[np.isnan(corr_to_output)] = 0
-        return corr_to_output
-    
-    
-    def compute_patterns(self, data_path=None, output='patterns'):
-        #vis_dict = None
-        if not data_path: 
-            print("Computing patterns: No path specified, using validation dataset (Default)")
-            ds = self.dataset.val
-        elif isinstance(data_path, str) or isinstance(data_path, (list, tuple)):
-            ds = self.dataset._build_dataset(data_path, 
-                                            split=False, 
-                                            test_batch=None, 
-                                            repeat=True)
-        elif isinstance(data_path, mneflow.data.Dataset):
-            if hasattr(data_path, 'test'):
-                ds = data_path.test
-            else:
-                ds = data_path.val
-        elif isinstance(data_path, tf.data.Dataset):
-            ds = data_path
-        else:
-            raise AttributeError('Specify dataset or data path.')
-
-        X, y = [row for row in ds.take(1)][0]
-
-        self.fin_fc = self.design[-1]
-        self.dmx_size = self.design[1].forward_layer.weights[1].shape[0]
-        self.dmx = self.design[1]
-        self.tconv = self.design[3]
-        self.pool = self.design[4]
-        
-        self.out_w_flat = self.fin_fc.w.numpy()
-        self.out_weights = np.reshape(self.out_w_flat, [-1, self.dmx_size,
-                                            self.out_dim])
-        self.out_biases = self.fin_fc.b.numpy()
-        self.feature_relevances = self.get_component_relevances(X, y)
-        
-        #compute temporal convolution layer outputs for vis_dics
-        # tc_out = self.pool(self.tconv(self.design[1](self.dmx(self.design[0](X)))).numpy())
-        tc_out = ModelDesign(None, *model.design[:5])(X).numpy()
-
-        #compute data covariance
-        X = X - tf.reduce_mean(X, axis=-2, keepdims=True)
-        X = tf.transpose(X, [3, 0, 1, 2])
-        X = tf.reshape(X, [X.shape[0], -1])
-        self.dcov = tf.matmul(X, tf.transpose(X))
-
-        # get spatial extraction fiter weights
-        
-        fw, fa, fb = (w.numpy() for w in self.design[1].forward_layer.weights)
-        bw, ba, bb = (w.numpy() for w in self.design[1].backward_layer.weights)
-
-        # fwd + bcwd
-        # (kernel weights + kernel biases) * recurrent weights
-        demx = (((fw + fb)@fa.T) + ((bw + bb)@ba.T))
-        self.lat_tcs = np.dot(demx.T, X)
-        del X
-
-        if 'patterns' in output:
-            self.patterns = np.dot(self.dcov, demx)
-
-        else:
-            self.patterns = demx
-
-        kern = self.tconv.filters.numpy()
-        self.filters = np.squeeze(kern)
-        self.tc_out = np.squeeze(tc_out)
-        self.corr_to_output = self.get_output_correlations(y)
 
 
 if __name__ == '__main__':
@@ -557,7 +468,7 @@ if __name__ == '__main__':
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
         perf_table_path = os.path.join(
             perf_tables_path,
-            f'{classification_name_formatted}_m.csv'
+            f'{classification_name_formatted}.csv'
         )
         processed_df = pd.Series(
             [
