@@ -40,8 +40,8 @@ class LFRNN(BaseModel):
         self.scope = 'lfcnn'
         specs.setdefault('filter_length', 7)
         specs.setdefault('n_latent', 32)
-        specs.setdefault('pooling', 2)
-        specs.setdefault('stride', 2)
+        specs.setdefault('pooling', 3)
+        specs.setdefault('stride', 3)
         specs.setdefault('padding', 'SAME')
         specs.setdefault('pool_type', 'max')
         specs.setdefault('nonlin', tf.nn.relu)
