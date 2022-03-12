@@ -257,46 +257,77 @@ class LFRNN(BaseModel):
         #     Dense(size=self.out_dim, nonlin=tf.nn.softmax)
         # )
         # FBCSP_ShallowNet_d
+        # self.design = ModelDesign(
+        #     self.inputs,
+        #     LayerDesign(tf.transpose, [0,3,2,1]),
+        #     tf.keras.layers.DepthwiseConv2D(
+        #         kernel_size=(1, self.specs['filter_length']),
+        #         depth_multiplier = self.specs['n_latent'],
+        #         strides=1,
+        #         padding="VALID",
+        #         activation = tf.identity,
+        #         kernel_initializer="he_uniform",
+        #         bias_initializer=Constant(0.1),
+        #         data_format="channels_last",
+        #         kernel_regularizer=k_reg.l2(self.specs['l2'])
+        #         #kernel_constraint="maxnorm"
+        #     ),
+        #     tf.keras.layers.Conv2D(
+        #         filters=self.specs['n_latent'],
+        #         kernel_size=(self.dataset.h_params['n_ch'], 1),
+        #         strides=1,
+        #         padding="VALID",
+        #         activation = tf.square,
+        #         kernel_initializer="he_uniform",
+        #         bias_initializer=Constant(0.1),
+        #         data_format="channels_last",
+        #         #data_format="channels_first",
+        #         kernel_regularizer=k_reg.l2(self.specs['l2'])
+        #     ),
+        #     TempPooling(
+        #         pooling=self.specs['pooling'],
+        #         pool_type="avg",
+        #         stride=self.specs['stride'],
+        #         padding='SAME',
+        #     ),
+        #     Dense(size=self.out_dim, nonlin=tf.identity)
+        # )
+        #EEGNet
         self.design = ModelDesign(
             self.inputs,
             LayerDesign(tf.transpose, [0,3,2,1]),
-            tf.keras.layers.DepthwiseConv2D(
-                kernel_size=(1, self.specs['filter_length']),
-                depth_multiplier = self.specs['n_latent'],
-                strides=1,
-                padding="VALID",
-                activation = tf.identity,
-                kernel_initializer="he_uniform",
-                bias_initializer=Constant(0.1),
-                data_format="channels_last",
-                kernel_regularizer=k_reg.l2(self.specs['l2'])
-                #kernel_constraint="maxnorm"
-            ),
             tf.keras.layers.Conv2D(
-                filters=self.specs['n_latent'],
-                kernel_size=(self.dataset.h_params['n_ch'], 1),
-                strides=1,
-                padding="VALID",
-                activation = tf.square,
-                kernel_initializer="he_uniform",
-                bias_initializer=Constant(0.1),
-                data_format="channels_last",
-                #data_format="channels_first",
-                kernel_regularizer=k_reg.l2(self.specs['l2'])
+                self.specs['n_latent'], 
+                (2, self.specs['filter_length']), 
+                padding = self.specs['padding'],
+                use_bias = False
             ),
-            TempPooling(
-                pooling=self.specs['pooling'],
-                pool_type="avg",
-                stride=self.specs['stride'],
-                padding='SAME',
+            tf.keras.layers.BatchNormalization(axis = 1),
+            tf.keras.layers.DepthwiseConv2D(
+                (self.dataset.h_params['n_ch'], 1), 
+                use_bias = False, 
+                depth_multiplier = 1,
+                depthwise_constraint = tf.keras.constraints.MaxNorm(1.)
             ),
-            Dense(size=self.out_dim, nonlin=tf.identity)
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Activation('elu'),
+            tf.keras.layers.AveragePooling2D((1, self.specs['pooling'])),
+            tf.keras.layers.Dropout(self.specs['dropout']),
+            tf.keras.layers.SeparableConv2D(
+                self.specs['n_latent'], 
+                (1, self.specs['filter_length']//self.specs["pooling"]),
+                use_bias = False,
+                padding = 'same'
+            ),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Activation('elu'),
+            tf.keras.layers.AveragePooling2D((1, self.specs['pooling']*2)),
+            tf.keras.layers.Dropout(self.specs['dropout']),
+            Dense(size=self.out_dim)
         )
 
         return self.design()
     
-
-
 
 if __name__ == '__main__':
     mpl.use('agg')
