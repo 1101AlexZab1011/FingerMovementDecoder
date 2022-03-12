@@ -219,7 +219,7 @@ class LFRNN(BaseModel):
         # )
         
         #deep4
-        ModelDesign(
+        self.design = ModelDesign(
             self.inputs,
             LayerDesign(tf.transpose, [0,3,2,1]),
             tf.keras.layers.DepthwiseConv2D(
