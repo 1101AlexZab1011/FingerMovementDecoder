@@ -289,7 +289,8 @@ class LFRNN(BaseModel):
                 pool_type="avg",
                 stride=self.specs['stride'],
                 padding='SAME',
-            )
+            ),
+            Dense(size=self.out_dim, nonlin=tf.identity)
         )
 
         return self.design()
