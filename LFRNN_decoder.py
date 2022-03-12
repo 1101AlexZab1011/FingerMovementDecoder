@@ -533,6 +533,7 @@ if __name__ == '__main__':
         )
         
         model = VARCNN(dataset, lf_params)
+        model.scope = 'varcnn'
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         network_out_path = os.path.join(subject_path, 'LFRNN')

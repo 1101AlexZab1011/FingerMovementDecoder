@@ -48,7 +48,7 @@ if __name__ == '__main__':
         for session in combined_sessions
     )
     included_sessions = [f'{sessions_name}{i}' for i in range(from_, to + 1)]
-    combined_sessions = f'{sessions_name}{included_sessions[0]}-{sessions_name}{included_sessions[-1]}'
+    combined_sessions = f'{included_sessions[0]}-{included_sessions[-1]}'
     
     for subject_name in os.listdir(subjects_dir):
         
