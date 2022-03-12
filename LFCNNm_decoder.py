@@ -254,7 +254,7 @@ class LFRNN(BaseModel):
                     padding='SAME',
                 )
             ) for _ in range(4)],
-            Dense(size=self.out_dim, nonlin=tf.softmax)
+            Dense(size=self.out_dim, nonlin=tf.nn.softmax)
         )
 
         return self.design()
