@@ -557,7 +557,7 @@ if __name__ == '__main__':
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
         perf_table_path = os.path.join(
             perf_tables_path,
-            f'{classification_name_formatted}.csv'
+            f'{classification_name_formatted}_m.csv'
         )
         processed_df = pd.Series(
             [
