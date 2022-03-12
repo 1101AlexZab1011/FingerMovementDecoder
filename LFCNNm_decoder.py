@@ -40,8 +40,8 @@ class LFRNN(BaseModel):
         self.scope = 'lfcnn'
         specs.setdefault('filter_length', 7)
         specs.setdefault('n_latent', 32)
-        specs.setdefault('pooling', 3)
-        specs.setdefault('stride', 3)
+        specs.setdefault('pooling', 75)
+        specs.setdefault('stride', 25)
         specs.setdefault('padding', 'SAME')
         specs.setdefault('pool_type', 'max')
         specs.setdefault('nonlin', tf.nn.relu)
@@ -219,6 +219,44 @@ class LFRNN(BaseModel):
         # )
         
         #deep4
+        # self.design = ModelDesign(
+        #     self.inputs,
+        #     LayerDesign(tf.transpose, [0,3,2,1]),
+        #     tf.keras.layers.DepthwiseConv2D(
+        #         kernel_size=(1, self.specs['filter_length']),
+        #         depth_multiplier = self.specs['n_latent'],
+        #         strides=1,
+        #         padding=self.specs['padding'],
+        #         activation = tf.identity,
+        #         kernel_initializer="he_uniform",
+        #         bias_initializer=Constant(0.1),
+        #         data_format="channels_last",
+        #         kernel_regularizer=k_reg.l2(self.specs['l2'])
+        #         #kernel_constraint="maxnorm"
+        #     ),
+        #     *[ModelDesign(
+        #         tf.keras.layers.Conv2D(
+        #             filters=self.specs['n_latent'],
+        #             kernel_size=(self.dataset.h_params['n_ch'], 1),
+        #             strides=1,
+        #             padding=self.specs['padding'],
+        #             activation=self.specs['nonlin'],
+        #             kernel_initializer="he_uniform",
+        #             bias_initializer=Constant(0.1),
+        #             data_format="channels_last",
+        #             #data_format="channels_first",
+        #             kernel_regularizer=k_reg.l2(self.specs['l2'])
+        #         ),
+        #         TempPooling(
+        #             pooling=self.specs['pooling'],
+        #             pool_type="avg",
+        #             stride=self.specs['stride'],
+        #             padding='SAME',
+        #         )
+        #     ) for _ in range(4)],
+        #     Dense(size=self.out_dim, nonlin=tf.nn.softmax)
+        # )
+        # FBCSP_ShallowNet_d
         self.design = ModelDesign(
             self.inputs,
             LayerDesign(tf.transpose, [0,3,2,1]),
@@ -226,7 +264,7 @@ class LFRNN(BaseModel):
                 kernel_size=(1, self.specs['filter_length']),
                 depth_multiplier = self.specs['n_latent'],
                 strides=1,
-                padding=self.specs['padding'],
+                padding="VALID",
                 activation = tf.identity,
                 kernel_initializer="he_uniform",
                 bias_initializer=Constant(0.1),
@@ -234,27 +272,24 @@ class LFRNN(BaseModel):
                 kernel_regularizer=k_reg.l2(self.specs['l2'])
                 #kernel_constraint="maxnorm"
             ),
-            *[ModelDesign(
-                tf.keras.layers.Conv2D(
-                    filters=self.specs['n_latent'],
-                    kernel_size=(self.dataset.h_params['n_ch'], 1),
-                    strides=1,
-                    padding=self.specs['padding'],
-                    activation=self.specs['nonlin'],
-                    kernel_initializer="he_uniform",
-                    bias_initializer=Constant(0.1),
-                    data_format="channels_last",
-                    #data_format="channels_first",
-                    kernel_regularizer=k_reg.l2(self.specs['l2'])
-                ),
-                TempPooling(
-                    pooling=self.specs['pooling'],
-                    pool_type="avg",
-                    stride=self.specs['stride'],
-                    padding='SAME',
-                )
-            ) for _ in range(4)],
-            Dense(size=self.out_dim, nonlin=tf.nn.softmax)
+            tf.keras.layers.Conv2D(
+                filters=self.specs['n_latent'],
+                kernel_size=(self.n_channels, 1),
+                strides=1,
+                padding="VALID",
+                activation = tf.square,
+                kernel_initializer="he_uniform",
+                bias_initializer=Constant(0.1),
+                data_format="channels_last",
+                #data_format="channels_first",
+                kernel_regularizer=k_reg.l2(self.specs['l2'])
+            ),
+            TempPooling(
+                pooling=self.specs['pooling'],
+                pool_type="avg",
+                stride=self.specs['stride'],
+                padding='SAME',
+            )
         )
 
         return self.design()
