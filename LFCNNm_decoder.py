@@ -274,7 +274,7 @@ class LFRNN(BaseModel):
             ),
             tf.keras.layers.Conv2D(
                 filters=self.specs['n_latent'],
-                kernel_size=(self.n_channels, 1),
+                kernel_size=(self.dataset.h_params['n_ch'], 1),
                 strides=1,
                 padding="VALID",
                 activation = tf.square,
