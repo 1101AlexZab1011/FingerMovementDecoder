@@ -319,21 +319,21 @@ if __name__ == '__main__':
         f'{classification_name_formatted}.csv'
     )
     processed_df = pd.Series(
-        [
-            n_classes,
-            *classes_samples,
-            sum(classes_samples),
-            train_acc_,
-            train_loss_,
-            test_acc_,
-            test_loss_,
-            model.v_metric,
-            model.v_loss,
-            
-        ],
-        index=['n_classes', *class_names, 'total', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
-        name=subject_name
-    ).to_frame().T
+            [
+                n_classes,
+                *classes_samples,
+                sum(classes_samples),
+                np.array(meta['test_fold'][0]).shape,
+                train_acc_,
+                train_loss_,
+                test_acc_,
+                test_loss_,
+                model.v_metric,
+                model.v_loss,
+            ],
+            index=['n_classes', *class_names, 'total', 'test_set', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
+            name=subject_name
+        ).to_frame().T
     
     if os.path.exists(perf_table_path):
         pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
