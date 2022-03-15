@@ -216,7 +216,7 @@ if __name__ == '__main__':
         ls_induced = list()
         for lc in tc:
             widths = np.arange(1, 71)
-            ls_induced.append(sp.signal.cwt(lc, sp.signal.ricker, widths))
+            ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
         induced.append(np.array(ls_induced).mean(axis=0))
     induced = np.array(induced)
     
