@@ -306,14 +306,14 @@ if __name__ == '__main__':
     models_path = os.path.join(subject_path, 'Models')
     check_path(weights_path, models_path)
     
-    save_model_weights(
-        model,
-        os.path.join(
-            weights_path,
-            f'{classification_name_formatted}.h5'
-        )
-    )
-    model.km.save(os.path.join(models_path, classification_name_formatted))
+    # save_model_weights(
+    #     model,
+    #     os.path.join(
+    #         weights_path,
+    #         f'{classification_name_formatted}.h5'
+    #     )
+    # )
+    # model.km.save(os.path.join(models_path, classification_name_formatted))
     perf_table_path = os.path.join(
         perf_tables_path,
         f'{classification_name_formatted}.csv'
