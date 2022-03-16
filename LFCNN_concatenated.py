@@ -161,7 +161,8 @@ if __name__ == '__main__':
             scale_interval=(0, 60),
             n_folds=5,
             overwrite=True,
-            segment=False
+            segment=False,
+            test_set='holdout'
         )
     X, Y = combiner.X, combiner.Y
     X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, Y, test_size=.8)
