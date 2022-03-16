@@ -283,7 +283,8 @@ if __name__ == '__main__':
                 
                 i += j
                 cases_indices_to_combine[-1].append(i)
-                cases_to_combine_list.append(epochs[case].filter(3, None))
+                # cases_to_combine_list.append(epochs[case].filter(3, None))
+                cases_to_combine_list.append(epochs[case])
                 
                 if i == 0:
                     epo_sample_pics_path = os.path.join(pics_path, 'Epo_Samples')
