@@ -43,6 +43,8 @@ if __name__ == '__main__':
                         default='', help='String to set in the start of a task name')
     parser.add_argument('--project_name', type=str,
                         default='fingers_movement_epochs', help='Name of a project')
+    parser.add_argument('-hp', '--high_pass', type=float,
+                        default=None, help='High-pass filter (Hz)')
     
     excluded_sessions, \
     excluded_subjects, \
@@ -54,7 +56,8 @@ if __name__ == '__main__':
     classification_name,\
     classification_postfix,\
     classification_prefix, \
-    project_name = vars(parser.parse_args()).values()
+    project_name, \
+    lfreq = vars(parser.parse_args()).values()
     
     if excluded_sessions:
         excluded_sessions = [sessions_name + session if sessions_name not in session else session for session in excluded_sessions]
@@ -128,8 +131,10 @@ if __name__ == '__main__':
         for j, case in enumerate(combination):
             i += j
             cases_indices_to_combine[-1].append(i)
-            cases_to_combine_list.append(epochs[case].filter(3, None))
-            # cases_to_combine_list.append(epochs[case])
+            if lfreq is None:
+                cases_to_combine_list.append(epochs[case])
+            else:
+                cases_to_combine_list.append(epochs[case].filter(lfreq, None))
             
         i += 1
         

@@ -356,6 +356,8 @@ if __name__ == '__main__':
                         default='', help='String to set in the start of a task name')
     parser.add_argument('--project_name', type=str,
                         default='fingers_movement_epochs', help='Name of a project')
+    parser.add_argument('-hp', '--high_pass', type=float,
+                        default=None, help='High-pass filter (Hz)')
     
     excluded_sessions, \
     excluded_subjects, \
@@ -367,7 +369,8 @@ if __name__ == '__main__':
     classification_name,\
     classification_postfix,\
     classification_prefix, \
-    project_name = vars(parser.parse_args()).values()
+    project_name, \
+    lfreq = vars(parser.parse_args()).values()
     
     if excluded_sessions:
         excluded_sessions = [sessions_name + session if sessions_name not in session else session for session in excluded_sessions]
@@ -434,33 +437,17 @@ if __name__ == '__main__':
             cases_indices_to_combine.append(list())
             
             for j, case in enumerate(combination):
-                
-                if i == 0:
-                    epo_sample_pics_path = os.path.join(pics_path, 'Epo_Samples')
-                    check_path(epo_sample_pics_path)
-                    fig = epochs[case].plot('MEG0113', show=False)
-                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_unfiltered_epo.png'))
-                    plt.close()
-                    fig = epochs[case].plot_psd(show=False)
-                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_unfiltered_epo_psd.png'))
-                    plt.close()
                     
                 
                 i += j
                 cases_indices_to_combine[-1].append(i)
-                cases_to_combine_list.append(epochs[case].filter(3, None))
-                
-                if i == 0:
-                    epo_sample_pics_path = os.path.join(pics_path, 'Epo_Samples')
-                    check_path(epo_sample_pics_path)
-                    fig = epochs[case].plot('MEG0113', show=False)
-                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_filtered_epo.png'))
-                    plt.close()
-                    fig = epochs[case].plot_psd(show=False)
-                    plt.savefig(os.path.join(epo_sample_pics_path, f'{subject_name}_filtered_epo_psd.png'))
-                    plt.close()
+                if lfreq is None:
+                    cases_to_combine_list.append(epochs[case])
+                else:
+                    cases_to_combine_list.append(epochs[case].filter(lfreq, None))
                 
             i += 1
+            
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)

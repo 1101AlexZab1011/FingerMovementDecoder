@@ -420,29 +420,30 @@ def plot_spatial_weights(
             fig1.canvas.draw()
             fig2 = plt.figure(constrained_layout=False)
             gs2 = fig2.add_gridspec(
-                nrows=3,
+                nrows=10,
                 ncols=3,
                 bottom=.1,
                 wspace=.05,
                 hspace=.1
             )
             ax21 = fig2.add_subplot(gs2[:, :-1])
-            ax22 = fig2.add_subplot(gs2[0, -1])
-            ax23 = fig2.add_subplot(gs2[1:3, -1])
+            ax22 = fig2.add_subplot(gs2[0:5, -1])
+            ax23 = fig2.add_subplot(gs2[5:, -1])
             plot_patterns(data, info, sorting_callback.sorted_indices[iy], ax21, name_format='', title='')
             ax22_t = ax22.twinx()
-            ax22_t.plot(waveforms.evoked[iy], '#454545')
-            ax22.imshow(np.flip(waveforms.induced[iy, :, :], axis=0), cmap='RdBu_r')
+            ax22_t.plot(sp.stats.zscore(waveforms.evoked[sorting_callback.sorted_indices[iy]]), '#454545')
+            pos = ax22.imshow(np.flip(waveforms.induced[sorting_callback.sorted_indices[iy], :, :], axis=0), cmap='RdBu_r')
+            cb = fig2.colorbar(pos, ax=ax22, pad=0.12, orientation='horizontal', aspect=75, fraction=.12)
             ax22.set_aspect('auto')
             ax22_t.set_aspect('auto')
-            ax22_t.set_ylim(top=1, bottom=-1)
+            # ax22_t.set_ylim(top=1, bottom=-1)
             ax23.plot(
                                 temporal_parameters.franges,
-                                temporal_parameters.finputs[sorting_callback.sorted_indices[iy]],
+                                sp.stats.zscore(temporal_parameters.finputs[sorting_callback.sorted_indices[iy]]),
                                 temporal_parameters.franges,
-                                temporal_parameters.foutputs[sorting_callback.sorted_indices[iy]],
+                                sp.stats.zscore(temporal_parameters.foutputs[sorting_callback.sorted_indices[iy]]),
                                 temporal_parameters.franges,
-                                temporal_parameters.fresponces[sorting_callback.sorted_indices[iy]],
+                                sp.stats.zscore(temporal_parameters.fresponces[sorting_callback.sorted_indices[iy]]),
                             )
             ax22_t.set_ylabel('Amplitude (μV)', labelpad=12.5, rotation=270)
             ax22_t.spines['top'].set_alpha(.2)
@@ -455,6 +456,8 @@ def plot_spatial_weights(
             ax22.spines['left'].set_alpha(.2)
             ax22.spines['bottom'].set_alpha(.2)
             ax22.tick_params(axis='both', which='both',length=5, color='#00000050')
+            cb.outline.set_color('#00000020')
+            cb.ax.tick_params(axis='both', which='both',length=5, color='#00000050')
             times = np.unique(np.round(waveforms.times, 1))
             ranges = np.linspace(0, len(waveforms.times), len(times)).astype(int)
             ax22.set_xticks(ranges)
@@ -464,7 +467,6 @@ def plot_spatial_weights(
             ax22.set_yticklabels(sorted(freqs, reverse=True))
             ax22.set_xlabel('Time (s)')
             ax22.set_ylabel('Frequency (Hz)')
-            ax23.set_ylim(top=1.2)
             ax23.legend(['Filter input', 'Filter output', 'Filter responce'], loc='upper right')      
             ax23.spines['top'].set_alpha(.2)
             ax23.spines['right'].set_alpha(.2)
@@ -473,13 +475,13 @@ def plot_spatial_weights(
             ax23.tick_params(axis='both', which='both',length=5, color='#00000050')
             ax23.set_xlabel('Frequency (Hz)')
             ax23.set_ylabel('Amplitude (μV)')
-            ax23.set_ylim(top=1.2)
+            # ax23.set_ylim(top=1.2)
             
             if logscale:
-                ax23.set_aspect(25)  
+                # ax23.set_aspect(25)  
                 ax23.set_yscale('log')
-            else:
-                ax23.set_aspect(75)  
+            # else:
+            #     ax23.set_aspect(75)  
                 
             fig2.suptitle(f'Latent source {sorting_callback.sorted_indices[iy] + 1}')
             plt.show()
@@ -505,7 +507,7 @@ def plot_spatial_weights(
     colors = np.array(['#f2827a' if sum_ >= 0 else '#8bbae5' for sum_ in sums])
 
     sort_button = Button(ax02, 'Sort')
-    sorting_callback = SortingCallback(sort_button, fig1, ax2, ax1, sorted(range(len(sums)), reverse=True))
+    sorting_callback = SortingCallback(sort_button, fig1, ax2, ax1, sorted(range(len(sums)), reverse=False))
     sort_button.on_clicked(sorting_callback)
 
     init_canvas(ax01, ax02, ax1, ax2)
