@@ -513,7 +513,7 @@ if __name__ == '__main__':
         model = LFRNN(dataset, lf_params)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
-        network_out_path = os.path.join(subject_path, 'LFRNN')
+        network_out_path = os.path.join(subject_path, 'LFCNNm')
         check_path(network_out_path)
         yp_path = os.path.join(network_out_path, 'Predictions')
         y_true_train, y_pred_train = model.predict(meta['train_paths'])

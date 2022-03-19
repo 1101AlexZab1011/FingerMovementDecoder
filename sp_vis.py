@@ -33,15 +33,16 @@ if __name__ == '__main__':
     
     cases_to_combine = [case.split(' ') for case in cases_to_combine]
     
-    # cases_to_combine = sorted(cases_to_combine, reverse=True)
+    cases_to_combine = sorted(cases_to_combine, reverse=True)
     class_names = ['&'.join(sorted(cases_combination, reverse=True)) for cases_combination in cases_to_combine]
+    
     if classification_name is None:
         classification_name = '_vs_'.join(class_names)
         
     classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
     
     subject_info_path = os.path.join(subjects_dir, subject_name, 'Info')
-    subject_parameters_path = os.path.join(subjects_dir, subject_name, 'Parameters')
+    subject_parameters_path = os.path.join(subjects_dir, subject_name, 'LFCNN', 'Parameters')
     
     spatial_parameters = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_spatial.pkl'))
     temporal_parameters = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_temporal.pkl'))

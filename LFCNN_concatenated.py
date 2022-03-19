@@ -128,8 +128,8 @@ if __name__ == '__main__':
         for j, case in enumerate(combination):
             i += j
             cases_indices_to_combine[-1].append(i)
-            # cases_to_combine_list.append(epochs[case].filter(3, None))
-            cases_to_combine_list.append(epochs[case])
+            cases_to_combine_list.append(epochs[case].filter(3, None))
+            # cases_to_combine_list.append(epochs[case])
             
         i += 1
         
