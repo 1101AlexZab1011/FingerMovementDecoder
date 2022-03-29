@@ -244,6 +244,7 @@ if __name__ == '__main__':
                 continue
             
             for case in cases:
+                print(case, epochs_file, case in epochs_file)
                 if case in epochs_file:
                     with Silence(), warnings.catch_warnings():
                         warnings.simplefilter("ignore")
@@ -272,7 +273,6 @@ if __name__ == '__main__':
             cases_indices_to_combine.append(list())
             
             for j, case in enumerate(combination):
-                    
                 
                 i += j
                 cases_indices_to_combine[-1].append(i)
