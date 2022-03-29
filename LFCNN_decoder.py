@@ -244,7 +244,6 @@ if __name__ == '__main__':
                 continue
             
             for case in cases:
-                print(case, epochs_file, case in epochs_file)
                 if case in epochs_file:
                     with Silence(), warnings.catch_warnings():
                         warnings.simplefilter("ignore")
