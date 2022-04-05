@@ -70,6 +70,15 @@ for epochs_file in os.listdir(biomag_data):
 
 all_epochs = collector.concatenate()
 
+for subject, content in collector.data.items():
+    for event_id, eve_content in content.items():
+        print(subject)
+        print(event_id)
+        print([
+            (epoch.times[0], epoch.times[-1]) for epoch in eve_content
+        ])
+
+
 for subject_name, subject_content in all_epochs:
     subject_path = os.path.join(biomag_home, subject_name)
     combiner = EpochsCombiner(*(epochs for epochs in subject_content.values())).combine(0, 1)
