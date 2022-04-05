@@ -84,6 +84,7 @@ for subject_name, subject_content in all_epochs_data.items():
     condition1, condition2 = (epochs for epochs in subject_content.values())
     condition1_y = np.zeros((condition1.shape[0],))
     condition2_y = np.ones((condition2.shape[0],))
+    print(condition1.shape, condition2.shape)
     X = np.stack([condition1, condition2], axis=0)
     Y = np.stack([condition1_y, condition2_y], axis=0)
     n_classes = 2
