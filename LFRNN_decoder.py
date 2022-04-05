@@ -134,6 +134,8 @@ class LFRNN(LFCNN):
         
         # demx = np.array([np.linalg.pinv(X_ins)@X_outs for X_ins, X_outs in zip(X_in, X_out)]).mean(0)
         
+        print(f'{X_in.shape = }\n{np.reshape(X_in, (X_in.shape[0]*X_in.shape[1], -1))}')
+        
         demx = np.linalg.pinv(
             np.reshape(X_in, (X_in.shape[0]*X_in.shape[1], -1))
         )@np.reshape(X_out, (X_out.shape[0]*X_out.shape[1], -1))

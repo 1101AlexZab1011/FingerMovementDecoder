@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import sklearn
 from LFCNN_decoder import Predictions, SpatialParameters, TemporalParameters, ComponentsOrder, WaveForms, compute_temporal_parameters, save_parameters, save_model_weights, plot_patterns, plot_waveforms
+from LFCNN_decoder import LFRNN
 
 if __name__ == '__main__':
     mpl.use('agg')
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     pseudo_subjects_home = os.path.join(tmp_path, 'Subjects')
     subject_name = f'Pse_Udo_{classification_postfix}'
     subject_path = os.path.join(pseudo_subjects_home, subject_name)
-    network_out_path = os.path.join(subject_path, 'LFCNN')
+    network_out_path = os.path.join(subject_path, 'LFRNN')
     tfr_path = os.path.join(subject_path, 'TFR')
     check_path(tmp_path, pseudo_subjects_home, subject_path, tfr_path, network_out_path)
     classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
@@ -190,7 +191,7 @@ if __name__ == '__main__':
             l2=1e-6
     )
     
-    model = mf.models.LFCNN(dataset, lf_params)
+    model = LFRNN(dataset, lf_params)
     model.build()
     model.train(n_epochs=25, eval_step=100, early_stopping=5)
     yp_path = os.path.join(network_out_path, 'Predictions')
