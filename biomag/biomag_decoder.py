@@ -44,18 +44,18 @@ class EpochsCollector(object):
         return {
             subject_name: {
                 event_type: mne.concatenate_epochs(epochs_list)
-                for event_type, epochs_list in enumerate(subject_content)
+                for event_type, epochs_list in subject_content.items()
             }
-            for subject_name, subject_content in enumerate(self.data)
+            for subject_name, subject_content in self.data.items()
         }
     
     def map(self, fun: Callable):
         self._data = {
             subject_name: {
                 event_type: map(fun, epochs_list)
-                for event_type, epochs_list in enumerate(subject_content)
+                for event_type, epochs_list in subject_content.items()
             }
-            for subject_name, subject_content in enumerate(self.data)
+            for subject_name, subject_content in self.data.items()
         }
 
 class_names = ['S', 'T']
