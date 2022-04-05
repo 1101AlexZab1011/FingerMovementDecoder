@@ -52,7 +52,7 @@ class EpochsCollector(object):
     def merge(self) -> dict[str, dict[str, np.ndarray]]:
         return {
             subject_name: {
-                event_type: np.stack([epochs.get_data() for epochs in epochs_list], axis=0)
+                event_type: np.concatenate([epochs.get_data() for epochs in epochs_list], axis=0)
                 for event_type, epochs_list in subject_content.items()
             }
             for subject_name, subject_content in self.data.items()
@@ -82,11 +82,10 @@ all_epochs_data = collector.merge()
 for subject_name, subject_content in all_epochs_data.items():
     subject_path = os.path.join(biomag_home, subject_name)
     condition1, condition2 = (epochs for epochs in subject_content.values())
-    print(condition1.shape, condition2.shape)
     condition1_y = np.zeros((condition1.shape[0],))
     condition2_y = np.ones((condition2.shape[0],))
-    X = np.stack([condition1, condition2], axis=0)
-    Y = np.stack([condition1_y, condition2_y], axis=0)
+    X = np.concatenate([condition1, condition2], axis=0)
+    Y = np.concatenate([condition1_y, condition2_y], axis=0)
     n_classes = 2
     classes_samples = [len(condition1_y), len(condition2_y)]
     perm = np.random.permutation(len(Y))
