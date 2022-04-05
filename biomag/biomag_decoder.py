@@ -65,9 +65,8 @@ biomag_data = os.path.join(biomag_home, 'BIOMAG_DATA')
 classification_name = 'biomag'
 
 for epochs_file in os.listdir(biomag_data):
-    epochs = mne.read_epochs(os.path.join(biomag_data, epochs_file))
     subject_name, event_type, *_ = epochs_file.split('_')
-    collector.data = subject_name, event_type, mne.read_epochs(os.path.join(biomag_home, epochs_file))
+    collector.data = subject_name, event_type, mne.read_epochs(os.path.join(biomag_data, epochs_file))
 
 all_epochs = collector.concatenate()
 
