@@ -132,10 +132,11 @@ class LFRNN(LFCNN):
         
         # # get spatial extraction fiter weights
         
-        print(X_in.shape, X_out.shape)
+        # demx = np.array([np.linalg.pinv(X_ins)@X_outs for X_ins, X_outs in zip(X_in, X_out)]).mean(0)
         
-        demx = np.array([np.linalg.pinv(X_ins)@X_outs for X_ins, X_outs in zip(X_in, X_out)]).mean(0)
-        
+        demx = np.linalg.pinv(
+            np.reshape(X_in, (X_in.shape[0]*X_in.shape[1], -1))
+        )@np.reshape(X_out, (X_out.shape[0]*X_out.shape[1], -1))
         
         self.lat_tcs = np.dot(demx.T, X)
         del X
