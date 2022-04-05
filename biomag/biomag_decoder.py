@@ -49,6 +49,15 @@ class EpochsCollector(object):
             for subject_name, subject_content in self.data.items()
         }
     
+    def merge(self) -> dict[str, dict[str, np.ndarray]]:
+        return {
+            subject_name: {
+                event_type: np.array([epochs.get_data() for epochs in epochs_list])
+                for event_type, epochs_list in subject_content.items()
+            }
+            for subject_name, subject_content in self.data.items()
+        }
+    
     def map(self, fun: Callable):
         self._data = {
             subject_name: {
@@ -74,6 +83,9 @@ for subject, content in collector.data.items():
         print(event_id)
         print([
             (epoch.times[0], epoch.times[-1]) for epoch in eve_content
+        ])
+        print([
+            epoch.get_data().shape for epoch in eve_content
         ])
         
 all_epochs = collector.concatenate()
