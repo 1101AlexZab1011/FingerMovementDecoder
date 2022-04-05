@@ -68,8 +68,6 @@ for epochs_file in os.listdir(biomag_data):
     subject_name, event_type, *_ = epochs_file.split('_')
     collector.data = subject_name, event_type, mne.read_epochs(os.path.join(biomag_data, epochs_file))
 
-all_epochs = collector.concatenate()
-
 for subject, content in collector.data.items():
     for event_id, eve_content in content.items():
         print(subject)
@@ -77,7 +75,8 @@ for subject, content in collector.data.items():
         print([
             (epoch.times[0], epoch.times[-1]) for epoch in eve_content
         ])
-
+        
+all_epochs = collector.concatenate()
 
 for subject_name, subject_content in all_epochs:
     subject_path = os.path.join(biomag_home, subject_name)
