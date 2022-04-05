@@ -16,6 +16,7 @@ from LFCNN_decoder import save_parameters, Predictions, WaveForms, SpatialParame
 import numpy as np
 import scipy as sp
 import pandas as pd
+from LFRNN_decoder import LFRNN
 class EpochsCollector(object): 
     def __init__(self):
         self._data = dict()
@@ -92,7 +93,7 @@ for subject_name, subject_content in all_epochs_data.items():
     Y = Y[perm]
     X = X[perm, ...]
     savepath = os.path.join(subject_path, 'TFR')
-    network_out_path = os.path.join(subject_path, 'LFCNN')
+    network_out_path = os.path.join(subject_path, 'LFRNN')
     yp_path = os.path.join(network_out_path, 'Predictions')
     sp_path = os.path.join(network_out_path, 'Parameters')
     perf_tables_path  = os.path.join(biomag_home, 'perf_tables')
@@ -129,7 +130,8 @@ for subject_name, subject_content in all_epochs_data.items():
         l2_scope=["weights"],
         l2=1e-6
     )
-    model = mf.models.LFCNN(dataset, lf_params)
+    # model = mf.models.LFCNN(dataset, lf_params)
+    model = LFRNN(dataset, lf_params)
     model.build()
     model.train(n_epochs=25, eval_step=100, early_stopping=5)
     y_true_train, y_pred_train = model.predict(meta['train_paths'])
