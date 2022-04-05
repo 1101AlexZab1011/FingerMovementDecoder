@@ -76,18 +76,7 @@ classification_name = 'biomag'
 for epochs_file in os.listdir(biomag_data):
     subject_name, event_type, *_ = epochs_file.split('_')
     collector.data = subject_name, event_type, mne.read_epochs(os.path.join(biomag_data, epochs_file))
-
-for subject, content in collector.data.items():
-    for event_id, eve_content in content.items():
-        print(subject)
-        print(event_id)
-        print([
-            (epoch.times[0], epoch.times[-1]) for epoch in eve_content
-        ])
-        print([
-            epoch.get_data().shape for epoch in eve_content
-        ])
-        
+    
 all_epochs_data = collector.merge()
 
 for subject_name, subject_content in all_epochs_data.items():
