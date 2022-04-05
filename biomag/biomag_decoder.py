@@ -125,7 +125,6 @@ for subject_name, subject_content in all_epochs_data.items():
         segment=False,
         test_set='holdout'
     )
-    X, Y = combiner.X, combiner.Y
     meta = mf.produce_tfrecords((X, Y), **import_opt)
     dataset = mf.Dataset(meta, train_batch=100)
     lf_params = dict(
