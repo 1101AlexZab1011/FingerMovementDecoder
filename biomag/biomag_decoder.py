@@ -52,7 +52,7 @@ class EpochsCollector(object):
     def merge(self) -> dict[str, dict[str, np.ndarray]]:
         return {
             subject_name: {
-                event_type: np.array([epochs.get_data() for epochs in epochs_list])
+                event_type: np.stack([epochs.get_data() for epochs in epochs_list], axis=0)
                 for event_type, epochs_list in subject_content.items()
             }
             for subject_name, subject_content in self.data.items()
@@ -88,20 +88,25 @@ for subject, content in collector.data.items():
             epoch.get_data().shape for epoch in eve_content
         ])
         
-all_epochs = collector.concatenate()
+all_epochs_data = collector.merge()
 
-for subject_name, subject_content in all_epochs:
+for subject_name, subject_content in all_epochs_data.items():
     subject_path = os.path.join(biomag_home, subject_name)
-    combiner = EpochsCombiner(*(epochs for epochs in subject_content.values())).combine(0, 1)
-    n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
-    n_classes = len(n_classes)
-    classes_samples = classes_samples.tolist()
-    combiner.shuffle()
+    condition1, condition2 = (epochs for epochs in subject_content.values())
+    condition1_y = np.zeros((condition1.shape[0],))
+    condition2_y = np.ones((condition2.shape[0],))
+    X = np.stack([condition1, condition2], axis=0)
+    Y = np.stack([condition1_y, condition2_y], axis=0)
+    n_classes = 2
+    classes_samples = [len(condition1_y), len(condition2_y)]
+    perm = np.random.permutation(len(Y))
+    Y = Y[perm]
+    X = X[perm, ...]
     savepath = os.path.join(subject_path, 'TFR')
     network_out_path = os.path.join(subject_path, 'LFCNN')
     yp_path = os.path.join(network_out_path, 'Predictions')
     sp_path = os.path.join(network_out_path, 'Parameters')
-    perf_tables_path  = os.path.join(network_out_path, 'perf_tables')
+    perf_tables_path  = os.path.join(biomag_home, 'perf_tables')
     check_path(subject_path, savepath, network_out_path, yp_path, sp_path, perf_tables_path)
     
     import_opt = dict(
