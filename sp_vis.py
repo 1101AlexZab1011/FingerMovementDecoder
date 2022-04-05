@@ -42,7 +42,7 @@ if __name__ == '__main__':
     classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
     
     subject_info_path = os.path.join(subjects_dir, subject_name, 'Info')
-    subject_parameters_path = os.path.join(subjects_dir, subject_name, 'LFRNN', 'Parameters')
+    subject_parameters_path = os.path.join(subjects_dir, subject_name, 'LFCNN', 'Parameters')
     
     spatial_parameters = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_spatial.pkl'))
     temporal_parameters = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_temporal.pkl'))
