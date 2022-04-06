@@ -87,6 +87,8 @@ for subject_name, subject_content in all_epochs_data.items():
     condition2_y = np.ones((condition2.shape[0],))
     X = np.concatenate([condition1, condition2], axis=0)
     Y = np.concatenate([condition1_y, condition2_y], axis=0)
+    print(condition1.shape, condition2.shape, X.shape, Y.shape)
+    print(Y)
     n_classes = 2
     classes_samples = [len(condition1_y), len(condition2_y)]
     perm = np.random.permutation(len(Y))
