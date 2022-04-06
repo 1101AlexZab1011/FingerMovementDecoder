@@ -26,6 +26,7 @@ classification_name = 'biomag'
 
 for epochs_file in os.listdir(biomag_data):
     epochs = mne.read_epochs(os.path.join(biomag_data, epochs_file))
+    epochs.pick_types(grad=True)
     print(epochs.info)
     print(epochs.info['ch_names'])
     print(len(epochs.info['ch_names']))
