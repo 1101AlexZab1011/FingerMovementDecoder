@@ -122,7 +122,7 @@ class LFRNN(LFCNN):
         self.feature_relevances = self.get_component_relevances(X, y)
         
         #compute temporal convolution layer outputs for vis_dics
-        tc_out = ModelDesign(None, *model.design[:5])(X).numpy()
+        tc_out = ModelDesign(None, *self.design[:5])(X).numpy()
 
         #compute data covariance
         X = X - tf.reduce_mean(X, axis=-2, keepdims=True)
