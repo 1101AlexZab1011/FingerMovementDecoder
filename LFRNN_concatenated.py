@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import sklearn
 from LFCNN_decoder import Predictions, SpatialParameters, TemporalParameters, ComponentsOrder, WaveForms, compute_temporal_parameters, save_parameters, save_model_weights, plot_patterns, plot_waveforms
-from LFCNN_decoder import LFRNN
 
 if __name__ == '__main__':
     mpl.use('agg')
