@@ -474,7 +474,7 @@ if __name__ == '__main__':
                 n_classes,
                 *classes_samples,
                 sum(classes_samples),
-                np.array(meta['test_fold'][0]).shape,
+                np.array(meta['test_fold'][0]).shape[0],
                 train_acc_,
                 train_loss_,
                 test_acc_,
