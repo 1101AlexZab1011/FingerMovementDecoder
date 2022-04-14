@@ -51,15 +51,28 @@ class LFRNN(LFCNN):
         self.design = ModelDesign(
             self.inputs,
             LayerDesign(tf.squeeze, axis=1),
+            # tf.keras.layers.Bidirectional(
+            #     tf.keras.layers.LSTM(
+            #         self.specs['n_latent'],
+            #         bias_regularizer='l1',
+            #         return_sequences=True,
+            #         kernel_regularizer=tf.keras.regularizers.L1(.01),
+            #         recurrent_regularizer=tf.keras.regularizers.L1(.01),
+            #         dropout=0.4,
+            #         recurrent_dropout=0.4,
+            #     ),
+            #     merge_mode='sum'
+            # ),
             tf.keras.layers.Bidirectional(
-                tf.keras.layers.LSTM(
+                # tf.keras.layers.LSTM(
+                tf.keras.layers.GRU(
                     self.specs['n_latent'],
-                    bias_regularizer='l1',
                     return_sequences=True,
-                    kernel_regularizer=tf.keras.regularizers.L1(.01),
-                    recurrent_regularizer=tf.keras.regularizers.L1(.01),
-                    dropout=0.4,
-                    recurrent_dropout=0.4,
+                    bias_regularizer='l1',
+                    recurrent_regularizer='l1',
+                    # kernel_regularizer='l2',
+                    dropout=0.2,
+                    recurrent_dropout=0.2,
                 ),
                 merge_mode='sum'
             ),
