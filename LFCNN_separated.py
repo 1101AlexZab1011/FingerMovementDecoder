@@ -297,10 +297,10 @@ if __name__ == '__main__':
             
             processed_df = pd.Series(
                 [
-                    n_classes,
-                    *classes_samples,
-                    sum(classes_samples),
-                    np.array(meta['test_fold'][0]).shape[0],
+                    f'{dataset_train.n_classes}/{dataset_test.n_classes}',
+                    *[f'{cs1}/{cs2}' for cs1, cs2 in zip(dataset_train.classes_samples, dataset_test.classes_samples)],
+                    f'{sum(dataset_train.classes_samples)}/{sum(dataset_test.classes_samples)}',
+                    f'{np.array(dataset_train.meta["test_fold"][0]).shape[0]}/{np.array(dataset_test.meta["test_fold"][0]).shape[0]}',
                     train_acc_,
                     train_loss_,
                     test_acc_,
@@ -308,7 +308,18 @@ if __name__ == '__main__':
                     model.v_metric,
                     model.v_loss,
                 ],
-                index=['n_classes', *class_names, 'total', 'test_set', 'train_acc', 'train_loss', 'test_acc', 'test_loss', 'val_acc', 'val_loss'],
+                index=[
+                    'n_classes',
+                    *class_names,
+                    'total',
+                    'test_set',
+                    'train_acc',
+                    'train_loss',
+                    'test_acc',
+                    'test_loss',
+                    'val_acc',
+                    'val_loss'
+                ],
                 name=subject_name
             ).to_frame().T
             sheet_name = f'{dataset_train.name}/{dataset_test.name}'
