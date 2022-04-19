@@ -244,7 +244,6 @@ if __name__ == '__main__':
             y_true_test, y_pred_test = model.predict(test_data)
             
             print(f'{model_name} performance (train {dataset_train.name}, test {dataset_test.name})')
-            print(y_true_train, y_pred_train)
             print('\ttrain-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)))
             print('\ttest-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_test), one_hot_decoder(y_pred_test)))
             
