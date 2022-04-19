@@ -57,7 +57,7 @@ def compute_temporal_parameters(model, *, fs=None):
         
     return franges, finputs, foutputs, fresponces
 
-def compute_waveforms(model: mf.BaseModel):
+def compute_waveforms(model: mf.models.BaseModel):
     time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, model.dataset.h_params['n_t']]))
     times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
     induced = list()
