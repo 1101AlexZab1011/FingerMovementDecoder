@@ -228,22 +228,22 @@ if __name__ == '__main__':
         for dataset_train, dataset_test in combinations_with_replacement(datasets.values(), 2):
             print(f'Using {dataset_train.name} as a train set and {dataset_test.name} as a test set')
             classification_name_formatted_sep = f'{classification_name_formatted}_train_{dataset_train.name}_test_{dataset_test.name}'
-            model = classifier(dataset_train, lf_params)
+            model = classifier(dataset_train.dataset, lf_params)
             model.build()
             model.train(n_epochs=25, eval_step=100, early_stopping=5)
             network_out_path = os.path.join(subject_path, f'{model_name}_train_{dataset_train.name}_test_{dataset_test.name}')
             yp_path = os.path.join(network_out_path, 'Predictions')
             sp_path = os.path.join(network_out_path, 'Parameters')
             check_path(network_out_path, yp_path, sp_path)
-            y_true_train, y_pred_train = model.predict(dataset_train)
-            y_true_test, y_pred_test = model.predict(dataset_test)
+            y_true_train, y_pred_train = model.predict(dataset_train.dataset)
+            y_true_test, y_pred_test = model.predict(dataset_test.dataset)
             
             print('{model_name} performance (train {dataset_train.name}, test {dataset_test.name})')
             print('\ttrain-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)))
             print('\ttest-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_test), one_hot_decoder(y_pred_test)))
             
-            train_loss_, train_acc_ = model.evaluate(dataset_train)
-            test_loss_, test_acc_ = model.evaluate(dataset_test)
+            train_loss_, train_acc_ = model.evaluate(dataset_train.dataset)
+            test_loss_, test_acc_ = model.evaluate(dataset_test.dataset)
             
             model.compute_patterns(meta['train_paths'])
             nt = model.dataset.h_params['n_t']
