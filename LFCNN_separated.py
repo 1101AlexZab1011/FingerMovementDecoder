@@ -347,7 +347,7 @@ if __name__ == '__main__':
             else:
                 df = processed_df
             
-            print(df, sheet_name)
+            print(df, sheet_name, writer.sheets)
             
             with pd.ExcelWriter(perf_table_path) as writer: 
                 df.to_excel(writer, sheet_name=sheet_name)
