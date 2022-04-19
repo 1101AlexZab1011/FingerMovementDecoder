@@ -57,6 +57,21 @@ def compute_temporal_parameters(model, *, fs=None):
         
     return franges, finputs, foutputs, fresponces
 
+def compute_waveforms(model: mf.BaseModel):
+    time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, model.dataset.h_params['n_t']]))
+    times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
+    induced = list()
+    
+    for tc in time_courses:
+        ls_induced = list()
+        
+        for lc in tc:
+            widths = np.arange(1, 71)
+            ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
+            
+        induced.append(np.array(ls_induced).mean(axis=0))
+        
+    return np.array(induced), times, time_courses
 
 def save_parameters(content: Any, path: str, parameters_type: Optional[str] = '') -> NoReturn:
     
@@ -218,17 +233,17 @@ if __name__ == '__main__':
     if classification_name is None:
         classification_name = '_vs_'.join(class_names)
     
+    classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
+    
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'perf_tables')
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
     check_path(perf_tables_path, pics_path)
-    subjects_performance = list()
     
     for subject_name in os.listdir(subjects_dir):
         
         if subject_name in excluded_subjects:
             continue
         
-        train_acc, train_loss, val_acc, val_loss, test_acc, test_loss = (list() for _ in range(6))
         subject_path = os.path.join(subjects_dir, subject_name)
         epochs_path = os.path.join(subject_path, 'Epochs')
         epochs = {case: list() for case in cases}
@@ -268,6 +283,7 @@ if __name__ == '__main__':
         i = 0
         cases_indices_to_combine = list()
         cases_to_combine_list = list()
+        
         for combination in cases_to_combine:
             cases_indices_to_combine.append(list())
             
@@ -281,6 +297,7 @@ if __name__ == '__main__':
                     cases_to_combine_list.append(epochs[case].filter(lfreq, None))
                 
             i += 1
+        
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)
@@ -288,27 +305,26 @@ if __name__ == '__main__':
         combiner.shuffle()
         tfr_path = os.path.join(subject_path, 'TFR')
         check_path(tfr_path)
-        classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
         savepath = os.path.join(
             tfr_path,
             classification_name_formatted
         )
         import_opt = dict(
-                savepath=savepath+'/',
-                out_name=project_name,
-                fs=200,
-                input_type='trials',
-                target_type='int',
-                picks={'meg': 'grad'},
-                scale=True,
-                crop_baseline=True,
-                decimate=None,
-                scale_interval=(0, 60),
-                n_folds=5,
-                overwrite=True,
-                segment=False,
-                test_set='holdout'
-            )
+            savepath=savepath+'/',
+            out_name=project_name,
+            fs=200,
+            input_type='trials',
+            target_type='int',
+            picks={'meg': 'grad'},
+            scale=True,
+            crop_baseline=True,
+            decimate=None,
+            scale_interval=(0, 60),
+            n_folds=5,
+            overwrite=True,
+            segment=False,
+            test_set='holdout'
+        )
         
         X, Y = combiner.X, combiner.Y
         meta = mf.produce_tfrecords((X, Y), **import_opt)
@@ -331,15 +347,15 @@ if __name__ == '__main__':
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         network_out_path = os.path.join(subject_path, 'LFCNN')
-        check_path(network_out_path)
         yp_path = os.path.join(network_out_path, 'Predictions')
+        sp_path = os.path.join(network_out_path, 'Parameters')
+        check_path(network_out_path, yp_path, sp_path)
         y_true_train, y_pred_train = model.predict(meta['train_paths'])
         y_true_test, y_pred_test = model.predict(meta['test_paths'])
         
         print('train-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)))
         print('test-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_test), one_hot_decoder(y_pred_test)))
         
-        check_path(yp_path)
         save_parameters(
             Predictions(
                 y_pred_test,
@@ -348,20 +364,19 @@ if __name__ == '__main__':
             os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
             'predictions'
         )
+        
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
         
-        # model.compute_patterns(meta['train_paths'])
-        # nt = model.dataset.h_params['n_t']
-        # time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
-        # times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
-        # patterns = model.patterns.copy()
-        # model.compute_patterns(meta['train_paths'], output='filters')
-        # filters = model.patterns.copy()
-        # franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
-        
-        # sp_path = os.path.join(network_out_path, 'Parameters')
-        # check_path(sp_path)
+        model.compute_patterns(meta['train_paths'])
+        nt = model.dataset.h_params['n_t']
+        time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
+        times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
+        patterns = model.patterns.copy()
+        model.compute_patterns(meta['train_paths'], output='filters')
+        filters = model.patterns.copy()
+        franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+        induced, times, time_courses = compute_waveforms(model)
         
         # induced = list()
         # for tc in time_courses:
@@ -372,99 +387,35 @@ if __name__ == '__main__':
         #     induced.append(np.array(ls_induced).mean(axis=0))
         # induced = np.array(induced)
         
-        # save_parameters(
-        #     WaveForms(time_courses.mean(1), induced, times, time_courses),
-        #     os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
-        #     'WaveForms'
-        # )
+        save_parameters(
+            WaveForms(time_courses.mean(1), induced, times, time_courses),
+            os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
+            'WaveForms'
+        )
         
-        # save_parameters(
-        #     SpatialParameters(patterns, filters),
-        #     os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
-        #     'spatial'
-        # )
-        # save_parameters(
-        #     TemporalParameters(franges, finputs, foutputs, fresponces),
-        #     os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
-        #     'temporal'
-        # )
-        # get_order = lambda order, ts: order.ravel()
-        # save_parameters(
-        #     ComponentsOrder(
-        #         get_order(*model._sorting('l2')),
-        #         get_order(*model._sorting('compwise_loss')),
-        #         get_order(*model._sorting('weight')),
-        #         get_order(*model._sorting('output_corr')),
-        #         get_order(*model._sorting('weight_corr')),
-        #     ),
-        #     os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
-        #     'sorting'
-        # )
+        save_parameters(
+            SpatialParameters(patterns, filters),
+            os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
+            'spatial'
+        )
+        save_parameters(
+            TemporalParameters(franges, finputs, foutputs, fresponces),
+            os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
+            'temporal'
+        )
+        get_order = lambda order, ts: order.ravel()
+        save_parameters(
+            ComponentsOrder(
+                get_order(*model._sorting('l2')),
+                get_order(*model._sorting('compwise_loss')),
+                get_order(*model._sorting('weight')),
+                get_order(*model._sorting('output_corr')),
+                get_order(*model._sorting('weight_corr')),
+            ),
+            os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
+            'sorting'
+        )
         
-        # pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
-        # patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
-        # filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
-        # spectra_pics_path = os.path.join(pics_path, 'Spectra', classification_name_formatted)
-        # wf_pics_path = os.path.join(pics_path, 'WaveForms', classification_name_formatted)
-        # loss_pics_path = os.path.join(pics_path, 'Loss', classification_name_formatted)
-        # acc_pics_path = os.path.join(pics_path, 'Accuracy', classification_name_formatted)
-        
-        # check_path(
-        #     pics_path,
-        #     os.path.join(pics_path, 'Patterns'),
-        #     os.path.join(pics_path, 'Filters'),
-        #     os.path.join(pics_path, 'Spectra'),
-        #     os.path.join(pics_path, 'WaveForms'),
-        #     os.path.join(pics_path, 'Loss'),
-        #     os.path.join(pics_path, 'Accuracy'),
-        #     patterns_pics_path,
-        #     filters_pics_path,
-        #     spectra_pics_path,
-        #     wf_pics_path,
-        #     loss_pics_path,
-        #     acc_pics_path
-        # )
-        # plt.plot(model.t_hist.history['loss'])
-        # plt.plot(model.t_hist.history['val_loss'])
-        # plt.title('model loss')
-        # plt.ylabel('loss')
-        # plt.xlabel('epoch')
-        # plt.legend(['train', 'validation'], loc='upper left')
-        # plt.savefig(os.path.join(loss_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close()
-        # plt.plot(model.t_hist.history['cat_ACC'])
-        # plt.plot(model.t_hist.history['val_cat_ACC'])
-        # plt.title('model acc')
-        # plt.ylabel('loss')
-        # plt.xlabel('epoch')
-        # plt.legend(['train', 'validation'], loc='upper left')
-        # plt.savefig(os.path.join(acc_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close()
-        
-        # patterns_fig = plot_patterns(patterns, any_info)
-        # patterns_fig.savefig(os.path.join(patterns_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close(patterns_fig)
-        # filters_fig = plot_patterns(filters, any_info)
-        # filters_fig.savefig(os.path.join(filters_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close(filters_fig)
-        # spectra_fig = model.plot_spectra(sorting='weight_corr', class_names=class_names)
-        # spectra_fig.savefig(os.path.join(spectra_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close(spectra_fig)
-        # wf_fig = plot_waveforms(model, class_names=class_names)
-        # wf_fig.savefig(os.path.join(wf_pics_path, f'{subject_name}_{classification_name_formatted}.png'))
-        # plt.close(wf_fig)
-        
-        # weights_path = os.path.join(subject_path, 'Weights')
-        # models_path = os.path.join(subject_path, 'Models')
-        # check_path(weights_path, models_path)
-        # save_model_weights(
-        #     model,
-        #     os.path.join(
-        #         weights_path,
-        #         f'{classification_name_formatted}.h5'
-        #     )
-        # )
-        # model.km.save(os.path.join(models_path, f'{classification_name_formatted}.h5'))
         perf_table_path = os.path.join(
             perf_tables_path,
             f'{classification_name_formatted}.csv'
