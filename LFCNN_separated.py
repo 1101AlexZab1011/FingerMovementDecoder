@@ -343,6 +343,7 @@ if __name__ == '__main__':
                         df = pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name)
                         df = pd.concat([df, processed_df], axis=0)
                     except ValueError:
+                        print(f'Sheet {sheet_name} not found')
                         df = processed_df
                 else:
                     df = processed_df
