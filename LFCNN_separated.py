@@ -337,7 +337,7 @@ if __name__ == '__main__':
                 perf_tables_path,
                 f'{classification_name_formatted}_sep.xlsx'
             )
-            with pd.ExcelWriter(perf_table_path) as writer: 
+            with pd.ExcelWriter(perf_table_path, engine='xlsxwriter') as writer: 
                 if os.path.exists(perf_table_path):
                     xlsx = pd.ExcelFile(perf_table_path)
                     print(xlsx.sheet_names)
