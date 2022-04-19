@@ -342,11 +342,12 @@ if __name__ == '__main__':
                     df = pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name)
                     df = pd.concat([df, processed_df], axis=0)
                 except ValueError:
+                    print(f'No such sheet: {sheet_name}')
                     df = processed_df
             else:
                 df = processed_df
             
-            print(df, sheet)
+            print(df, sheet_name)
             
             with pd.ExcelWriter(perf_table_path) as writer: 
                 df.to_excel(writer, sheet_name=sheet_name)
