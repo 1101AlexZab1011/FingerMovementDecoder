@@ -335,8 +335,8 @@ if __name__ == '__main__':
             )
             with pd.ExcelWriter(perf_table_path) as writer: 
                 if os.path.exists(perf_table_path):
-                    pd.concat([pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name), processed_df], axis=0)\
-                    .to_excel(writer, sheet_name=sheet_name)
+                    pd.concat([pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name, engine='openpyxl'), processed_df], axis=0)\
+                    .to_excel(writer, sheet_name=sheet_name, engine='openpyxl')
                 else:
                     processed_df\
-                    .to_excel(writer, sheet_name=sheet_name)
+                    .to_excel(writer, sheet_name=sheet_name, engine='openpyxl')
