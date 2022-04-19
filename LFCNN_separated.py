@@ -332,31 +332,13 @@ if __name__ == '__main__':
                 ],
                 name=subject_name
             ).to_frame().T
-            sheet_name = f'{dataset_train.name}|{dataset_test.name}'
             perf_table_path = os.path.join(
                 perf_tables_path,
-                f'{classification_name_formatted}_sep.xlsx'
+                f'{classification_name_formatted}_train_{dataset_train.name}_test_{dataset_test.name}_sep.csv'
             )
-            with pd.ExcelWriter(perf_table_path, engine='xlsxwriter') as writer: 
-                if os.path.exists(perf_table_path):
-                    xlsx = pd.ExcelFile(perf_table_path)
-                    print(xlsx.sheet_names)
-                    df = xlsx.parse(sheet_name=sheet_name, index_col=0)
-                    df = pd.concat([df, processed_df], axis=0)
-                    df.to_excel(writer, sheet_name=sheet_name)
-                else:
-                    processed_df.to_excel(writer, sheet_name=sheet_name)
-            #     try:
-            #         df = pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name)
-            #         df = pd.concat([df, processed_df], axis=0)
-            #     except ValueError:
-            #         print(f'No such sheet: {sheet_name}')
-            #         df = processed_df
-            #         print(pd.ExcelFile(perf_table_path).sheet_names)
-            # else:
-            #     df = processed_df
-            
-            # print(df, sheet_name)
-            
-            
-            #     df.to_excel(writer, sheet_name=sheet_name)
+            if os.path.exists(perf_table_path):
+                pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
+                .to_csv(perf_table_path)
+            else:
+                processed_df\
+                .to_csv(perf_table_path)
