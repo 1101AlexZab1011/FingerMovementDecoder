@@ -334,8 +334,11 @@ if __name__ == '__main__':
                 f'{classification_name_formatted}_sep.xlsx'
             )
             if os.path.exists(perf_table_path):
-                df = pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name)
-                df = pd.concat([df, processed_df], axis=0)
+                try:
+                    df = pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name)
+                    df = pd.concat([df, processed_df], axis=0)
+                except ValueError:
+                    df = processed_df
             else:
                 df = processed_df
             
