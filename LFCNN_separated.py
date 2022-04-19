@@ -109,6 +109,10 @@ if __name__ == '__main__':
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'perf_tables')
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
     check_path(perf_tables_path, pics_path)
+    perf_table_path = os.path.join(
+        perf_tables_path,
+        f'{classification_name_formatted}_sep.xlsx'
+    )
     with pd.ExcelWriter(perf_table_path) as writer:
         for subject_name in os.listdir(subjects_dir):
             
@@ -333,10 +337,6 @@ if __name__ == '__main__':
                     name=subject_name
                 ).to_frame().T
                 sheet_name = f'{dataset_train.name}|{dataset_test.name}'
-                perf_table_path = os.path.join(
-                    perf_tables_path,
-                    f'{classification_name_formatted}_sep.xlsx'
-                )
                 
                 if os.path.exists(perf_table_path):
                     try:
