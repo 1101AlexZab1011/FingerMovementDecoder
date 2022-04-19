@@ -344,6 +344,7 @@ if __name__ == '__main__':
                 except ValueError:
                     print(f'No such sheet: {sheet_name}')
                     df = processed_df
+                    print(pd.ExcelFile(perf_table_path).sheet_names)
             else:
                 df = processed_df
             
