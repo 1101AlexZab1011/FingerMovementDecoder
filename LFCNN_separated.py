@@ -328,7 +328,7 @@ if __name__ == '__main__':
                 ],
                 name=subject_name
             ).to_frame().T
-            sheet_name = f'{dataset_train.name}/{dataset_test.name}'
+            sheet_name = f'{dataset_train.name}|{dataset_test.name}'
             perf_table_path = os.path.join(
                 perf_tables_path,
                 f'{classification_name_formatted}_sep.xlsx'
