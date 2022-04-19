@@ -338,14 +338,19 @@ if __name__ == '__main__':
                 ).to_frame().T
                 sheet_name = f'{dataset_train.name}|{dataset_test.name}'
                 
-                if os.path.exists(perf_table_path):
-                    try:
-                        df = pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name)
-                        df = pd.concat([df, processed_df], axis=0)
-                    except ValueError:
-                        print(f'Sheet {sheet_name} not found')
-                        df = processed_df
-                else:
-                    df = processed_df
-                
-                df.to_excel(writer, sheet_name=sheet_name)
+                # if os.path.exists(perf_table_path):
+                #     try:
+                #         df = pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name)
+                #         df = pd.concat([df, processed_df], axis=0)
+                #     except ValueError:
+                #         print(f'Sheet {sheet_name} not found')
+                #         df = processed_df
+                # else:
+                #     df = processed_df
+                print(sheet_name)
+                if sheet_name in writer.sheets:
+                    startrow = writer.sheets[sheet_name].max_row
+                    print(sheet_name, startrow)
+                    processed_df.to_excel(writer, sheet_name=sheet_name, startrow=startrow)
+                else: 
+                    processed_df.to_excel(writer, sheet_name=sheet_name)
