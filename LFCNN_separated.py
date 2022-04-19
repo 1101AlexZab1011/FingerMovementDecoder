@@ -66,6 +66,7 @@ if __name__ == '__main__':
                         default=None, help='High-pass filter (Hz)')
     parser.add_argument('-m', '--model', type=str,
                         default='LFCNN', help='Model to use')
+    parser.add_argument('--use_train', action='store_true', help='Use train set from separated dataset to test a model')
     
     combined_sessions, \
     excluded_subjects, \
@@ -79,7 +80,8 @@ if __name__ == '__main__':
     classification_prefix, \
     project_name, \
     lfreq, \
-    model_name = vars(parser.parse_args()).values()
+    model_name, \
+    use_train = vars(parser.parse_args()).values()
     
     if model_name == 'LFCNN':
         classifier = mf.models.LFCNN
@@ -235,15 +237,19 @@ if __name__ == '__main__':
             yp_path = os.path.join(network_out_path, 'Predictions')
             sp_path = os.path.join(network_out_path, 'Parameters')
             check_path(network_out_path, yp_path, sp_path)
-            y_true_train, y_pred_train = model.predict(dataset_train.dataset)
-            y_true_test, y_pred_test = model.predict(dataset_test.dataset)
             
-            print('{model_name} performance (train {dataset_train.name}, test {dataset_test.name})')
+            test_data = dataset_test.dataset.train if dataset_train.name != dataset_test.name and use_train else dataset_test.dataset.test
+            
+            y_true_train, y_pred_train = model.predict(dataset_train.dataset.train)
+            y_true_test, y_pred_test = model.predict(test_data)
+            
+            print(f'{model_name} performance (train {dataset_train.name}, test {dataset_test.name})')
+            print(y_true_train, y_pred_train)
             print('\ttrain-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)))
             print('\ttest-set: ', subject_name, sklearn.metrics.accuracy_score(one_hot_decoder(y_true_test), one_hot_decoder(y_pred_test)))
             
-            train_loss_, train_acc_ = model.evaluate(dataset_train.dataset)
-            test_loss_, test_acc_ = model.evaluate(dataset_test.dataset)
+            train_loss_, train_acc_ = model.evaluate(dataset_train.dataset.train)
+            test_loss_, test_acc_ = model.evaluate(test_data)
             
             model.compute_patterns(meta['train_paths'])
             nt = model.dataset.h_params['n_t']
@@ -295,12 +301,14 @@ if __name__ == '__main__':
                 f'{classification_name_formatted}_sep.xlsx'
             )
             
+            used_test_fold = 'train_size' if dataset_train.name != dataset_test.name and use_train else 'test_size'
+            
             processed_df = pd.Series(
                 [
                     f'{dataset_train.n_classes}/{dataset_test.n_classes}',
                     *[f'{cs1}/{cs2}' for cs1, cs2 in zip(dataset_train.classes_samples, dataset_test.classes_samples)],
                     f'{sum(dataset_train.classes_samples)}/{sum(dataset_test.classes_samples)}',
-                    f'{np.array(dataset_train.meta["test_fold"][0]).shape[0]}/{np.array(dataset_test.meta["test_fold"][0]).shape[0]}',
+                    f'{dataset_train.meta["test_size"]}/{dataset_test.meta[used_test_fold]}',
                     train_acc_,
                     train_loss_,
                     test_acc_,
