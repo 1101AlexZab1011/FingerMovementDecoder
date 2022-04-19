@@ -212,6 +212,7 @@ if __name__ == '__main__':
             datasets.update({group: DatasetContainer(f'{group[0]}-{group[-1]}', n_classes, classes_samples, meta, mf.Dataset(meta, train_batch=100))})
         
         for dataset_train, dataset_test in combinations_with_replacement(datasets.values(), 2):
+            print(f'Using {dataset_train.name} as a train set and {dataset_test.name} as a test set')
             classification_name_formatted_sep = f'{classification_name_formatted}_train_{dataset_train.name}_test_{dataset_test.name}'
             model = classifier(dataset, lf_params)
             model.build()
