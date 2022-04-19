@@ -60,13 +60,15 @@ if __name__ == '__main__':
                         default='', help='String to append to a task name')
     parser.add_argument('--prefix', type=str,
                         default='', help='String to set in the start of a task name')
-    parser.add_argument('--project_name', type=str,
+    parser.add_argument('--project-name', type=str,
                         default='fingers_movement_epochs', help='Name of a project')
-    parser.add_argument('-hp', '--high_pass', type=float,
+    parser.add_argument('-hp', '--high-pass', type=float,
                         default=None, help='High-pass filter (Hz)')
     parser.add_argument('-m', '--model', type=str,
                         default='LFCNN', help='Model to use')
-    parser.add_argument('--use_train', action='store_true', help='Use train set from separated dataset to test a model')
+    parser.add_argument('--use-train', action='store_true', help='Use train set from separated dataset to test a model')
+    parser.add_argument('--no-params', action='store_true', help='Do not compute parameters')
+    
     
     combined_sessions, \
     excluded_subjects, \
@@ -81,7 +83,8 @@ if __name__ == '__main__':
     project_name, \
     lfreq, \
     model_name, \
-    use_train = vars(parser.parse_args()).values()
+    use_train, \
+    no_params = vars(parser.parse_args()).values()
     
     if model_name == 'LFCNN':
         classifier = mf.models.LFCNN
@@ -249,52 +252,52 @@ if __name__ == '__main__':
             
             train_loss_, train_acc_ = model.evaluate(dataset_train.dataset.train)
             test_loss_, test_acc_ = model.evaluate(test_data)
-            
-            model.compute_patterns(meta['train_paths'])
-            nt = model.dataset.h_params['n_t']
-            time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
-            times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
-            patterns = model.patterns.copy()
-            model.compute_patterns(meta['train_paths'], output='filters')
-            filters = model.patterns.copy()
-            franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
-            induced, times, time_courses = compute_waveforms(model)
-            
-            save_parameters(
-                Predictions(
-                    y_pred_test,
-                    y_true_test
-                ),
-                os.path.join(yp_path, f'{classification_name_formatted_sep}_pred.pkl'),
-                'predictions'
-            )
-            save_parameters(
-                WaveForms(time_courses.mean(1), induced, times, time_courses),
-                os.path.join(sp_path, f'{classification_name_formatted_sep}_waveforms.pkl'),
-                'WaveForms'
-            )
-            save_parameters(
-                SpatialParameters(patterns, filters),
-                os.path.join(sp_path, f'{classification_name_formatted_sep}_spatial.pkl'),
-                'spatial'
-            )
-            save_parameters(
-                TemporalParameters(franges, finputs, foutputs, fresponces),
-                os.path.join(sp_path, f'{classification_name_formatted_sep}_temporal.pkl'),
-                'temporal'
-            )
-            get_order = lambda order, ts: order.ravel()
-            save_parameters(
-                ComponentsOrder(
-                    get_order(*model._sorting('l2')),
-                    get_order(*model._sorting('compwise_loss')),
-                    get_order(*model._sorting('weight')),
-                    get_order(*model._sorting('output_corr')),
-                    get_order(*model._sorting('weight_corr')),
-                ),
-                os.path.join(sp_path, f'{classification_name_formatted_sep}_sorting.pkl'),
-                'sorting'
-            )
+            if not no_params:
+                model.compute_patterns(meta['train_paths'])
+                nt = model.dataset.h_params['n_t']
+                time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
+                times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
+                patterns = model.patterns.copy()
+                model.compute_patterns(meta['train_paths'], output='filters')
+                filters = model.patterns.copy()
+                franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+                induced, times, time_courses = compute_waveforms(model)
+                
+                save_parameters(
+                    Predictions(
+                        y_pred_test,
+                        y_true_test
+                    ),
+                    os.path.join(yp_path, f'{classification_name_formatted_sep}_pred.pkl'),
+                    'predictions'
+                )
+                save_parameters(
+                    WaveForms(time_courses.mean(1), induced, times, time_courses),
+                    os.path.join(sp_path, f'{classification_name_formatted_sep}_waveforms.pkl'),
+                    'WaveForms'
+                )
+                save_parameters(
+                    SpatialParameters(patterns, filters),
+                    os.path.join(sp_path, f'{classification_name_formatted_sep}_spatial.pkl'),
+                    'spatial'
+                )
+                save_parameters(
+                    TemporalParameters(franges, finputs, foutputs, fresponces),
+                    os.path.join(sp_path, f'{classification_name_formatted_sep}_temporal.pkl'),
+                    'temporal'
+                )
+                get_order = lambda order, ts: order.ravel()
+                save_parameters(
+                    ComponentsOrder(
+                        get_order(*model._sorting('l2')),
+                        get_order(*model._sorting('compwise_loss')),
+                        get_order(*model._sorting('weight')),
+                        get_order(*model._sorting('output_corr')),
+                        get_order(*model._sorting('weight_corr')),
+                    ),
+                    os.path.join(sp_path, f'{classification_name_formatted_sep}_sorting.pkl'),
+                    'sorting'
+                )
             
             used_test_fold = 'train_size' if dataset_train.name != dataset_test.name and use_train else 'test_size'
             
