@@ -312,11 +312,11 @@ if __name__ == '__main__':
                     f'{sum(dataset_train.classes_samples)}/{sum(dataset_test.classes_samples)}',
                     f'{dataset_train.meta["test_size"]}/{dataset_test.meta[used_test_fold]}',
                     train_acc_,
-                    train_loss_,
+                    # train_loss_,
                     test_acc_,
-                    test_loss_,
+                    # test_loss_,
                     model.v_metric,
-                    model.v_loss,
+                    # model.v_loss,
                 ],
                 index=[
                     'n_classes',
@@ -324,11 +324,11 @@ if __name__ == '__main__':
                     'total',
                     'test_set',
                     'train_acc',
-                    'train_loss',
+                    # 'train_loss',
                     'test_acc',
-                    'test_loss',
+                    # 'test_loss',
                     'val_acc',
-                    'val_loss'
+                    # 'val_loss'
                 ],
                 name=subject_name
             ).to_frame().T
