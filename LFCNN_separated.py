@@ -214,7 +214,7 @@ if __name__ == '__main__':
         for dataset_train, dataset_test in combinations_with_replacement(datasets.values(), 2):
             print(f'Using {dataset_train.name} as a train set and {dataset_test.name} as a test set')
             classification_name_formatted_sep = f'{classification_name_formatted}_train_{dataset_train.name}_test_{dataset_test.name}'
-            model = classifier(dataset, lf_params)
+            model = classifier(dataset_train, lf_params)
             model.build()
             model.train(n_epochs=25, eval_step=100, early_stopping=5)
             network_out_path = os.path.join(subject_path, f'{model_name}_train_{dataset_train.name}_test_{dataset_test.name}')
