@@ -332,7 +332,7 @@ if __name__ == '__main__':
                 ],
                 name=subject_name
             ).to_frame().T
-            sheet_name = f'{dataset_train.name}|{dataset_test.name}'
+            sheet_name = f'{dataset_train.name}{dataset_test.name}'
             perf_table_path = os.path.join(
                 perf_tables_path,
                 f'{classification_name_formatted}_sep.xlsx'
@@ -347,7 +347,7 @@ if __name__ == '__main__':
             else:
                 df = processed_df
             
-            print(df, sheet_name, writer.sheets)
+            print(df, sheet_name)
             
             with pd.ExcelWriter(perf_table_path) as writer: 
                 df.to_excel(writer, sheet_name=sheet_name)
