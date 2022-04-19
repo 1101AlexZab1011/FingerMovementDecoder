@@ -295,10 +295,6 @@ if __name__ == '__main__':
                 os.path.join(sp_path, f'{classification_name_formatted_sep}_sorting.pkl'),
                 'sorting'
             )
-            perf_table_path = os.path.join(
-                perf_tables_path,
-                f'{classification_name_formatted}_sep.xlsx'
-            )
             
             used_test_fold = 'train_size' if dataset_train.name != dataset_test.name and use_train else 'test_size'
             
@@ -330,9 +326,13 @@ if __name__ == '__main__':
                 name=subject_name
             ).to_frame().T
             sheet_name = f'{dataset_train.name}/{dataset_test.name}'
-            with pd.ExcelWriter(perf_table_path) as writer: 
+            perf_table_path = os.path.join(
+                perf_tables_path,
+                f'{classification_name_formatted}_sep.xlsx'
+            )
+            with pd.ExcelWriter(perf_table_path, engine='xlsxwriter') as writer: 
                 if os.path.exists(perf_table_path):
-                    pd.concat([pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name), processed_df], axis=0)\
+                    pd.concat([pd.read_excel(perf_table_path, index_col=0, header=0, sheet_name=sheet_name, engine='openpyxl'), processed_df], axis=0)\
                     .to_excel(writer, sheet_name=sheet_name)
                 else:
                     processed_df\
