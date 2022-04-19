@@ -211,6 +211,20 @@ if __name__ == '__main__':
             meta = mf.produce_tfrecords((X, Y), **import_opt)
             datasets.update({group: DatasetContainer(f'{group[0]}-{group[-1]}', n_classes, classes_samples, meta, mf.Dataset(meta, train_batch=100))})
         
+        lf_params = dict(
+            n_latent=32,
+            filter_length=50,
+            nonlin=tf.keras.activations.elu,
+            padding='SAME',
+            pooling=10,
+            stride=10,
+            pool_type='max',
+            model_path=import_opt['savepath'],
+            dropout=.4,
+            l2_scope=["weights"],
+            l2=1e-6
+        )
+        
         for dataset_train, dataset_test in combinations_with_replacement(datasets.values(), 2):
             print(f'Using {dataset_train.name} as a train set and {dataset_test.name} as a test set')
             classification_name_formatted_sep = f'{classification_name_formatted}_train_{dataset_train.name}_test_{dataset_test.name}'
