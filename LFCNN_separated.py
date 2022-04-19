@@ -24,7 +24,7 @@ import sklearn
 import scipy as sp
 from LFCNN_decoder import *
 from dataclasses import dataclass
-from itertools import combinations_with_replacement
+from itertools import product
 from LFRNN_decoder import LFRNN
 
 @dataclass
@@ -230,7 +230,7 @@ if __name__ == '__main__':
             l2=1e-6
         )
         dataset_prev = None
-        for dataset_train, dataset_test in combinations_with_replacement(datasets.values(), 2):
+        for dataset_train, dataset_test in product(datasets.values(), repeat=2):
             print(f'Using {dataset_train.name} as a train set and {dataset_test.name} as a test set')
             classification_name_formatted_sep = f'{classification_name_formatted}_train_{dataset_train.name}_test_{dataset_test.name}'
             
