@@ -27,5 +27,5 @@ if __name__ == '__main__':
         header_printed = True
         
         for samp in out.values():
-            print(f'\t{samp}', end='\t')
+            print(f'{samp}', end='\t\t')
         print()
