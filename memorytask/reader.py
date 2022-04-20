@@ -109,10 +109,10 @@ if __name__ == "__main__":
             savepath = os.path.join(epochs_dir, '_'.join(
                 list(
                     filter(
-                        lambda str_: str_ != ''
+                        lambda str_: str_ != '',
+                        [prefix, filename, stimulus, f'{postfix}.fif']
                     )
                 ),
-                [prefix, filename, stimulus, f'{postfix}.fif']
             ))
             save_epochs(savepath, epochs)
             success(f'{subject}, {stimulus}: Epochs successfully saved')
