@@ -22,7 +22,7 @@ if __name__ == '__main__':
         
         if not header_printed:
             for sti in out:
-                print(f'  {sti}', end='\t')
+                print(f'\t{sti}', end='\t')
             print()
         header_printed = True
         print(subject, end='  ')
