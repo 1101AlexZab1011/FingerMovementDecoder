@@ -15,7 +15,7 @@ if __name__ == '__main__':
     for subject in sorted(os.listdir(subjects_dir)):
         epochs_dir = os.path.join(subjects_dir, subject, 'Epochs')
         out = dict()
-        for epochs_file in os.listdir(epochs_dir):
+        for epochs_file in sorted(os.listdir(epochs_dir)):
             with Silence():
                 shape = mne.read_epochs(os.path.join(epochs_dir, epochs_file)).get_data().shape
             out[epochs_file[:8]] = shape[0]
