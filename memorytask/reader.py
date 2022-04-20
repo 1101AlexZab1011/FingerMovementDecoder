@@ -44,8 +44,8 @@ if __name__ == "__main__":
                         default='', help='String to set in the start of saved file name')
     
     excluded_subjects, \
-    subjects_dir, \
     source_dir, \
+    subjects_dir, \
     target_file, \
     info_path, \
     filename, \
@@ -56,10 +56,10 @@ if __name__ == "__main__":
         raise OSError(f'Info file by path {info_path} not found')
     
     check_path(subjects_dir)
-    n_subjects = len(os.listdir(subjects_dir))
+    n_subjects = len(os.listdir(source_dir))
     
     if n_subjects == 0:
-        raise OSError(f'There is not a single subject directory found by the path {subjects_dir}')
+        raise OSError(f'There is not a single subject directory found by the path {source_dir}')
     
     if os.path.isdir(info_path):
         n_info_files = len(os.listdir(info_path))
@@ -70,19 +70,20 @@ if __name__ == "__main__":
         info = read_info(info_path)
         info = [info for _ in range(n_subjects)]
     
-    for subject, subject_info in zip(os.listdir(subjects_dir), info):
+    for subject, subject_info in zip(os.listdir(source_dir), info):
         
         if subject in excluded_subjects:
             warn(f'Skipping subject {subject}...')
             continue
         
-        subject_dir = os.path.join(subjects_dir, subject)
+        subject_dir = os.path.join(source_dir, subject)
+        subject_save_dir = os.path.join(subjects_dir, subject)
         
         if not os.path.isdir(subject_dir):
             continue
         
-        epochs_dir = os.path.join(subject_dir, 'Epochs')
-        check_path(subject_dir, epochs_dir)
+        epochs_dir = os.path.join(subject_save_dir, 'Epochs')
+        check_path(subject_save_dir, epochs_dir)
         
         for stimulus in os.listdir(subject_dir):
             mat_file = os.path.join(subject_dir, stimulus, target_file)
