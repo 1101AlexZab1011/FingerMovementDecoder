@@ -9,7 +9,7 @@ sys.path.insert(0, parentdir)
 import mne
 
 if __name__ == '__main__':
-    subjects_dir = '../MemoryTaskSubjects'
+    subjects_dir = './Source/MemoryTaskSubjects'
     for subject in os.listdir(subjects_dir):
         epochs_dir = os.path.join(subjects_dir, subject, 'Epochs')
         for epochs_file in os.listdir(epochs_dir):
