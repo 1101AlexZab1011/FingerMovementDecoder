@@ -77,6 +77,10 @@ if __name__ == "__main__":
             continue
         
         subject_dir = os.path.join(subjects_dir, subject)
+        
+        if not os.path.isdir(subject_dir):
+            continue
+        
         epochs_dir = os.path.join(subject_dir, 'Epochs')
         check_path(subject_dir, epochs_dir)
         
