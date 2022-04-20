@@ -18,7 +18,7 @@ if __name__ == '__main__':
         for epochs_file in os.listdir(epochs_dir):
             with Silence():
                 shape = mne.read_epochs(os.path.join(epochs_dir, epochs_file)).get_data().shape
-            out[epochs_file[:9]] = shape[0]
+            out[epochs_file[:8]] = shape[0]
         
         if not header_printed:
             for sti in out:
@@ -27,5 +27,5 @@ if __name__ == '__main__':
         header_printed = True
         
         for samp in out.values():
-            print(samp, end=';\t')
+            print(samp, end='\t\t')
         print()
