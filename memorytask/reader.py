@@ -105,7 +105,7 @@ if __name__ == "__main__":
                         f'due to {type(err)}\n{err}\n', True)
                 continue
             
-            success(f'{subject}, {stimulus}: Epochs successfully read')
+            # success(f'{subject}, {stimulus}: Epochs successfully read')
             savepath = os.path.join(epochs_dir, '_'.join(
                 list(
                     filter(
