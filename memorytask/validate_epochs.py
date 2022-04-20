@@ -15,4 +15,5 @@ if __name__ == '__main__':
         epochs_dir = os.path.join(subjects_dir, subject, 'Epochs')
         for epochs_file in os.listdir(epochs_dir):
             with Silence():
-                print(f'{epochs_file}: {mne.read_epochs(os.path.join(epochs_dir, epochs_file)).get_data().shape}')
+                shape = mne.read_epochs(os.path.join(epochs_dir, epochs_file)).get_data().shape
+            print(f'{epochs_file}: {shape}')

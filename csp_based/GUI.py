@@ -1,8 +1,10 @@
 import sys
 import os
-current_dir = os.path.dirname(os.path.abspath('./'))
-if not current_dir in sys.path:
-    sys.path.append(current_dir)
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
 
 from typing import *
 from cross_runs_TF_planes import CrossRunsTFScorer
