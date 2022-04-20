@@ -19,5 +19,5 @@ if __name__ == '__main__':
                 shape = mne.read_epochs(os.path.join(epochs_dir, epochs_file)).get_data().shape
             out[epochs_file[:9]] = shape[0]
         for sti, samp in out.items():
-            print(f'{sti}: {samp}', end=';')
+            print(f'{sti}: {samp}', end=';\t')
         print()
