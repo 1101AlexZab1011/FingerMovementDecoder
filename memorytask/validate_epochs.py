@@ -11,6 +11,7 @@ from utils.console import Silence
 
 if __name__ == '__main__':
     subjects_dir = './Source/MemoryTaskSubjects'
+    header_printed = False
     for subject in os.listdir(subjects_dir):
         epochs_dir = os.path.join(subjects_dir, subject, 'Epochs')
         out = dict()
@@ -18,6 +19,13 @@ if __name__ == '__main__':
             with Silence():
                 shape = mne.read_epochs(os.path.join(epochs_dir, epochs_file)).get_data().shape
             out[epochs_file[:9]] = shape[0]
-        for sti, samp in out.items():
-            print(f'{sti}: {samp}', end=';\t')
+        
+        if not header_printed:
+            for sti in out:
+                print(sti, end='\t')
+            print()
+        header_printed = True
+        
+        for samp in out.values():
+            print(samp, end=';\t')
         print()
