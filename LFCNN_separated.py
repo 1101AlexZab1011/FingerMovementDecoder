@@ -258,9 +258,6 @@ if __name__ == '__main__':
             
             if dataset_train.name != dataset_prev and not no_params:
                 model.compute_patterns(meta['train_paths'])
-                nt = model.dataset.h_params['n_t']
-                time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
-                times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
                 patterns = model.patterns.copy()
                 model.compute_patterns(meta['train_paths'], output='filters')
                 filters = model.patterns.copy()
@@ -334,7 +331,7 @@ if __name__ == '__main__':
             ).to_frame().T
             perf_table_path = os.path.join(
                 perf_tables_path,
-                f'{classification_name_formatted}_train_{dataset_train.name}_test_{dataset_test.name}_sep.csv'
+                f'{classification_name_formatted_sep}_sep.csv'
             )
             if os.path.exists(perf_table_path):
                 pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
