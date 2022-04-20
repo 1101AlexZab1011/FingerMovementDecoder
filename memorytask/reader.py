@@ -92,7 +92,7 @@ if __name__ == "__main__":
                         f'due to {type(err)}\n{err}\n', True)
                 continue
             
-            success('Epochs successfully read:')
+            success('Epochs successfully read')
             savepath = os.path.join(epochs_dir, f'{prefix}_{filename}_{stimulus}_{postfix}.fif')
             save_epochs(epochs)
-            
+            success('Epochs successfully saved')
