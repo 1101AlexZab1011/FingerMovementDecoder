@@ -106,6 +106,13 @@ if __name__ == "__main__":
                 continue
             
             success(f'{subject}, {stimulus}: Epochs successfully read')
-            savepath = os.path.join(epochs_dir, '_'.join([prefix, filename, stimulus, f'{postfix}.fif']))
+            savepath = os.path.join(epochs_dir, '_'.join(
+                list(
+                    filter(
+                        lambda str_: str_ != ''
+                    )
+                ),
+                [prefix, filename, stimulus, f'{postfix}.fif']
+            ))
             save_epochs(savepath, epochs)
             success(f'{subject}, {stimulus}: Epochs successfully saved')
