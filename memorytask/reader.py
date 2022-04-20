@@ -1,14 +1,14 @@
 import sys
 import os
 import inspect
-from typing import Any
-import pickle
-import mne
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
+from typing import Any
+import pickle
+import mne
 from utils.storage_management import check_path
 import argparse
 from mat_to_fif import read_mat_epochs, read_pkl, save_epochs
