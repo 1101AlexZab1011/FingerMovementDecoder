@@ -43,7 +43,7 @@ def save_pkl(content: Any, path: str) -> NoReturn:
     f'Reading '
     f'"{path.split("/")[-2]}/'
     f'{path.split("/")[-1]}" file for '
-    f'{path.split("/")[-5]}'
+    f'{path.split("/")[-3]}'#[-5]}'
     f'... '
 )
 def read_mat_epochs(path, *, info):
