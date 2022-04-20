@@ -12,7 +12,7 @@ from utils.console import Silence
 if __name__ == '__main__':
     subjects_dir = './Source/MemoryTaskSubjects'
     header_printed = False
-    for subject in os.listdir(subjects_dir):
+    for subject in sorted(os.listdir(subjects_dir)):
         epochs_dir = os.path.join(subjects_dir, subject, 'Epochs')
         out = dict()
         for epochs_file in os.listdir(epochs_dir):
