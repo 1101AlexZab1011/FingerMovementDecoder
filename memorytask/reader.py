@@ -17,11 +17,19 @@ from utils.console.colored import success, alarm, warn
 def read_info(path: str) -> mne.Info:
     ext = path.split('.')[-1]
     if ext == 'pkl':
-        return read_pkl(path)
+        info = read_pkl(path)
     elif ext == 'fif':
-        return mne.io.read_info(path)
+        info = mne.io.read_info(path)
     else:
         raise ValueError(f'Wrong extension for Info file: {ext}')
+    
+    if isinstance(info, mne.Info):
+        return info
+    elif isinstance(info, (list, tuple)):
+        assert len(info) == 1, f'There are several ({len(info)}) Info objects at {path}'
+        return info[0]
+    else:
+        raise ValueError(f'Info has wrong type: {type(info)}')
 
 if __name__ == "__main__":
 
