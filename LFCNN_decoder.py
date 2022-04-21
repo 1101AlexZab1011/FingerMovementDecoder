@@ -22,6 +22,7 @@ import copy
 import scipy.signal as sl
 import sklearn
 import scipy as sp
+from utils.console.spinner import spinner
 
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
@@ -30,6 +31,7 @@ ComponentsOrder = namedtuple('ComponentsOrder', 'l2 compwise_loss weight output_
 Predictions = namedtuple('Predictions', 'y_p y_true')
 WaveForms = namedtuple('WaveForms', 'evoked induced times tcs')
 
+@spinner(prefix='Compute temporal parameters... ')
 def compute_temporal_parameters(model, *, fs=None):
     
     if fs is None:
@@ -57,6 +59,10 @@ def compute_temporal_parameters(model, *, fs=None):
         
     return franges, finputs, foutputs, fresponces
 
+def get_order(order: np.array, *args):
+    order.ravel()
+
+@spinner(prefix='Compute spectral parameters... ')
 def compute_waveforms(model: mf.models.BaseModel):
     time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, model.dataset.h_params['n_t']]))
     times = (1/float(model.dataset.h_params['fs']))*np.arange(model.dataset.h_params['n_t'])
