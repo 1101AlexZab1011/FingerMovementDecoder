@@ -137,9 +137,9 @@ if __name__ == '__main__':
                     # with Silence(), warnings.catch_warnings():
                     # warnings.simplefilter("ignore")
                     epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
-                    print(f'{case}: {epochs_.get_data().shape}')
+                    print(f'before: {case}: {epochs_.get_data().shape}')
                     epochs_.resample(200)
-                    print(f'{case}: {epochs_.get_data().shape}')
+                    print(f'after: {case}: {epochs_.get_data().shape}')
                     if any_info is None:
                         any_info = epochs_.info
 
