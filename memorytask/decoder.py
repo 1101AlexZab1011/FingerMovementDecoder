@@ -109,10 +109,11 @@ if __name__ == '__main__':
             for class_name in class_names:
                 class_name.remove(class_member)
 
+    class_names = ['_&_'.join(class_name) for class_name in class_names]
     classification_name_formatted = "_".join(
         list(filter(lambda s: s not in (None, ""), [
             classification_prefix,
-            '_vs_'.join(['_&_'.join(class_name) for class_name in class_names]),
+            '_vs_'.join(class_names),
             classification_postfix
         ]))
     )
