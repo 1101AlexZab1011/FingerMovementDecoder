@@ -135,7 +135,7 @@ if __name__ == '__main__':
             for case in cases:
                 if case in epochs_file:
                     # with Silence(), warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
+                    # warnings.simplefilter("ignore")
                     epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
                     epochs_.resample(200)
 
