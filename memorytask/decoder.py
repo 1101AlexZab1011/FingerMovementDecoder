@@ -134,181 +134,181 @@ if __name__ == '__main__':
 
             for case in cases:
                 if case in epochs_file:
-                    # with Silence(), warnings.catch_warnings():
-                    # warnings.simplefilter("ignore")
-                    epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
-                    print(f'before: {case}: {epochs_.get_data().shape}, {epochs_.info["sfreq"]}')
-                    epochs_.resample(200)
-                    print(f'after: {case}: {epochs_.get_data().shape}, {epochs_.info["sfreq"]}')
-                    if any_info is None:
-                        any_info = epochs_.info
+                    with Silence(), warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
+                        epochs_.resample(200)
 
-                    if epochs[case] is not None:
-                        raise ValueError(f'Epochs for {case} are readed twice')
+                        if any_info is None:
+                            any_info = epochs_.info
 
-                    epochs[case] = epochs_
+                        if epochs[case] is not None:
+                            raise ValueError(f'Epochs for {case} are readed twice')
 
-        # i = 0
-        # cases_indices_to_combine = list()
-        # cases_to_combine_list = list()
+                        epochs[case] = epochs_
 
-        # for combination in cases_to_combine:
-        #     cases_indices_to_combine.append(list())
+        i = 0
+        cases_indices_to_combine = list()
+        cases_to_combine_list = list()
 
-        #     for j, case in enumerate(combination):
+        for combination in cases_to_combine:
+            cases_indices_to_combine.append(list())
 
-        #         i += j
-        #         cases_indices_to_combine[-1].append(i)
-        #         cases_to_combine_list.append(epochs[case])
+            for j, case in enumerate(combination):
 
-        #     i += 1
+                i += j
+                cases_indices_to_combine[-1].append(i)
+                cases_to_combine_list.append(epochs[case])
 
-        # combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
+            i += 1
 
-        # n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
-        # n_classes = len(n_classes)
-        # classes_samples = classes_samples.tolist()
-        # combiner.shuffle()
-        # tfr_path = os.path.join(subject_path, 'TFR')
-        # check_path(tfr_path)
-        # savepath = os.path.join(
-        #     tfr_path,
-        #     classification_name_formatted
-        # )
-        # import_opt = dict(
-        #     savepath=savepath + '/',
-        #     out_name=project_name,
-        #     fs=200,
-        #     input_type='trials',
-        #     target_type='int',
-        #     picks={'meg': 'grad'},
-        #     scale=True,
-        #     crop_baseline=True,
-        #     decimate=None,
-        #     scale_interval=(0, 60),
-        #     n_folds=5,
-        #     overwrite=True,
-        #     segment=False,
-        #     test_set='holdout'
-        # )
+        combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
 
-        # X, Y = combiner.X, combiner.Y
-        # meta = mf.produce_tfrecords((X, Y), **import_opt)
-        # dataset = mf.Dataset(meta, train_batch=100)
-        # lf_params = dict(
-        #     n_latent=32,
-        #     filter_length=50,
-        #     nonlin=tf.keras.activations.elu,
-        #     padding='SAME',
-        #     pooling=10,
-        #     stride=10,
-        #     pool_type='max',
-        #     model_path=import_opt['savepath'],
-        #     dropout=.4,
-        #     l2_scope=["weights"],
-        #     l2=1e-6
-        # )
+        n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
+        n_classes = len(n_classes)
+        classes_samples = classes_samples.tolist()
+        combiner.shuffle()
+        tfr_path = os.path.join(subject_path, 'TFR')
+        check_path(tfr_path)
+        savepath = os.path.join(
+            tfr_path,
+            classification_name_formatted
+        )
+        import_opt = dict(
+            savepath=savepath + '/',
+            out_name=project_name,
+            fs=200,
+            input_type='trials',
+            target_type='int',
+            picks={'meg': 'grad'},
+            scale=True,
+            crop_baseline=True,
+            decimate=None,
+            scale_interval=(0, 60),
+            n_folds=5,
+            overwrite=True,
+            segment=False,
+            test_set='holdout'
+        )
 
-        # model = classifier(dataset, lf_params)
-        # model.build()
-        # model.train(n_epochs=25, eval_step=100, early_stopping=5)
+        X, Y = combiner.X, combiner.Y
+        meta = mf.produce_tfrecords((X, Y), **import_opt)
+        dataset = mf.Dataset(meta, train_batch=100)
+        lf_params = dict(
+            n_latent=32,
+            filter_length=50,
+            nonlin=tf.keras.activations.elu,
+            padding='SAME',
+            pooling=10,
+            stride=10,
+            pool_type='max',
+            model_path=import_opt['savepath'],
+            dropout=.4,
+            l2_scope=["weights"],
+            l2=1e-6
+        )
 
-        # network_out_path = os.path.join(subject_path, model_name)
-        # yp_path = os.path.join(network_out_path, 'Predictions')
-        # sp_path = os.path.join(network_out_path, 'Parameters')
-        # check_path(network_out_path, yp_path, sp_path)
-        # y_true_train, y_pred_train = model.predict(meta['train_paths'])
-        # y_true_test, y_pred_test = model.predict(meta['test_paths'])
+        model = classifier(dataset, lf_params)
+        model.build()
+        model.train(n_epochs=25, eval_step=100, early_stopping=5)
 
-        # print('train-set: ', subject_name, sklearn.metrics.accuracy_score(
-        #     one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)
-        # ))
-        # print('test-set: ', subject_name, sklearn.metrics.accuracy_score(
-        #     one_hot_decoder(y_true_test), one_hot_decoder(y_pred_test)
-        # ))
+        network_out_path = os.path.join(subject_path, model_name)
+        yp_path = os.path.join(network_out_path, 'Predictions')
+        sp_path = os.path.join(network_out_path, 'Parameters')
+        check_path(network_out_path, yp_path, sp_path)
+        y_true_train, y_pred_train = model.predict(meta['train_paths'])
+        y_true_test, y_pred_test = model.predict(meta['test_paths'])
 
-        # train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
-        # test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
+        print('train-set: ', subject_name, sklearn.metrics.accuracy_score(
+            one_hot_decoder(y_true_train), one_hot_decoder(y_pred_train)
+        ))
+        print('test-set: ', subject_name, sklearn.metrics.accuracy_score(
+            one_hot_decoder(y_true_test), one_hot_decoder(y_pred_test)
+        ))
 
-        # if not no_params:
-        #     model.compute_patterns(meta['train_paths'])
-        #     nt = model.dataset.h_params['n_t']
-        #     time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
-        #     times = (1 / float(model.dataset.h_params['fs'])) *\
-        #         np.arange(model.dataset.h_params['n_t'])
-        #     patterns = model.patterns.copy()
-        #     model.compute_patterns(meta['train_paths'], output='filters')
-        #     filters = model.patterns.copy()
-        #     franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
-        #     induced, times, time_courses = compute_waveforms(model)
+        train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
+        test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
 
-        #     save_parameters(
-        #         Predictions(
-        #             y_pred_test,
-        #             y_true_test
-        #         ),
-        #         os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
-        #         'predictions'
-        #     )
+        if not no_params:
+            model.compute_patterns(meta['train_paths'])
+            nt = model.dataset.h_params['n_t']
+            time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
+            times = (1 / float(model.dataset.h_params['fs'])) *\
+                np.arange(model.dataset.h_params['n_t'])
+            patterns = model.patterns.copy()
+            model.compute_patterns(meta['train_paths'], output='filters')
+            filters = model.patterns.copy()
+            print(compute_temporal_parameters(model))
+            # franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+            induced, times, time_courses = compute_waveforms(model)
 
-        #     save_parameters(
-        #         WaveForms(time_courses.mean(1), induced, times, time_courses),
-        #         os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
-        #         'WaveForms'
-        #     )
+            save_parameters(
+                Predictions(
+                    y_pred_test,
+                    y_true_test
+                ),
+                os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
+                'predictions'
+            )
 
-        #     save_parameters(
-        #         SpatialParameters(patterns, filters),
-        #         os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
-        #         'spatial'
-        #     )
+            save_parameters(
+                WaveForms(time_courses.mean(1), induced, times, time_courses),
+                os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
+                'WaveForms'
+            )
 
-        #     save_parameters(
-        #         TemporalParameters(franges, finputs, foutputs, fresponces),
-        #         os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
-        #         'temporal'
-        #     )
+            save_parameters(
+                SpatialParameters(patterns, filters),
+                os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
+                'spatial'
+            )
 
-        #     save_parameters(
-        #         ComponentsOrder(
-        #             get_order(*model._sorting('l2')),
-        #             get_order(*model._sorting('compwise_loss')),
-        #             get_order(*model._sorting('weight')),
-        #             get_order(*model._sorting('output_corr')),
-        #             get_order(*model._sorting('weight_corr')),
-        #         ),
-        #         os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
-        #         'sorting'
-        #     )
+            save_parameters(
+                TemporalParameters(franges, finputs, foutputs, fresponces),
+                os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
+                'temporal'
+            )
 
-        # perf_table_path = os.path.join(
-        #     perf_tables_path,
-        #     f'{classification_name_formatted}.csv'
-        # )
-        # processed_df = pd.Series(
-        #     [
-        #         n_classes,
-        #         *classes_samples,
-        #         sum(classes_samples),
-        #         np.array(meta['test_fold'][0]).shape[0],
-        #         train_acc_,
-        #         test_acc_,
-        #         model.v_metric,
-        #     ],
-        #     index=[
-        #         'n_classes',
-        #         *class_names,
-        #         'total',
-        #         'test_set',
-        #         'train_acc',
-        #         'test_acc',
-        #         'val_acc',
-        #     ],
-        #     name=subject_name
-        # ).to_frame().T
+            save_parameters(
+                ComponentsOrder(
+                    get_order(*model._sorting('l2')),
+                    get_order(*model._sorting('compwise_loss')),
+                    get_order(*model._sorting('weight')),
+                    get_order(*model._sorting('output_corr')),
+                    get_order(*model._sorting('weight_corr')),
+                ),
+                os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
+                'sorting'
+            )
 
-        # if os.path.exists(perf_table_path):
-        #     pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
-        #         .to_csv(perf_table_path)
-        # else:
-        #     processed_df.to_csv(perf_table_path)
+        perf_table_path = os.path.join(
+            perf_tables_path,
+            f'{classification_name_formatted}.csv'
+        )
+        processed_df = pd.Series(
+            [
+                n_classes,
+                *classes_samples,
+                sum(classes_samples),
+                np.array(meta['test_fold'][0]).shape[0],
+                train_acc_,
+                test_acc_,
+                model.v_metric,
+            ],
+            index=[
+                'n_classes',
+                *class_names,
+                'total',
+                'test_set',
+                'train_acc',
+                'test_acc',
+                'val_acc',
+            ],
+            name=subject_name
+        ).to_frame().T
+
+        if os.path.exists(perf_table_path):
+            pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
+                .to_csv(perf_table_path)
+        else:
+            processed_df.to_csv(perf_table_path)
