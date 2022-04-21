@@ -84,7 +84,7 @@ def spinned(
             spinner = asyncio.ensure_future(async_spinner(chars, prefix_to_use, postfix_to_use, delay))
             result = await asyncio.gather(asyncio.to_thread(func, *args, **kwargs))
             spinner.cancel()
-            return result
+            return result[0]
 
         return wrapper
 
