@@ -109,13 +109,13 @@ if __name__ == '__main__':
             for class_name in class_names:
                 class_name.remove(class_member)
 
-    classification_name = '_vs_'.join(['_&_'.join(class_name) for class_name in class_names])
     classification_name_formatted = "_".join(
         list(filter(lambda s: s not in (None, ""), [
-            classification_prefix, classification_name, classification_postfix
+            classification_prefix,
+            '_vs_'.join(['_&_'.join(class_name) for class_name in class_names]),
+            classification_postfix
         ]))
     )
-    del class_names, classification_name
 
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'mem_task_perf_tables')
     check_path(perf_tables_path)
