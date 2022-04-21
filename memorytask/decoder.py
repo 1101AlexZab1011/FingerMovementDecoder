@@ -137,8 +137,9 @@ if __name__ == '__main__':
                     # with Silence(), warnings.catch_warnings():
                     # warnings.simplefilter("ignore")
                     epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
+                    print(f'{case}: {epochs_.get_data().shape}')
                     epochs_.resample(200)
-
+                    print(f'{case}: {epochs_.get_data().shape}')
                     if any_info is None:
                         any_info = epochs_.info
 
@@ -146,8 +147,7 @@ if __name__ == '__main__':
                         raise ValueError(f'Epochs for {case} are readed twice')
 
                     epochs[case] = epochs_
-        for case in cases:
-            print(f'{case}: {epochs[case].get_data().shape}')
+
         # i = 0
         # cases_indices_to_combine = list()
         # cases_to_combine_list = list()
