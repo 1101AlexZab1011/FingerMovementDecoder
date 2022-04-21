@@ -238,8 +238,8 @@ if __name__ == '__main__':
             patterns = model.patterns.copy()
             model.compute_patterns(meta['train_paths'], output='filters')
             filters = model.patterns.copy()
-            print(compute_temporal_parameters(model))
-            # franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+            print(len(compute_temporal_parameters(model)))
+            franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
             induced, times, time_courses = compute_waveforms(model)
 
             save_parameters(
