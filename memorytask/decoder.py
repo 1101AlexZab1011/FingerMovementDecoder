@@ -23,6 +23,7 @@ from LFCNN_decoder import compute_temporal_parameters, compute_waveforms, \
     save_parameters, get_order, \
     Predictions, TemporalParameters, SpatialParameters, WaveForms, ComponentsOrder
 import pandas as pd
+import copy
 
 
 def remove_repeated_members(arr: list) -> list:
@@ -37,6 +38,21 @@ def remove_single_members(arr: list) -> list:
     return list(
         filter(lambda x: counter[x] > 1, counter.keys())
     )
+
+
+def remove_common_members(*lists: list) -> tuple[list, ...]:
+    first_member = lists[0]
+    lists = list(lists[1:])
+
+    for elem in first_member[:]:
+
+        if all([elem in member for member in lists]):
+            first_member.remove(elem)
+
+            for member in lists:
+                member.remove(elem)
+
+    return tuple([first_member] + lists)
 
 
 if __name__ == '__main__':
@@ -103,12 +119,7 @@ if __name__ == '__main__':
         ]))
         for comb in cases_to_combine
     ]
-
-    for class_member in class_names[0]:
-        if all([class_member in class_name for class_name in class_names[1:]]):
-            for class_name in class_names:
-                class_name.remove(class_member)
-
+    class_names = list(remove_common_members(*class_names))
     class_names = ['_&_'.join(class_name) for class_name in class_names]
     classification_name_formatted = "_".join(
         list(filter(lambda s: s not in (None, ""), [
