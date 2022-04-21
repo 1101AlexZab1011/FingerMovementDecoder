@@ -121,7 +121,7 @@ if __name__ == '__main__':
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'mem_task_perf_tables')
     check_path(perf_tables_path)
 
-    for subject_name in os.listdir(subjects_dir):
+    for subject_name in sorted(os.listdir(subjects_dir)):
 
         if subject_name in excluded_subjects:
             continue
