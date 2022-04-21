@@ -306,7 +306,7 @@ if __name__ == '__main__':
             ],
             name=subject_name
         ).to_frame().T
-
+        print(perf_table_path)
         if os.path.exists(perf_table_path):
             pd.concat([pd.read_csv(perf_table_path, index_col=0, header=0), processed_df], axis=0)\
                 .to_csv(perf_table_path)
