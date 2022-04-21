@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
         subject_path = os.path.join(subjects_dir, subject_name)
         epochs_path = os.path.join(subject_path, 'Epochs')
-        epochs = {case: list() for case in cases}
+        epochs = {case: None for case in cases}
         any_info = None
 
         for epochs_file in os.listdir(epochs_path):
@@ -142,7 +142,10 @@ if __name__ == '__main__':
                         if any_info is None:
                             any_info = epochs_.info
 
-                        epochs[case].append(epochs_)
+                        if epochs[case] is not None:
+                            raise ValueError(f'Epochs for {case} are readed twice')
+
+                        epochs[case] = epochs_
 
         i = 0
         cases_indices_to_combine = list()
