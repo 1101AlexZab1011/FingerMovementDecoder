@@ -1,39 +1,39 @@
 #!/bin/bash
 
-# LFCNN
+# # LFCNN
 
-# 4 cases
-for i in {0..10}
-    do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI" "LM" "RI" "RM" --no-params
-    done
+# # 4 cases
+# for i in {0..10}
+#     do 
+#         ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI" "LM" "RI" "RM" --no-params
+#     done
 
-# left vs right
-for i in {0..10}
-    do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI LM" "RI RM" --no-params
-    done
+# # left vs right
+# for i in {0..10}
+#     do 
+#         ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI LM" "RI RM" --no-params
+#     done
 
-# left
-for i in {0..10}
-    do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI" "LM" --no-params
-    done
+# # left
+# for i in {0..10}
+#     do 
+#         ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI" "LM" --no-params
+#     done
 
-# right
-for i in {0..10}
-    do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "RI" "RM" --no-params
-    done
+# # right
+# for i in {0..10}
+#     do 
+#         ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "RI" "RM" --no-params
+#     done
 
 
-# LFRNN
+# # LFRNN
 
-# 4 cases
-for i in {0..10}
-    do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI" "LM" "RI" "RM" --no-params -m LFRNN --postfix LFRNN
-    done
+# # 4 cases
+# for i in {0..10}
+#     do 
+#         ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI" "LM" "RI" "RM" --no-params -m LFRNN --postfix LFRNN
+#     done
 
 # left vs right
 for i in {0..10}
