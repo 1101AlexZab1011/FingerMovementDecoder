@@ -257,6 +257,7 @@ if __name__ == '__main__':
             test_loss_, test_acc_ = model.evaluate(test_data)
             
             if dataset_train.name != dataset_prev and not no_params:
+                dataset_prev = dataset_train.name
                 model.compute_patterns(meta['train_paths'])
                 patterns = model.patterns.copy()
                 model.compute_patterns(meta['train_paths'], output='filters')
