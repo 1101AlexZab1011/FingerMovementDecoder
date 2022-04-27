@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--prefix', type=str,
                         default='', help='String to set in the start of a task name')
     parser.add_argument('-m', '--model', type=str,
-                        default='', help='Name of model to use')
+                        default='LFCNN', help='Name of the model that was used')
     parser.add_argument('--log', action='store_true', help='Apply logaritmic scale')
     
     sort, \
