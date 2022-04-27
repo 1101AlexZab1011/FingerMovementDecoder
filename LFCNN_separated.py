@@ -323,22 +323,22 @@ if __name__ == '__main__':
                         y_pred_test,
                         y_true_test
                     ),
-                    os.path.join(yp_path, f'{classification_name_formatted_sep}_pred.pkl'),
+                    os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
                     'predictions'
                 )
                 save_parameters(
                     WaveForms(time_courses.mean(1), induced, times, time_courses),
-                    os.path.join(sp_path, f'{classification_name_formatted_sep}_waveforms.pkl'),
+                    os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
                     'WaveForms'
                 )
                 save_parameters(
                     SpatialParameters(patterns, filters),
-                    os.path.join(sp_path, f'{classification_name_formatted_sep}_spatial.pkl'),
+                    os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
                     'spatial'
                 )
                 save_parameters(
                     TemporalParameters(franges, finputs, foutputs, fresponces),
-                    os.path.join(sp_path, f'{classification_name_formatted_sep}_temporal.pkl'),
+                    os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
                     'temporal'
                 )
                 save_parameters(
@@ -349,7 +349,7 @@ if __name__ == '__main__':
                         get_order(*model._sorting('output_corr')),
                         get_order(*model._sorting('weight_corr')),
                     ),
-                    os.path.join(sp_path, f'{classification_name_formatted_sep}_sorting.pkl'),
+                    os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
                     'sorting'
                 )
 

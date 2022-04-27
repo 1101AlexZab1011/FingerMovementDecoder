@@ -20,6 +20,8 @@ if __name__ == '__main__':
                         default='', help='String to append to a task name')
     parser.add_argument('--prefix', type=str,
                         default='', help='String to set in the start of a task name')
+    parser.add_argument('-m', '--model', type=str,
+                        default='', help='Name of model to use')
     parser.add_argument('--log', action='store_true', help='Apply logaritmic scale')
     
     sort, \
@@ -29,6 +31,7 @@ if __name__ == '__main__':
     classification_name,\
     classification_postfix,\
     classification_prefix, \
+    model_name, \
     logscale = vars(parser.parse_args()).values()
     
     cases_to_combine = [case.split(' ') for case in cases_to_combine]
@@ -42,7 +45,7 @@ if __name__ == '__main__':
     classification_name_formatted = "_".join(list(filter(lambda s: s not in (None, ""), [classification_prefix, classification_name, classification_postfix])))
     
     subject_info_path = os.path.join(subjects_dir, subject_name, 'Info')
-    subject_parameters_path = os.path.join(subjects_dir, subject_name, 'LFRNN', 'Parameters')
+    subject_parameters_path = os.path.join(subjects_dir, subject_name, model_name, 'Parameters')
     
     spatial_parameters = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_spatial.pkl'))
     temporal_parameters = read_pkl(os.path.join(subject_parameters_path, f'{classification_name_formatted}_temporal.pkl'))
