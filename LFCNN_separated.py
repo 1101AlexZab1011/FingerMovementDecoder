@@ -230,6 +230,7 @@ if __name__ == '__main__':
             l2=1e-6
         )
         dataset_prev = None
+        new_parameters = False
         for dataset_train, dataset_test in product(datasets.values(), repeat=2):
             print(f'Using {dataset_train.name} as a train set and {dataset_test.name} as a test set')
             classification_name_formatted_sep = f'{classification_name_formatted}_train_{dataset_train.name}_test_{dataset_test.name}'
@@ -243,6 +244,7 @@ if __name__ == '__main__':
                 yp_path = os.path.join(network_out_path, 'Predictions')
                 sp_path = os.path.join(network_out_path, 'Parameters')
                 check_path(network_out_path, yp_path, sp_path)
+                new_parameters = True
             
             test_data = dataset_test.dataset.train if dataset_train.name != dataset_test.name and use_train else dataset_test.dataset.test
             
@@ -256,8 +258,9 @@ if __name__ == '__main__':
             train_loss_, train_acc_ = model.evaluate(dataset_train.dataset.train)
             test_loss_, test_acc_ = model.evaluate(test_data)
             
-            if dataset_train.name != dataset_prev and not no_params:
+            if new_parameters and not no_params:
                 dataset_prev = dataset_train.name
+                new_parameters = False
                 model.compute_patterns(meta['train_paths'])
                 patterns = model.patterns.copy()
                 model.compute_patterns(meta['train_paths'], output='filters')
