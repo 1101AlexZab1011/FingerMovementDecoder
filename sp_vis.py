@@ -94,6 +94,7 @@ if __name__ == '__main__':
     print(f'weight {orders.weight + 1}')
     print(f'weight_corr {orders.weight_corr + 1 }')
     print(f'output_corr {orders.output_corr + 1 }')
+    print(f'compwise_loss {orders.compwise_loss + 1 }')
     plot_spatial_weights(
         spatial_parameters,
         temporal_parameters,

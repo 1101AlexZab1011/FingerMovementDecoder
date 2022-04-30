@@ -36,22 +36,22 @@
 #     done
 
 # left vs right
-for i in {0..10}
-    do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI LM" "RI RM" --no-params -m LFRNN --postfix LFRNN
-    done
+# for i in {0..10}
+#     do 
+#         ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI LM" "RI RM" --no-params -m LFRNN --postfix LFRNN
+#     done
 
-# left
-for i in {0..10}
-    do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI" "LM" --no-params -m LFRNN --postfix LFRNN
-    done
+# # left
+# for i in {0..10}
+#     do 
+#         ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "LI" "LM" --no-params -m LFRNN --postfix LFRNN
+#     done
 
-# right
-for i in {0..10}
-    do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "RI" "RM" --no-params -m LFRNN --postfix LFRNN
-    done
+# # right
+# for i in {0..10}
+#     do 
+#         ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2" "B7 B8" -cmc "RI" "RM" --no-params -m LFRNN --postfix LFRNN
+#     done
 
 
 # seq
