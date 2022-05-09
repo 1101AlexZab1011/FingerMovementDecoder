@@ -1,35 +1,28 @@
-import asyncio
-import itertools
 import os
 import argparse
 import pickle
 import re
-import sys
-import time
 import warnings
-from os import listdir
 from shutil import rmtree
-from typing import NoReturn, Optional, Callable, Union, Any
-
+from typing import NoReturn, Union, Any
 import mne
-
 from utils.console import Silence
 from utils.console.colored import ColoredText, bold, success, alarm, warn
 from utils.console.spinner import spinner
-from utils.data_management import dict2str
 from utils.storage_management import check_path
 
 
 @spinner(prefix=lambda path: f'Reading {path}... ')
 def read_pkl(path: str) -> Any:
     with open(
-            path,
-            'rb'
-        ) as file:
+        path,
+        'rb'
+    ) as file:
         content = pickle.load(
             file
         )
-    return content	
+    return content
+
 
 @spinner(prefix=lambda _, path: f'Saving file into {path}... ')
 def save_pkl(content: Any, path: str) -> NoReturn:
@@ -43,7 +36,7 @@ def save_pkl(content: Any, path: str) -> NoReturn:
     f'Reading '
     f'"{path.split("/")[-2]}/'
     f'{path.split("/")[-1]}" file for '
-    f'{path.split("/")[-3]}'#[-5]}'
+    f'{path.split("/")[-3]}'  # [-5]}'
     f'... '
 )
 def read_mat_epochs(path, *, info):
@@ -99,7 +92,8 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--cases', type=str, nargs='+',
                         default=['LI', 'LM', 'RI', 'RM'], help='Cases to consider')
     parser.add_argument('-sd', '--subjects-dir', type=str,
-                        default=os.path.join(os.getcwd(), 'Source', 'Subjects'), help='Path to the subjects directory')
+                        default=os.path.join(os.getcwd(), 'Source', 'Subjects'),
+                        help='Path to the subjects directory')
     parser.add_argument('-t', '--trials', type=int,
                         default=10, help='Number of trials')
     parser.add_argument('-m', '--manually', help='if true, ask how to perform each step',
@@ -109,15 +103,15 @@ if __name__ == "__main__":
     parser.add_argument('--delete-unnecessary', help='Delete all files that are no longer needed',
                         action='store_true')
     excluded_locks, \
-    excluded_sessions, \
-    excluded_subjects, \
-    all_locks, \
-    cases, \
-    subjects_dir, \
-    n_trials, \
-    manually, \
-    sessions_name, \
-    delete_unnecessary = vars(parser.parse_args()).values()
+        excluded_sessions, \
+        excluded_subjects, \
+        all_locks, \
+        cases, \
+        subjects_dir, \
+        n_trials, \
+        manually, \
+        sessions_name, \
+        delete_unnecessary = vars(parser.parse_args()).values()
 
     sessions = [
         f'{sessions_name}{i + 1}'
@@ -211,8 +205,10 @@ if __name__ == "__main__":
             if info_saved:
 
                 if manually:
-                    delete_raw = y_n_question(f'Remove Raw-file of {subject} '
-                                              f'at {os.path.join(raw_dir, raw_file_name)}?')
+                    delete_raw = y_n_question(
+                        f'Remove Raw-file of {subject} '
+                        f'at {os.path.join(raw_dir, raw_file_name)}?'
+                    )
                 elif delete_unnecessary:
                     delete_raw = True
                 else:
@@ -256,7 +252,9 @@ if __name__ == "__main__":
                         alarm(f'Epochs for {subject} {lock} {case} {session} already exist')
 
                         if manually:
-                            transform_epoch = y_n_question(f'Overwrite epoch "{cor_case_session}_epochs.fif"?')
+                            transform_epoch = y_n_question(
+                                f'Overwrite epoch "{cor_case_session}_epochs.fif"?'
+                            )
                         else:
                             transform_epoch = False
                     else:
@@ -269,8 +267,11 @@ if __name__ == "__main__":
                             if isinstance(epochs, list) and len(epochs) == 1:
                                 epochs = epochs[0]
                         except ValueError as err:
-                            alarm(f'Epochs for {subject} {lock} {case} {session} can not be read '
-                                  f'due to {type(err)}\n{err}\n', True)
+                            alarm(
+                                f'Epochs for {subject} {lock} {case} {session} can not be read '
+                                f'due to {type(err)}\n{err}\n',
+                                True
+                            )
                             continue
                         success('Epochs successfully read:')
                         print(epochs)
@@ -285,8 +286,10 @@ if __name__ == "__main__":
                         success(f'Epochs successfully saved at {epochs_to_save}')
 
                         if manually:
-                            delete_mat_epochs = y_n_question(f'Remove ".mat" epochs file for '
-                                                             f'{subject} {lock} {case} {session} at {dat_mat_path}?')
+                            delete_mat_epochs = y_n_question(
+                                f'Remove ".mat" epochs file for '
+                                f'{subject} {lock} {case} {session} at {dat_mat_path}?'
+                            )
                         elif delete_unnecessary:
                             delete_mat_epochs = True
                         else:
@@ -295,8 +298,7 @@ if __name__ == "__main__":
                         if delete_mat_epochs:
                             rmtree(os.path.join(subject_case, cor_case_session))
                             warn(
-                                f'Epochs file in ".mat" format for {subject} {lock} {case} {session} has been removed',
+                                f'Epochs file in ".mat" format for {subject} '
+                                f'{lock} {case} {session} has been removed',
                                 True
                             )
-
-#python mat_to_fif.py -ep Fe_To_08 Ga_Fed_06 Ku_El_09 Pr_An_04 Ru_Ek_07 Se_Tu_03 Te_Ali_11 -el StimLock -es B2 B3 B4 B5 B6 B7 B8 B9 -m
