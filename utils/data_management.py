@@ -1,9 +1,17 @@
-from lib2to3.pgen2.token import OP
 from typing import Optional, Union
 
 
-def dict2str(dictionary: dict, *, space: Optional[int] = 1, tabulation: Optional[int] = 2, first_space = True) -> str:
-    tab = lambda tabulation: ' ' * tabulation
+def dict2str(
+    dictionary: dict,
+    *,
+    space: Optional[int] = 1,
+    tabulation: Optional[int] = 2,
+    first_space=True
+) -> str:
+
+    def tab(tabulation: int) -> str:
+        ' ' * tabulation
+
     string = f'{tab(tabulation) if first_space else ""}{{\n'
     tabulation += space
     for key, value in zip(dictionary.keys(), dictionary.values()):
@@ -19,7 +27,12 @@ def dict2str(dictionary: dict, *, space: Optional[int] = 1, tabulation: Optional
     string += f'{tab(tabulation - space)}}}\n'
     return string
 
-def convert_base(num: Union[int, str], to_base: Optional[int] = 10, from_base: Optional[int] = 10) -> str:
+
+def convert_base(
+    num: Union[int, str],
+    to_base: Optional[int] = 10,
+    from_base: Optional[int] = 10
+) -> str:
     if from_base < 2 or from_base > 36:
         raise ValueError('from_base must be >= 2 and <= 36, or 0')
     if to_base < 2 or to_base > 36:

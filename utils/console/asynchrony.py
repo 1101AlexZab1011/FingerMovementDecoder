@@ -1,8 +1,6 @@
 import asyncio
 import functools
 import os
-import random
-import time
 from asyncio import Task
 from typing import Union, Callable, Optional, Coroutine
 
@@ -62,14 +60,18 @@ def closed_async(
         result = loop.run_until_complete(future)
         if close_event_loop:
             loop.close()
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         loop.stop()
         loop.close()
     return result
 
 
 class Handler(object):
-    def __init__(self, list_of_tasks: list[Union[Callable, Deploy]], n_task_simultaneously: Optional[int] = 5):
+    def __init__(
+        self,
+        list_of_tasks: list[Union[Callable, Deploy]],
+        n_task_simultaneously: Optional[int] = 5
+    ):
         self._tasks = list_of_tasks
         self._batch_size = n_task_simultaneously
 

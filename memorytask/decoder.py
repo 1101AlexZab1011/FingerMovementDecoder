@@ -23,7 +23,6 @@ from LFCNN_decoder import compute_temporal_parameters, compute_waveforms, \
     save_parameters, get_order, \
     Predictions, TemporalParameters, SpatialParameters, WaveForms, ComponentsOrder
 import pandas as pd
-import copy
 
 
 def remove_repeated_members(arr: list) -> list:

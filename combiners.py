@@ -64,7 +64,10 @@ class EpochsCombiner(AbstractCombiner, UserList):
 
     @original_data.setter
     def original_data(self, value: List[EpochsArray]) -> NoReturn:
-        raise AttributeError('EpochsCombiner data can not be set. It can be changed only via new EpochsCombiner object')
+        raise AttributeError(
+            'EpochsCombiner data can not be set. '
+            'It can be changed only via new EpochsCombiner object'
+        )
 
     @property
     def filtered_data(self) -> List[EpochsArray]:
@@ -72,7 +75,10 @@ class EpochsCombiner(AbstractCombiner, UserList):
 
     @filtered_data.setter
     def filtered_data(self, value: List[EpochsArray]) -> NoReturn:
-        raise AttributeError('Filtered data can not be set. It must be computed from the given EpochsArrays')
+        raise AttributeError(
+            'Filtered data can not be set. '
+            'It must be computed from the given EpochsArrays'
+        )
 
     @property
     def cropped_data(self) -> List[EpochsArray]:
@@ -80,12 +86,17 @@ class EpochsCombiner(AbstractCombiner, UserList):
 
     @cropped_data.setter
     def cropped_data(self, value: List[EpochsArray]) -> NoReturn:
-        raise AttributeError('Cropped data can not be set. It must be computed from the given EpochsArrays')
+        raise AttributeError(
+            'Cropped data can not be set. '
+            'It must be computed from the given EpochsArrays'
+        )
 
     def switch_data(self, data_to_use: str):
         if data_to_use not in self.__storage.keys():
-            raise ValueError(f'Wrong switch option: {data_to_use}. '
-                             f'Possible data to switch: {", ".join([key for key in self.__storage.keys()])}.')
+            raise ValueError(
+                f'Wrong switch option: {data_to_use}. '
+                f'Possible data to switch: {", ".join([key for key in self.__storage.keys()])}.'
+            )
         self.data = self.__storage[data_to_use]
         return self
 
@@ -104,7 +115,7 @@ class EpochsCombiner(AbstractCombiner, UserList):
         ]
         self.data = self.__storage['cropped']
         return self
-    
+
     def shuffle(self):
         X = self.X
         Y = self.Y
@@ -121,9 +132,11 @@ class EpochsCombiner(AbstractCombiner, UserList):
 
             def check_range(index):
                 if index > len(self.data):
-                    raise ValueError(f'Indices out of range: '
-                                     f'this EpochsCombiner contains only {len(self.data)} EpochsArrays, '
-                                     f'but index {index} is given')
+                    raise ValueError(
+                        f'Indices out of range: '
+                        f'this EpochsCombiner contains only {len(self.data)} EpochsArrays, '
+                        f'but index {index} is given'
+                    )
 
             if isinstance(indices, int):
                 check_range(indices)
@@ -135,11 +148,13 @@ class EpochsCombiner(AbstractCombiner, UserList):
                 return tuple(indices)
 
             else:
-                raise ValueError(f'Class indices must be integers of any iterable of integers, '
-                                 f'{type(indices)} is given instead')
+                raise ValueError(
+                    f'Class indices must be integers of any iterable of integers, '
+                    f'{type(indices)} is given instead'
+                )
 
         args = [format_indices(indices) for indices in args]
-        
+
         all_class_data = list()
         all_class_labels = list()
         for i, class_indices in enumerate(args):
@@ -151,7 +166,7 @@ class EpochsCombiner(AbstractCombiner, UserList):
             all_class_labels.append(np.array([
                 i for _ in range(class_data.shape[0])
             ]))
-        
+
         X = np.concatenate(all_class_data, axis=0)
         Y = np.concatenate(all_class_labels)
 

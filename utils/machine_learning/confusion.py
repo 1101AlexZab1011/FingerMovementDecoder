@@ -11,7 +11,12 @@ class ConfusionEstimator(object):
             fp: Union[float, np.ndarray],
             fn: Union[float, np.ndarray]
     ):
-        tp, tn, fp, fn = (val.mean() if isinstance(val, np.ndarray) else val for val in (tp, tn, fp, fn))
+        tp, tn, fp, fn = (
+            val.mean()
+            if isinstance(val, np.ndarray)
+            else val
+            for val in (tp, tn, fp, fn)
+        )
 
         if any([
             np.isnan(val)
@@ -20,7 +25,10 @@ class ConfusionEstimator(object):
             or not np.isreal(val)
             for val in (tp, tn, fp, fn)
         ]):
-            raise ValueError('All values of confusion matrix must be real numbers or arrays of real numbers')
+            raise ValueError(
+                'All values of confusion matrix must be '
+                'real numbers or arrays of real numbers'
+            )
 
         self._tp, self._tn, self._fp, self._fn = tp, tn, fp, fn
         self.__init_params()
@@ -67,7 +75,10 @@ class ConfusionEstimator(object):
 
     @acc.setter
     def acc(self, value: Any):
-        raise AttributeError('Accuracy can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Accuracy can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def tpr(self):
@@ -75,7 +86,10 @@ class ConfusionEstimator(object):
 
     @tpr.setter
     def tpr(self, value: Any):
-        raise AttributeError('True Positive Rate can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'True Positive Rate can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def sens(self):
@@ -83,7 +97,10 @@ class ConfusionEstimator(object):
 
     @sens.setter
     def sens(self, value):
-        raise AttributeError('Sensitivity can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Sensitivity can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def tnr(self):
@@ -91,7 +108,10 @@ class ConfusionEstimator(object):
 
     @tnr.setter
     def tnr(self, value: Any):
-        raise AttributeError('True Negative Rate can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'True Negative Rate can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def spec(self):
@@ -99,7 +119,10 @@ class ConfusionEstimator(object):
 
     @spec.setter
     def spec(self, value):
-        raise AttributeError('Specificity can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Specificity can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def fpr(self):
@@ -107,7 +130,10 @@ class ConfusionEstimator(object):
 
     @fpr.setter
     def fpr(self, value: Any):
-        raise AttributeError('False Positive Rate can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'False Positive Rate can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def mr(self):
@@ -115,7 +141,10 @@ class ConfusionEstimator(object):
 
     @mr.setter
     def mr(self, value):
-        raise AttributeError('Miss Rate can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Miss Rate can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def fnr(self):
@@ -123,7 +152,10 @@ class ConfusionEstimator(object):
 
     @fnr.setter
     def fnr(self, value):
-        raise AttributeError('False Negative Rate can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'False Negative Rate can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def fallout(self):
@@ -131,7 +163,10 @@ class ConfusionEstimator(object):
 
     @fallout.setter
     def fallout(self, value):
-        raise AttributeError('Fall-Out can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Fall-Out can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def ppv(self):
@@ -139,7 +174,10 @@ class ConfusionEstimator(object):
 
     @ppv.setter
     def ppv(self, value):
-        raise AttributeError('Positive Predictive Value can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Positive Predictive Value can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def prec(self):
@@ -147,7 +185,10 @@ class ConfusionEstimator(object):
 
     @prec.setter
     def prec(self, value):
-        raise AttributeError('Precision can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Precision can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def npv(self):
@@ -155,7 +196,10 @@ class ConfusionEstimator(object):
 
     @npv.setter
     def npv(self, value):
-        raise AttributeError('Negative Predictive Value can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Negative Predictive Value can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def fdr(self):
@@ -163,7 +207,10 @@ class ConfusionEstimator(object):
 
     @fdr.setter
     def fdr(self, value):
-        raise AttributeError('False Discovery Rate can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'False Discovery Rate can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def for_(self):
@@ -171,7 +218,10 @@ class ConfusionEstimator(object):
 
     @for_.setter
     def for_(self, value):
-        raise AttributeError('False Omission Rate can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'False Omission Rate can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def pt(self):
@@ -179,7 +229,10 @@ class ConfusionEstimator(object):
 
     @pt.setter
     def pt(self, value):
-        raise AttributeError('Prevalence Threshold can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Prevalence Threshold can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def ts(self):
@@ -187,7 +240,10 @@ class ConfusionEstimator(object):
 
     @ts.setter
     def ts(self, value):
-        raise AttributeError('Threat Score can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Threat Score can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def csi(self):
@@ -195,7 +251,10 @@ class ConfusionEstimator(object):
 
     @csi.setter
     def csi(self, value):
-        raise AttributeError('Critical Success Index can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Critical Success Index can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def ba(self):
@@ -203,7 +262,10 @@ class ConfusionEstimator(object):
 
     @ba.setter
     def ba(self, value):
-        raise AttributeError('Balanced Accuracy can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Balanced Accuracy can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def f1(self):
@@ -211,7 +273,10 @@ class ConfusionEstimator(object):
 
     @f1.setter
     def f1(self, value):
-        raise AttributeError('F1-score can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'F1-score can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def mcc(self):
@@ -219,8 +284,10 @@ class ConfusionEstimator(object):
 
     @mcc.setter
     def mcc(self, value):
-        raise AttributeError('Matthews Correlation Coefficient can not be set, '
-                            'it must be computed from confusion matrix')
+        raise AttributeError(
+            'Matthews Correlation Coefficient can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def fm(self):
@@ -228,7 +295,10 @@ class ConfusionEstimator(object):
 
     @fm.setter
     def fm(self, value):
-        raise AttributeError('Fowlkes-Mallows Index can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Fowlkes-Mallows Index can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def bm(self):
@@ -236,7 +306,10 @@ class ConfusionEstimator(object):
 
     @bm.setter
     def bm(self, value):
-        raise AttributeError('Informedness can not be set, it must be computed from confusion matrix')
+        raise AttributeError(
+            'Informedness can not be set, '
+            'it must be computed from confusion matrix'
+        )
 
     @property
     def mk(self):
@@ -244,32 +317,44 @@ class ConfusionEstimator(object):
 
     @mk.setter
     def mk(self, value):
-        raise AttributeError('Markedness can not be set, it must be computed from confusion matrix')
-    
+        raise AttributeError(
+            'Markedness can not be set, '
+            'it must be computed from confusion matrix'
+        )
+
     @property
     def lr_plus(self):
         return self._lr_plus
 
     @lr_plus.setter
     def lr_plus(self, value):
-        raise AttributeError('Positive likelihood ratio can not be set, it must be computed from confusion matrix')
-    
+        raise AttributeError(
+            'Positive likelihood ratio can not be set, '
+            'it must be computed from confusion matrix'
+        )
+
     @property
     def lr_minus(self):
         return self._lr_minus
 
     @lr_minus.setter
     def lr_minus(self, value):
-        raise AttributeError('Negative likelihood ratio can not be set, it must be computed from confusion matrix')
-    
+        raise AttributeError(
+            'Negative likelihood ratio can not be set, '
+            'it must be computed from confusion matrix'
+        )
+
     @property
     def dor(self):
         return self._dor
 
     @dor.setter
     def dor(self, value):
-        raise AttributeError('Diagnostic odds ratio can not be set, it must be computed from confusion matrix')
-    
+        raise AttributeError(
+            'Diagnostic odds ratio can not be set, '
+            'it must be computed from confusion matrix'
+        )
+
     @property
     def prev(self):
         return self._prev
@@ -293,7 +378,17 @@ class ConfusionEstimator(object):
         self._ba = (self.tpr + self.tnr) / 2
         self._f1 = 2 * (self.ppv * self.tpr) / (self.ppv + self.tpr)
         self._mcc = (self.tp * self.tn - self.fp * self.fn) / \
-                    np.sqrt((self.tp + self.fp) * (self.tp + self.fn) * (self.tn + self.fp) * (self.tn + self.fn))
+            np.sqrt(
+            (
+                self.tp + self.fp
+            ) * (
+                self.tp + self.fn
+            ) * (
+                self.tn + self.fp
+            ) * (
+                self.tn + self.fn
+            )
+        )
         self._fm = np.sqrt(self.ppv * self.tpr)
         self._bm = self.tpr + self.tnr - 1
         self._mk = self.ppv + self.npv - 1

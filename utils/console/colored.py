@@ -57,18 +57,16 @@ class ColoredText(object):
         return self
 
     def style(self, style_name: str):
-        self.styles = [
-                          {
-                              'bold': 1,
-                              'b': 1,
-                              'italic': 3,
-                              'i': 3,
-                              'underline': 4,
-                              'u': 4,
-                              'reverse': 7,
-                              'r': 7
-                          }[style_name]
-                      ] + self.styles
+        self.styles = [{
+            'bold': 1,
+            'b': 1,
+            'italic': 3,
+            'i': 3,
+            'underline': 4,
+            'u': 4,
+            'reverse': 7,
+            'r': 7
+        }[style_name]] + self.styles
         self.__current_style += 1
         return self
 
@@ -83,7 +81,7 @@ def clean_styles(styled_text):
 
     def remove_sublist_from_list(in_list, sublist):
         indices = find_sublist(sublist, in_list)
-        if not indices is None:
+        if indices is not None:
             return in_list[0:indices[0]] + in_list[indices[1]:]
         else:
             return in_list
@@ -102,7 +100,12 @@ def bold(msg: str, **kwargs) -> NoReturn:
     print(ColoredText().color().style('b')(msg), **kwargs)
 
 
-def warn(msg: str, in_bold: Optional[bool] = False, bright: Optional[bool] = True, **kwargs) -> NoReturn:
+def warn(
+    msg: str,
+    in_bold: Optional[bool] = False,
+    bright: Optional[bool] = True,
+    **kwargs
+) -> NoReturn:
     yellow = ColoredText().color('y')
     if bright:
         yellow.bright()
@@ -112,7 +115,12 @@ def warn(msg: str, in_bold: Optional[bool] = False, bright: Optional[bool] = Tru
         print(yellow(msg), **kwargs)
 
 
-def alarm(msg: str, in_bold: Optional[bool] = False, bright: Optional[bool] = True, **kwargs) -> NoReturn:
+def alarm(
+    msg: str,
+    in_bold: Optional[bool] = False,
+    bright: Optional[bool] = True,
+    **kwargs
+) -> NoReturn:
     red = ColoredText().color('r')
     if bright:
         red.bright()
@@ -122,7 +130,12 @@ def alarm(msg: str, in_bold: Optional[bool] = False, bright: Optional[bool] = Tr
         print(red(msg), **kwargs)
 
 
-def success(msg: str, in_bold: Optional[bool] = False, bright: Optional[bool] = True, **kwargs) -> NoReturn:
+def success(
+    msg: str,
+    in_bold: Optional[bool] = False,
+    bright: Optional[bool] = True,
+    **kwargs
+) -> NoReturn:
     green = ColoredText().color('g')
     if bright:
         green.bright()

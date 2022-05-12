@@ -70,7 +70,9 @@ def read_or_write(
             elif isinstance(file_prefix, str):
                 prefix = file_prefix
             else:
-                raise ValueError(f'Prefix to file have to be string or callable, but {type(path)} is given')
+                raise ValueError(
+                    f'Prefix to file have to be string or callable, but {type(path)} is given'
+                )
 
             if reader is not None and os.path.exists(place):
                 code = encrypt_callable(func, args, kwargs, prefix)

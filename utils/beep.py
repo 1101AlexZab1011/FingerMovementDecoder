@@ -63,4 +63,6 @@ class Beeper(object):
         if isinstance(repeat, int):
             self._repeat = repeat
         else:
-            raise AttributeError(f'The number of repetitions must be an integer, {type(repeat)} is given')
+            raise AttributeError(
+                f'The number of repetitions must be an integer, {type(repeat)} is given'
+            )

@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Optional, Callable, Any
+from typing import Optional
 
 
 class Silence:
@@ -36,7 +36,7 @@ def erase_previous_line(line: Optional[int] = 1, *, return_str: Optional[bool] =
 def edit_previous_line(text: str, line: Optional[int] = 1, *, return_str: Optional[bool] = False):
     # out = f'\033[{line}F\033[K\033[a{text}'
     out = f'\033[{line}F\033[K{text}'
-    for i in range(line-1):
+    for i in range(line - 1):
         out += '\n'
     if return_str:
         return out
@@ -44,7 +44,12 @@ def edit_previous_line(text: str, line: Optional[int] = 1, *, return_str: Option
         print(out)
 
 
-def add_line_above(text: Optional[str] = '', line: Optional[int] = 1, *, return_str: Optional[bool] = False):
+def add_line_above(
+    text: Optional[str] = '',
+    line: Optional[int] = 1,
+    *,
+    return_str: Optional[bool] = False
+):
     out = f'\033[{line}F\033[L{text}'
     for i in range(line):
         out += '\n'

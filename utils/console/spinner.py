@@ -1,18 +1,20 @@
 import asyncio
 import functools
 import itertools
-import os
-import pickle
 import sys
 import time
-from typing import Optional, Callable, Union, Any, List, Tuple
+from typing import Optional, Callable, Union, List, Tuple
 
 from utils.console.asynchrony import looped
-from utils.console.colored import ColoredText, clean_styles, alarm
+from utils.console.colored import clean_styles
 
 
 class Spinner(object):
-    def __init__(self, delay: Optional[float] = 0.1, states: Optional[Tuple[str, ...]] = ('/', '-', '\\', '|')):
+    def __init__(
+        self,
+        delay: Optional[float] = 0.1,
+        states: Optional[Tuple[str, ...]] = ('/', '-', '\\', '|')
+    ):
         self.delay = delay
         self.__states = states
         self.__current_state = 0
@@ -81,7 +83,14 @@ def spinned(
                 postfix_to_use = postfix
             else:
                 postfix_to_use = str(postfix)
-            spinner = asyncio.ensure_future(async_spinner(chars, prefix_to_use, postfix_to_use, delay))
+            spinner = asyncio.ensure_future(
+                async_spinner(
+                    chars,
+                    prefix_to_use,
+                    postfix_to_use,
+                    delay
+                )
+            )
             result = await asyncio.gather(asyncio.to_thread(func, *args, **kwargs))
             spinner.cancel()
             return result[0]

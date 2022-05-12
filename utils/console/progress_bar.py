@@ -1,17 +1,12 @@
-import asyncio
-import itertools
 import os
-import random
-import re
 import sys
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional, Callable, Union, NoReturn, Any
 from utils.console import delete_previous_line, edit_previous_line, add_line_above
-from utils.console.asynchrony import closed_async, looped, async_generator
-from utils.console.colored import warn, ColoredText, alarm, clean_styles
-from utils.data_management import dict2str
+from utils.console.asynchrony import async_generator
+from utils.console.colored import warn, alarm
 from utils.structures import Deploy
 
 
@@ -83,7 +78,8 @@ class Progress(AbstractProgress):
         if self.ending is None:
             self.ending = self.space
         if self.suffix is None:
-            self.suffix = lambda proc: f'{100 * (proc.iteration / float(proc.total)): .{proc.decimals}f}%'
+            self.suffix = lambda proc:\
+                f'{100 * (proc.iteration / float(proc.total)): .{proc.decimals}f}%'
         if self.length is None:
             try:
                 self.length = os.get_terminal_size().columns // 2
@@ -102,7 +98,9 @@ class Progress(AbstractProgress):
                     self.iteration += 1
                 else:
                     raise ValueError(
-                        f'The parameter "move" must be either boolean or integer, but {type(move)} is given')
+                        'The parameter "move" must be either '
+                        f'boolean or integer, but {type(move)} is given'
+                    )
         else:
             warn('Progress can not run, because number of iterations is unknown')
 
@@ -119,7 +117,10 @@ class Progress(AbstractProgress):
         elif isinstance(self.prefix, Callable):
             prefix = self.prefix(self)
         else:
-            raise TypeError(f'Prefix must be either string or callable, {type(self.prefix)} is given')
+            raise TypeError(
+                'Prefix must be either string '
+                f'or callable, {type(self.prefix)} is given'
+            )
         if self.iteration == self.total and self.report_message:
             suffix = self.report_message
         elif isinstance(self.suffix, str):
@@ -127,7 +128,10 @@ class Progress(AbstractProgress):
         elif isinstance(self.suffix, Callable):
             suffix = self.suffix(self)
         else:
-            raise TypeError(f'Suffix must be either string or callable, {type(self.suffix)} is given')
+            raise TypeError(
+                'Suffix must be either string '
+                f'or callable, {type(self.suffix)} is given'
+            )
         bar = self.fill * filled_length + end + self.space * (self.length - filled_length - 1)
         return f'\r{prefix} {self.edges[0]}{bar}{self.edges[1]} {suffix}'
 
@@ -169,7 +173,9 @@ class Spinner(AbstractProgress):
                     self.iteration = self.iteration + move
             else:
                 raise ValueError(
-                    f'The parameter "move" must be either boolean or integer, but {type(move)} is given')
+                    'The parameter "move" must be either '
+                    f'boolean or integer, but {type(move)} is given'
+                )
 
         return f'\r{self.prefix} {next(self)} {self.suffix}'
 
@@ -276,10 +282,18 @@ class ProgressBar(object):
                 )
                 self.__changing = False
         else:
-            self.interrupt(f'This is not a spinner: line {self._taken_lines[progress_index]}, running: {type(spinner)}')
+            self.interrupt(
+                'This is not a spinner: line '
+                f'{self._taken_lines[progress_index]}, running: {type(spinner)}'
+            )
 
-    def run_with_spinner(self, func: Union[Deploy, Callable], spinner: Spinner, *,
-                         delete_final: Optional[bool] = False):
+    def run_with_spinner(
+        self,
+        func: Union[Deploy, Callable],
+        spinner: Spinner,
+        *,
+        delete_final: Optional[bool] = False
+    ):
         self.__wait_changes()
         self.__changing = True
         self._progresses.append(spinner)
@@ -362,7 +376,11 @@ class ProgressBar(object):
         self.__changing = False
 
     def interrupt(self, why: Optional[str] = None):
-        self.__protected_print(alarm, f'\n\rProgram was stopped due to KeyboardInterrupt, exiting...\n{why}', True)
+        self.__protected_print(
+            alarm,
+            f'\n\rProgram was stopped due to KeyboardInterrupt, exiting...\n{why}',
+            True
+        )
         os._exit(0)
 
     def print(self, message: str):
@@ -500,7 +518,10 @@ class Process(object):
                 self.bar.delete_progress(progress_index)
             return res
         else:
-            raise ValueError('Process performance must be either "generator", "sequence" or "pipeline"')
+            raise ValueError(
+                'Process performance must be either '
+                '"generator", "sequence" or "pipeline"'
+            )
 
     @property
     def costs(self):

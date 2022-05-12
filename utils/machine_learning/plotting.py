@@ -8,14 +8,21 @@ from sklearn.linear_model import LogisticRegression
 from utils.machine_learning import AbstractTransformer
 
 
-def binary_dicision_boundary(clf: Union[BaseEstimator, ClassifierMixin, RegressorMixin], linespace: Optional[np.ndarray] = np.linspace(-3, 3, 100)):
+def binary_dicision_boundary(
+    clf: Union[
+        BaseEstimator,
+        ClassifierMixin,
+        RegressorMixin
+    ],
+    linespace: Optional[np.ndarray] = np.linspace(-3, 3, 100)
+):
     i_mesh, j_mesh = np.meshgrid(linespace, linespace)
     true_mesh, false_mesh = list(), list()
     for i in range(linespace.shape[-1]):
         x_mesh = np.array([i_mesh[i, :], j_mesh[i, :]]).T
         prediction_mesh = clf.predict(x_mesh)
-        class1 = x_mesh[prediction_mesh==0]
-        class2 = x_mesh[prediction_mesh==1]
+        class1 = x_mesh[prediction_mesh == 0]
+        class2 = x_mesh[prediction_mesh == 1]
         true_mesh.append(class1)
         false_mesh.append(class2)
     return np.array(true_mesh), np.array(false_mesh)
@@ -27,7 +34,7 @@ class DistributionPlotter(AbstractTransformer):
             clf: Optional[Union[
                 BaseEstimator, ClassifierMixin, RegressorMixin, AbstractTransformer
             ]] = LogisticRegression(),
-            scale : Optional[np.ndarray] = np.linspace(-3, 3, 100)
+            scale: Optional[np.ndarray] = np.linspace(-3, 3, 100)
     ):
         self.X = None
         self.Y = None

@@ -11,19 +11,20 @@ import mne
 
 LayerContent = namedtuple('LayerContent', 'name data weights biases shape original_shape')
 
+
 class ModelAnalyzer(object):
     def __init__(self, model: tf.keras.Model):
         self._model = model
         self._layers = NumberedDict()
-        
+
         for layer in model.layers:
-            
+
             if len(layer.weights):
-                
+
                 if len(layer.weights) <= 3:
                     w = layer.weights[0].numpy()
                     w_shape = w.shape
-                    
+
                     # deleting empty dimensions, e.g. (1, m, n, 1) -> (m, n)
                     shape_sorted = dict(
                         sorted(
@@ -35,38 +36,80 @@ class ModelAnalyzer(object):
                     reshape_order = list(shape_sorted.keys())
                     empty_shapes_count = list(shape_sorted.values()).count(1)
                     w = np.transpose(w, reshape_order)
-                    
+
                     if empty_shapes_count:
-                        
+
                         for _ in range(empty_shapes_count):
                             w = w[0]
-                    
-                    # convert biases to the form of a one-dimensional matrix (to protect the summation of weights and biases), e.g. (n,) -> (1, n)
+
+                    # convert biases to the form of a one-dimensional matrix
+                    # (to protect the summation of weights and biases), e.g. (n,) -> (1, n)
                     b = layer.weights[1].numpy()
                     b_shape = b.shape
-                    
-                    # each layer has name, data (weights + biases), weights, biases, current shape of weights and biases, initial shape of weights and biases
-                    
+
+                    # each layer has name, data (weights + biases), weights, biases,
+                    # current shape of weights and biases, initial shape of weights and biases
+
                     if len(layer.weights) == 2:
                         b = b.reshape(1, -1)
                         self._layers.append(
-                            layer.name, LayerContent(layer.name, w+b, w, b, (w.shape, b.shape), (w_shape, b_shape))
+                            layer.name,
+                            LayerContent(
+                                layer.name,
+                                w + b,
+                                w,
+                                b,
+                                (
+                                    w.shape,
+                                    b.shape
+                                ),
+                                (
+                                    w_shape,
+                                    b_shape
+                                )
+                            )
                         )
                     else:
-                        print(layer.weights[0].numpy().shape, layer.weights[1].numpy().shape, layer.weights[2].numpy().shape)
+                        print(
+                            layer.weights[0].numpy().shape,
+                            layer.weights[1].numpy().shape,
+                            layer.weights[2].numpy().shape
+                        )
                         self._layers.append(
-                            layer.name, LayerContent(layer.name, (w, b, layer.weights[2].numpy()), w, b, (w.shape, b.shape), (w_shape, b_shape))
+                            layer.name,
+                            LayerContent(
+                                layer.name,
+                                (
+                                    w,
+                                    b,
+                                    layer.weights[2].numpy()
+                                ),
+                                w,
+                                b,
+                                (
+                                    w.shape,
+                                    b.shape
+                                ),
+                                (
+                                    w_shape,
+                                    b_shape
+                                )
+                            )
                         )
                 else:
-                    raise ValueError(f'The layer {layer.name} has unexpected number of trainable variables: {len(layer.weights)}')
-                
+                    raise ValueError(
+                        f'The layer {layer.name} has '
+                        f'unexpected number of trainable variables: {len(layer.weights)}'
+                    )
+
     @property
     def layers(self):
         return self._layers
+
     @layers.setter
     def layers(self, _):
         raise AttributeError('Can not set layers content directly')
-    
+
     def plot_metrics(
         self,
         metrics_names: Union[str, list[str], tuple[str, ...]],
@@ -83,38 +126,44 @@ class ModelAnalyzer(object):
             metrics_names = metrics_names,
         try:
             for i, metric_name in enumerate(metrics_names):
-                
+
                 if inverse_colormap:
-                    color_index = colormap_size - i%colormap_size
+                    color_index = colormap_size - i % colormap_size
                 else:
-                    color_index = i%colormap_size
+                    color_index = i % colormap_size
                 plt.plot(self._model.history.history[metric_name], color=colormap(color_index))
-            
+
             plt.title(title)
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
-            
+
             if legend:
                 plt.legend(metrics_names)
-            
+
             if show:
                 plt.show()
 
             return plt.gcf()
-            
-        except KeyError as e:
-            
-            raise KeyError(f'Available metrics are: {self.get_available_metrics()}, but {metrics_names} were given')
-    
+
+        except KeyError:
+            raise KeyError(
+                'Available metrics are: '
+                f'{self.get_available_metrics()}, '
+                f'but {metrics_names} were given'
+            )
+
     @staticmethod
     def __check_given_figsize(figsize: Union[int, tuple[int, int]]) -> tuple[int, int]:
-        
+
         if isinstance(figsize, int):
             return figsize, figsize
         elif not isinstance(figsize, (tuple, list)):
-            raise ValueError('Size of the figure can be set either by a number or by a tuple of two numbers')
+            raise ValueError(
+                'Size of the figure can be set either '
+                'by a number or by a tuple of two numbers'
+            )
         return figsize
-    
+
     def plot_1d_weights(
         self,
         layer_identifier: Union[int, str],
@@ -132,24 +181,27 @@ class ModelAnalyzer(object):
         plt.figure(figsize=self.__check_given_figsize(figsize), dpi=100)
         _1d_weights = self.layers[layer_identifier].data
         if _1d_weights.ndim > 2:
-            raise ValueError(f'Dimensionality of the layer must be lesser than 2 but it has {_1d_weights.ndim} dimensions')
+            raise ValueError(
+                'Dimensionality of the layer must be '
+                f'lesser than 2 but it has {_1d_weights.ndim} dimensions'
+            )
         elif _1d_weights.shape[0] == 1:
             _1d_weights = _1d_weights[0]
-        
+
         if transpose:
             _1d_weights = _1d_weights.T
             xlabel, ylabel = ylabel, xlabel
-        
+
         plt.plot(_1d_weights, fmt, color=color, linewidth=linewidth, **kwargs)
         plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        
+
         if show:
             plt.show()
-        
+
         return plt.gcf()
-        
+
     def plot_2d_weights(
         self,
         layer_identifier: Union[int, str],
@@ -164,17 +216,20 @@ class ModelAnalyzer(object):
         show: Optional[bool] = True,
         **kwargs
     ):
-        
+
         plt.figure(figsize=self.__check_given_figsize(figsize), dpi=100)
         _2d_weights = self.layers[layer_identifier].data
-        
+
         if _2d_weights.ndim != 2:
-            raise ValueError(f'Dimensionality of the layer must be equal 2 but it has {_2d_weights.ndim} dimensions')
-        
+            raise ValueError(
+                'Dimensionality of the layer must '
+                f'be equal 2 but it has {_2d_weights.ndim} dimensions'
+            )
+
         if transpose:
             _2d_weights = _2d_weights.T
             xlabel, ylabel = ylabel, xlabel
-            
+
         plt.imshow(_2d_weights, cmap=colormap, aspect=aspect, **kwargs)
         plt.title(title)
         plt.xlabel(xlabel)
@@ -182,17 +237,17 @@ class ModelAnalyzer(object):
 
         if colorbar:
             plt.colorbar(cax=plt.axes([.925, .125, 0.075, .7555]))
-        
+
         if show:
             plt.show()
-        
+
         return plt.gcf()
 
 
 class LFCNNAnalyzer(ModelAnalyzer):
     def __init__(self, model: tf.keras.Model):
         super().__init__(model)
-    
+
     def plot_spatial_weights(
         self,
         figsize: Optional[Union[int, tuple[int, int]]] = (8, 8),
@@ -219,7 +274,7 @@ class LFCNNAnalyzer(ModelAnalyzer):
             show,
             **kwargs
         )
-    
+
     def plot_patterns(
         self,
         info: mne.Info,
@@ -240,14 +295,14 @@ class LFCNNAnalyzer(ModelAnalyzer):
         image_interp: Optional[str] = 'bilinear',
         scalings: Optional[Union[dict[str, float], str]] = None
     ):
-        
+
         if not title:
-            title=f'Extracted Patterns'
-        
+            title = 'Extracted Patterns'
+
         info = copy.deepcopy(info)
         info['sfreq'] = 1.
         patterns = mne.EvokedArray(self.layers['spatial_filters_layer'].data, info, tmin=0)
-        
+
         return patterns.plot_topomap(
             times=range(self.layers['spatial_filters_layer'].data.shape[1]),
             vmin=vmin, vmax=vmax,
@@ -258,7 +313,7 @@ class LFCNNAnalyzer(ModelAnalyzer):
             contours=contours, image_interp=image_interp,
             show=show, scalings=scalings
         )
-    
+
     def plot_temporal_weights(
         self,
         figsize: Optional[Union[int, tuple[int, int]]] = (8, 8),

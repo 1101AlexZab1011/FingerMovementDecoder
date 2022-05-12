@@ -4,7 +4,7 @@ import inspect
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir) 
+sys.path.insert(0, parentdir)
 
 import mne
 from utils.console import Silence
@@ -19,7 +19,7 @@ if __name__ == '__main__':
             with Silence():
                 shape = mne.read_epochs(os.path.join(epochs_dir, epochs_file)).get_data().shape
             out[epochs_file[:8]] = shape[0]
-        
+
         if not header_printed:
             for sti in out:
                 print(f'\t{sti}', end='\t')
