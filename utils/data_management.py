@@ -6,8 +6,21 @@ def dict2str(
     *,
     space: Optional[int] = 1,
     tabulation: Optional[int] = 2,
-    first_space=True
+    first_space: Optional[bool] = True
 ) -> str:
+    """Converts :obj: `dict` into readable `str`
+
+    Args:
+        dictionary (dict): A dictionary to convert
+        space (:obj: `int`, optional) Number of spaces between depth levels. Defaults to 1.
+        tabulation (:obj: `int`, optional): Number of spaces
+            at the first level of the dictionary depth. Defaults to 2.
+        first_space (:obj: `bool`, optional): To add spaces at the first level
+            of the dictionary depth. Defaults to True.
+
+    Returns:
+        str: A converted dictionary
+    """
 
     def tab(tabulation: int) -> str:
         ' ' * tabulation
@@ -33,6 +46,19 @@ def convert_base(
     to_base: Optional[int] = 10,
     from_base: Optional[int] = 10
 ) -> str:
+    """Converts base of a given number
+
+    Args:
+        num (:obj: `int` or :obj: `str`): Number to convert base.
+        to_base (:obj: `int`, optional): The base to convert to. Defaults to 10.
+        from_base (:obj: `int`, optional): The base to convert from. Defaults to 10.
+
+    Raises:
+        ValueError: If the given base is out of allowed range: [2, 36]
+
+    Returns:
+        str: A converted number.
+    """
     if from_base < 2 or from_base > 36:
         raise ValueError('from_base must be >= 2 and <= 36, or 0')
     if to_base < 2 or to_base > 36:
