@@ -4,13 +4,26 @@ from typing import Optional, Callable, Any, Union, Dict
 import os
 
 
-def check_path(*args: str) -> bool:
+def check_path(*args: str) -> None:
+    """Creates a directory if does not exist and if it is possible.
+
+    Args:
+        *args (str): Directories to check.
+    """
     for path in args:
         if not os.path.isdir(path):
             os.mkdir(path)
 
 
 def get_dir_size(start_path: str = './') -> float:
+    """Computes size of directory in bites
+
+    Args:
+        start_path (str, optional): Path to compute size of which. Defaults to './'.
+
+    Returns:
+        float: Size of the given directory in bites
+    """
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(start_path):
         for f in filenames:
@@ -22,12 +35,29 @@ def get_dir_size(start_path: str = './') -> float:
 
 
 def read_or_write(
-        file_ext,
+        file_ext: str,
         reader: Optional[Callable] = None,
         writer: Optional[Callable] = None,
         path: Optional[Union[str, Callable]] = './rw_storage',
         file_prefix: Optional[Union[str, Callable]] = ''
 ):
+    """A decorator for calculating a decorated function if it has never been executed
+        and save a result or to read the result without execution
+        of the function if it was computed before.
+
+    Args:
+        file_ext (str): An extension of the file to save result of the decorated function
+        reader (:obj: `Callable`, optional): Function to read a result if it already exists.
+            Must take path to the stored content to read as the single argument.
+            If None, does not read. Defaults to None.
+        writer (:obj: `Callable`, optional): Function to write a result.
+            Must take path as the first argument and any content to save as the second.
+            If None, does not write. Defaults to None.
+        path (:obj: `str` or :obj: `Callable`, optional): Path to storage for results.
+            Defaults to './rw_storage'.
+        file_prefix (:obj: `str` or :obj: `Callable`, optional): Prefix to savefile
+            to make it more human-readable. Defaults to ''.
+    """
     def encrypt_callable(func: Callable, args: tuple, kwargs: dict[str: Any], prefix: str):
         args_str = ", ".join([str(arg) for arg in args])
         kwargs_str = ', '.join([f'{key}={value}' for key, value in kwargs.items()])
