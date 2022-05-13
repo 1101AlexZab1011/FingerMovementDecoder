@@ -15,16 +15,6 @@ class Beeper(object):
         repeat (:obj: `int`, optional): How much times to repeat.
             If None, do not repeat. Defaults to None.
 
-    Attributes:
-        duration (:obj: `int` or :obj: `float` or :obj: `list` of :obj: `int` or :obj: `float`):
-            Duration of each tone. List of durations specifically to each tone
-            or one value globally
-        frequency (:obj: `int` or :obj: `float` or :obj: `list` of :obj: `int` or :obj: `float`):
-            Frequency of each tone. List of frequencies specifically to each tone
-            or one value globally
-        repeat (:obj: `int`, optional): How much times to repeat.
-            If None, do not repeat. Defaults to None.
-
     Raises:
         AttributeRerror: if not :obj: `int` value is given as a number of repetitions
     """
@@ -65,6 +55,10 @@ class Beeper(object):
 
     @property
     def duration(self):
+        """:obj: `int` or :obj: `float` or :obj: `list` of :obj: `int` or :obj: `float`:
+            Duration of each tone. List of durations specifically to each tone
+            or one value globally
+        """
         return self._duration
 
     @duration.setter
@@ -73,6 +67,10 @@ class Beeper(object):
 
     @property
     def frequency(self):
+        """:obj: `int` or :obj: `float` or :obj: `list` of :obj: `int` or :obj: `float`:
+            Frequency of each tone. List of frequencies specifically to each tone
+            or one value globally
+        """
         return self._frequency
 
     @frequency.setter
@@ -81,6 +79,9 @@ class Beeper(object):
 
     @property
     def repeat(self):
+        """:obj: `int`: How much times to repeat.
+            If None, do not repeat. Defaults to None.
+        """
         return self._repeat
 
     @repeat.setter

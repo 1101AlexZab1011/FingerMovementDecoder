@@ -415,10 +415,16 @@ if __name__ == '__main__':
             ]
             if e == '-plot-patterns-':
                 fig = csp.plot_patterns(resp_lock_lm_B1_epochs.info, size=5, res=128, show=False)
-                draw_figure_w_toolbar(window['fig_cv'].TKCanvas, fig, window['controls_cv'].TKCanvas)
+                draw_figure_w_toolbar(
+                    window['fig_cv'].TKCanvas, fig, window['controls_cv'].TKCanvas
+                )
             else:
-                fig = csp.plot_filters(resp_lock_lm_B1_epochs.info, size=5, res=128, show=False)
-                draw_figure_w_toolbar(window['fig_cv'].TKCanvas, fig, window['controls_cv'].TKCanvas)
+                fig = csp.plot_filters(
+                    resp_lock_lm_B1_epochs.info, size=5, res=128, show=False
+                )
+                draw_figure_w_toolbar(
+                    window['fig_cv'].TKCanvas, fig, window['controls_cv'].TKCanvas
+                )
         elif e == '-clean-':
             clean_canvas(window['fig_cv'].TKCanvas, window['controls_cv'].TKCanvas)
             window['stat'].update('')
@@ -435,8 +441,11 @@ if __name__ == '__main__':
             window_spacing = (n_cycles / np.max(freqs_range) / 2.)
             centered_w_times = np.arange(tmin, tmax, window_spacing)[1:]
             n_windows = len(centered_w_times)
-            av_tfr = AverageTFR(create_info(['freq'], 1000), cases.meta['tfs'].mean()[np.newaxis, :],
-                                centered_w_times, freqs_range[1:], 1)
+            av_tfr = AverageTFR(
+                create_info(['freq'], 1000),
+                cases.meta['tfs'].mean()[np.newaxis, :],
+                centered_w_times, freqs_range[1:], 1
+            )
             chance = .5  # set chance level to white in the
 
             TF_plane_layout = [

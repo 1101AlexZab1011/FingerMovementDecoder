@@ -1,11 +1,44 @@
 from typing import Optional, Union, Any,\
     Callable, List, Iterable, Dict, Tuple,\
-    NoReturn
+    NoReturn, Hashable
 from collections import UserDict, UserList, namedtuple
 from utils.console.colored import alarm, ColoredText
 
 
 class Linked(object):
+    """A linked object that can form interacting chains
+
+    Args:
+        name (:obj:`str`, optional): Name of this Linked object.
+            Used as a string representation. Defaults to 'Linked'.
+        parent (:obj:`Any`, optional): Linked instanse playing role of
+            a \"parent\" to the current Linked. The current Linked supposed to be depending
+            on its parent and observing its changes. Defaults to None.
+        meta (:obj:`dict`, optional): Any meta-information that can be related to this Linked.
+            Defaults to None.
+        options (:obj:`Iterable`, optional): Content of Linked object. Defaults to None.
+        child_options_generator (:obj:`Callable` or :obj:`list` of :obj:`Callable`, optional):
+            Function or list of functions to generate new options for children of
+            the current Linked. Each children options generator must take current Linked as
+            a single argument and return list of options. If list of functions is given,
+            enerates different oprions for different children according to an order of given
+            generators and an order of children. If number of children is bigger than number
+            of options generators, then applying last generator in sequence for every child
+            who does not have one. If number of options generators is bigger than number of
+            children, then the extra ones will be ignored. Defaults to None.
+        children (:obj:`Any` or :obj:`list` of :obj:`Any`, optional):
+            Child or list of children of the current Linked. Defaults to None.
+
+    Raises:
+        AttributeError:
+            * If children are not Linked or subclass of it
+            * If the given options are not iterable
+
+    Note:
+        Children are Linked objects, depending to the current one by a way defined in
+        options generators. Parent is an Linked object which this object depends on.
+
+    """
     def __init__(
             self,
             name: Optional[str] = 'Linked',
@@ -48,7 +81,19 @@ class Linked(object):
         options: Optional[List[Any]] = None,
         option_index_to_choose: Optional[int] = 0
     ):
+        """Takes new options, produces new options for all children,
+            calls every children.
 
+        Args:
+            options (:obj:`Any`, optional): New content for this Linked. Defaults to None.
+            option_index_to_choose (Optional[int], optional): Which one of options to select.
+                By default, selects the first one. Defaults to 0.
+
+        Raises:
+            ValueError: If children are not Linked or subclass of it
+        """
+        # chnames =  [child.name for child in self.children] if self.children is not None else None
+        # print(self.name, chnames)
         if options is not None and options != [] and options != ():
             self._options = options
             self.__selected_option = self.options[option_index_to_choose]
@@ -105,17 +150,30 @@ class Linked(object):
                     child(gen(self))
 
     def __iter__(self):
+        """Iterates a current Linked and all its descendants.
+
+        Note:
+            Descendants are all chilren and all children's children.
+        """
         return iter([self] + self.inverse_dependencies())
 
     def __str__(self):
         return f'{self.name}'
 
     def __getitem__(self, i):
+        """Returns ith  element of list of
+            the current :class:`Linked` and all its descendants.
+        """
         chain = [self] + list(self.inverse_dependencies())
         return chain[i]
 
     @property
     def parent(self):
+        """:class:`Linked`: Parent of a current :class:`Linked`.
+
+        Raises:
+            AttributeError: If parent is not Linked or subclass of it.
+        """
         return self._parent
 
     @parent.setter
@@ -131,6 +189,12 @@ class Linked(object):
 
     @property
     def children(self):
+        """:class:`Linked` or :obj:`list` of :class:`Linked`:
+            Children of a current :class:`Linked`.
+
+        Raises:
+            AttributeError: If children are not Linked or subclasses of it.
+        """
         return self._children
 
     @children.setter
@@ -156,6 +220,12 @@ class Linked(object):
 
     @property
     def siblings(self):
+        """:class:`Linked` or :obj:`list` of :class:`Linked`:
+            Siblings of a current :class:`Linked`.
+
+        Note:
+            Siblings are all :class:`Linked` that have a common parent
+        """
         return self.__siblings
 
     @siblings.setter
@@ -164,6 +234,8 @@ class Linked(object):
 
     @property
     def selected_option(self):
+        """:obj:`Any`: A currently selected option
+        """
         return self.__selected_option
 
     @selected_option.setter
@@ -172,6 +244,8 @@ class Linked(object):
 
     @property
     def options(self):
+        """:obj:`list` of :obj:`Any`: Options of a current :class:`Linked`.
+        """
         return self._options
 
     @options.setter
@@ -190,6 +264,18 @@ class Linked(object):
                 child.__siblings = [sib for sib in self.children if sib != child]
 
     def add_children(self, children):
+        """Adds :class:`Linked` to the list of children of the current :class:`Linked`.
+
+        Args:
+            children (:class:`Linked` or :obj:`list` of :class:`Linked`): Child
+                or the list of children to add
+
+        Raises:
+            AttributeError:
+                * If the existing children are not Linked or subclasses of it.
+                * If a given children are not Linked or subclasses of it.
+        """
+
         if not isinstance(self.children, list):
             self.children = [self.children] if self.children is not None else []
         if issubclass(type(children), Linked):
@@ -204,9 +290,13 @@ class Linked(object):
             self.children += children
         else:
             raise AttributeError(f'All the children must be Linked, but {type(children)} is given')
+
         self.__introduce_children()
 
     def remove(self):
+        """Removes the current :class:`Linked` and all its children
+        """
+
         self.parent.children = [child for child in self.parent.children if child != self]
         for dep in self.inverse_dependencies():
             del dep
@@ -214,17 +304,29 @@ class Linked(object):
 
     def select(
         self,
-        option,
+        option: Union[int, Any],
         index: Optional[bool] = False,
-        child_option_index_to_choose: Optional[int] = 0
     ):
+        """Selects an option
+
+        Args:
+            option (:obj:`int` or :obj:`Any`): option to choose or an index of option to choose
+            index (Optional[bool], optional): If False, to set option derectly,
+                otherwise to set option under the given index. Defaults to False.
+        """
         if index:
             self.__selected_option = self.options[option]
         else:
             self.__selected_option = option
-        self(option_index_to_choose=child_option_index_to_choose)
+
+        self()
 
     def inverse_dependencies(self):
+        """Compute inverse dependencies to the current :class:`Linked`
+
+        Returns:
+            :obj:`list` of :class:`Linked`: List of descendants of the current :class:`Linked`
+        """
         if self.children is None:
             return []
         elif isinstance(self.children, list) and self.children:
@@ -241,6 +343,11 @@ class Linked(object):
             return [self.children]
 
     def dependencies(self):
+        """Compute dependencies to the current :class:`Linked`
+
+        Returns:
+            :obj:`list` of :class:`Linked`: List of ancestors of the current :class:`Linked`
+        """
         deps = list()
         dep = self.parent
         while dep is not None:
@@ -250,6 +357,14 @@ class Linked(object):
 
 
 class Deploy(object):
+    """Class to wrap a given function and its arguments
+        to call it without arguments
+
+    Args:
+        func (Callable): Function to wrap
+        *args: Arguments of a given function
+        **kwargs: Keyword arguments of a given function
+    """
     def __init__(self, func: Callable, *args: Any, **kwargs: Any):
         self.func = func
         self.args = args
@@ -267,6 +382,11 @@ class Deploy(object):
 
 
 class Pipeline(object):
+    """Class to execute a sequence of Callable
+
+    Args:
+        *args (:obj:`Callable` or :class: `Deploy`): Sequence of callable objects to execute
+    """
     def __init__(self, *args: Union[Callable, Deploy]):
         self._run_flow = args
 
@@ -275,6 +395,21 @@ class Pipeline(object):
         *args,
         kwargs: Optional[Union[Dict[str, Any], Tuple[Dict[str, Any]]]] = None
     ):
+        """_summary_
+
+        Args:
+            kwargs (:obj:`dict` of :obj:`str` and obj:`Any`
+                or :obj:`tuple` of :obj:`dict` of :obj:`str` and :obj:`Any`, optional):
+                Keyword arguments to each function of a pipline. Defaults to None.
+
+        Raises:
+            ValueError:
+                * If kwargs are not :obj:`Iterable` of :obj:Callable
+                * If kwargs are not given to all pipeline members
+
+        Returns:
+            Any: Output of a pipeline
+        """
         if kwargs is None:
             kwargs = dict()
         if isinstance(kwargs, dict):
@@ -305,6 +440,8 @@ class Pipeline(object):
 
     @property
     def run_flow(self):
+        """:obj:`list` of :obj:`Callanle`: execution queue of a pipeline
+        """
         return self._run_flow
 
     @run_flow.setter
@@ -321,6 +458,11 @@ class Pipeline(object):
             self._run_flow = steps
 
     def append(self, *steps):
+        """Adds :obj:`Callable` members to a pipeline
+
+        Raises:
+            AttributeError: If any of the given objects is not callable
+        """
         if any([not isinstance(el, Callable) for el in steps]):
             raise AttributeError('All elements to append must be callable')
         else:
@@ -328,7 +470,18 @@ class Pipeline(object):
 
 
 class NumberedDict(UserDict):
-    def __getitem__(self, key):
+    """A dictionary which comprises some :obj:`list` properties
+    """
+    def __getitem__(self, key: Union[int, Hashable]):
+        """Returns item by key
+
+        Args:
+            key (:obj:`int` or :obj:`Hashable`): If hashable is given, key plays a role
+                of a dictionary key, if int is goven, key plays a role of index
+
+        Returns:
+            Any: Content corresponding to the given key
+        """
         if isinstance(key, int) and key not in self.data:
             key = list(self.data.keys())[key]
 
@@ -355,6 +508,20 @@ class NumberedDict(UserDict):
         return self.data.values()
 
     def append(self, *args, **kwargs):
+        """appends elements to the end of :class:`NumberedDict`
+
+        Args:
+            *args: If one argument is given, appends it at the kay equal to length of
+                :class:`NumberedDict`. If two arguments are given, the second one
+                plays a role of a key
+            **kwargs: Keyword arguments are used to update the dictionary
+
+        Raises:
+            TypeError:
+                * If both args and kwargs are given
+                * If more than two arguments are given in args
+                * If no any arguments are given
+        """
         if args and kwargs:
             raise TypeError(
                 'append() takes either positional or '
@@ -377,11 +544,30 @@ class NumberedDict(UserDict):
 
 
 class Expandable(object):
+    """A dictionary-like class that allows to refer its fields via
+        both square brackets and dot
+    """
     def __init__(self):
         self.__data = dict()
         self.__field_properties = namedtuple('FieldPropertes', 'readonly writable')(list(), list())
 
     def __setattr__(self, name: str, value: Union[Any, tuple[Any, str]]):
+        """Sets attributes
+
+        Args:
+            name (str): Key and field name used to access new value
+            value (:obj:`Any` or :obj:`tuple` of obj:`Any` and obj:`str`):
+                Any value to set under the given name. If tuple of length 2,
+                the second value is considered as a mode name.
+
+        Raises:
+            AttributeError: When trying to change a read-only field.
+
+        Note:
+            There are two types of modes for values:
+                * writable - allows both to write and read the field
+                * readonly - prevents field from changes from outside
+        """
 
         if hasattr(self, '_Expandable__field_properties'):
 
@@ -460,6 +646,20 @@ class Expandable(object):
         return value, mode
 
     def keys(self, mode: Optional[str] = 'all') -> list[Any]:
+        """Returns existing keys / field-names
+
+        Args:
+            mode (str, optional): Which type of keys to return. Defaults to 'all'.
+
+        Returns:
+            list[Any]: :obj:`list` of keys
+
+        Note:
+            There are three types of keys:
+            * 'all' - all keys in the object
+            * 'readonly' - keys only from read-only fields
+            * 'writable' - keys only from writable fields
+        """
 
         if mode == 'all':
             return list(self.__data.keys())
@@ -469,6 +669,14 @@ class Expandable(object):
             return self.__field_properties.readonly
 
     def values(self, mode: Optional[str] = 'all') -> list[Any]:
+        """Returns existing values
+
+        Args:
+            mode (str, optional): Which type of values to return. Defaults to 'all'.
+
+        Returns:
+            list[Any]: :obj:`list` of values
+        """
 
         if mode == 'all':
             return list(self.__data.values())
@@ -478,11 +686,35 @@ class Expandable(object):
             return [self.__data[key] for key in self.__field_properties.readonly]
 
     def items(self, mode: Optional[str] = 'all') -> list[tuple[Any, Any]]:
+        """Returns pairs of existing keys and values
+
+        Args:
+            mode (str, optional): Which type of items to return. Defaults to 'all'.
+
+        Returns:
+            :obj:`list` of :obj:`tuple` of :obj:`Any` and :obj:`Any`: :obj:`list` of values
+        """
 
         return list(zip(self.keys(mode), self.values(mode)))
 
     def is_writable(self, key: Any) -> bool:
+        """Checks if key corresponds to a writable field
+
+        Args:
+            key (Any): Key to check
+
+        Returns:
+            bool: True, if the given field is writable
+        """
         return key in self.__field_properties.writable
 
     def is_readonly(self, key: Any) -> bool:
+        """Checks if key corresponds to a readonly field
+
+        Args:
+            key (Any): Key to check
+
+        Returns:
+            bool: True, if the given field is readonly
+        """
         return key in self.__field_properties.readonly
