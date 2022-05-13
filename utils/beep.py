@@ -3,6 +3,31 @@ from typing import Union, Optional
 
 
 class Beeper(object):
+    """Sound-maker class
+
+    Args:
+        duration (:obj: `int` or :obj: `float` or :obj: `list` of :obj: `int` or :obj: `float`):
+            Duration of each tone. List of durations specifically to each tone
+            or one value globally
+        frequency (:obj: `int` or :obj: `float` or :obj: `list` of :obj: `int` or :obj: `float`):
+            Frequency of each tone. List of frequencies specifically to each tone
+            or one value globally
+        repeat (:obj: `int`, optional): How much times to repeat.
+            If None, do not repeat. Defaults to None.
+
+    Attributes:
+        duration (:obj: `int` or :obj: `float` or :obj: `list` of :obj: `int` or :obj: `float`):
+            Duration of each tone. List of durations specifically to each tone
+            or one value globally
+        frequency (:obj: `int` or :obj: `float` or :obj: `list` of :obj: `int` or :obj: `float`):
+            Frequency of each tone. List of frequencies specifically to each tone
+            or one value globally
+        repeat (:obj: `int`, optional): How much times to repeat.
+            If None, do not repeat. Defaults to None.
+
+    Raises:
+        AttributeRerror: if not :obj: `int` value is given as a number of repetitions
+    """
     def __init__(
             self,
             duration: Union[int, float, list[Union[int, float]]],

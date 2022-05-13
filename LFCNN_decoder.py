@@ -64,7 +64,7 @@ def get_order(order: np.array, *args):
 
 
 @spinner(prefix='Compute spectral parameters... ')
-def compute_waveforms(model: mf.models.BaseModel) -> tuple(np.ndarray, np.ndarray, np.ndarray):
+def compute_waveforms(model: mf.models.BaseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     time_courses = np.squeeze(model.lat_tcs.reshape(
         [model.specs['n_latent'], -1, model.dataset.h_params['n_t']]
     ))
@@ -177,7 +177,7 @@ def plot_patterns(
     show=True, show_names=False, title=None,
     outlines='head', contours=6,
     image_interp='bilinear'
-) -> mne.figure.Figure:
+) -> mpl.figure.Figure:
 
     if not title:
         title = 'All patterns'
