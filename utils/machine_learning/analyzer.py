@@ -7,12 +7,21 @@ from typing import Union, Optional
 import matplotlib.colors as mc
 import matplotlib.pyplot as plt
 import mne
+import matplotlib as mpl
 
 
 LayerContent = namedtuple('LayerContent', 'name data weights biases shape original_shape')
 
 
 class ModelAnalyzer(object):
+    """Class for analyzing tensorflow-based neural networks
+
+    Args:
+        model (tf.keras.Model): Model to analyze
+
+    Raises:
+        ValueError: If layer has unexpected number of weights
+    """
     def __init__(self, model: tf.keras.Model):
         self._model = model
         self._layers = NumberedDict()
@@ -104,6 +113,14 @@ class ModelAnalyzer(object):
 
     @property
     def layers(self):
+        """Data of layers containing names, weights, biases andshapes
+
+        Returns:
+            :obj:`list` of `LayerContent`: _description_
+
+        Note:
+            See `LayerContent` namedtuple for details of layers structure
+        """
         return self._layers
 
     @layers.setter
@@ -121,7 +138,28 @@ class ModelAnalyzer(object):
         inverse_colormap: Optional[bool] = True,
         legend: Optional[bool] = True,
         show: Optional[bool] = True,
-    ):
+    ) -> mpl.figure.Figure:
+        """Plot metrics from a history of a model
+
+        Args:
+            metrics_names (:obj:`str` or :obj:`list` of :obj:`str` or :obj:`tuple` of :obj:`str`):
+                metrics existing in `model.history.history` to plot
+            title (str, optional): Title of the resulting figure. Defaults to ''.
+            xlabel (str, optional): Label for x-axis. Defaults to ''.
+            ylabel (str, optional): Label for y-axis. Defaults to ''.
+            colormap (`matplotlib.colors.Colormap`, optional): Colormap to figure.
+                Defaults to `matplotlib.pyplot.cm.Set3`.
+            colormap_size (int, optional): Amount of colors to use. Defaults to 11.
+            inverse_colormap (bool, optional): If True, invert colormap. Defaults to True.
+            legend (bool, optional): If True, show legend. Defaults to True.
+            show (bool, optional): If True, show figure. Defaults to True.
+
+        Raises:
+            KeyError: If wrong metric name is given
+
+        Returns:
+            matplotlib.figure.Figure: The resulting figure
+        """
         if isinstance(metrics_names, str):
             metrics_names = metrics_names,
         try:
@@ -177,7 +215,30 @@ class ModelAnalyzer(object):
         transpose: Optional[bool] = False,
         show: Optional[bool] = True,
         **kwargs
-    ):
+    ) -> mpl.figure.Figure:
+        """Plots 1-dimensional weigths of layer
+
+        Args:
+            layer_identifier (:obj:`int` or :obj:`str`): An index or a name of a layer to visualize
+            figsize (:obj:`int` or :obj:`tuple` of :obj:`int` abd `int`, optional):
+                Size of a figure. If only one number is given, length is equal to width.
+                Defaults to (8, 8).
+            title (str, optional): Title of a figure. Defaults to ''.
+            xlabel (str, optional): Label of x-axis. Defaults to ''.
+            ylabel (str, optional): Label of y-axis. Defaults to ''.
+            color (str, optional): Color of a figure content. Defaults to '#6fa8dc'.
+            fmt (str, optional): Style of a figure content. Defaults to 'x'.
+            linewidth (float, optional): Width of lines. Defaults to 1.
+            transpose (bool, optional): If True, transpose image. Defaults to False.
+            show (bool, optional): If True, show figure. Defaults to True.
+            **kwargs: Keyword arguments for matplotlib.pyplot.plot() function
+
+        Raises:
+            ValueError: If the given layer has more that one dimension
+
+        Returns:
+            matplotlib.figure.Figure: Resulting figure
+        """
         plt.figure(figsize=self.__check_given_figsize(figsize), dpi=100)
         _1d_weights = self.layers[layer_identifier].data
         if _1d_weights.ndim > 2:
@@ -216,6 +277,31 @@ class ModelAnalyzer(object):
         show: Optional[bool] = True,
         **kwargs
     ):
+        """Plots 2-dimensional weigths of layer
+
+        Args:
+            layer_identifier (:obj:`int` or :obj:`str`): An index or a name of a layer to visualize
+            figsize (:obj:`int` or :obj:`tuple` of :obj:`int` abd `int`, optional):
+                Size of a figure. If only one number is given, length is equal to width.
+                Defaults to (8, 8).
+            title (str, optional): Title of a figure. Defaults to ''.
+            xlabel (str, optional): Label of x-axis. Defaults to ''.
+            ylabel (str, optional): Label of y-axis. Defaults to ''.
+            colormap (matplotlib.colors.Colormap, optional):
+                Colormap of a figure content. Defaults to matplotlib.pyplot.cm.Reds.
+            aspect (:obj:`float` or :obj:`str`, optional): Length-to-width ratio
+                for a figure content. Defaults to 'auto'.
+            transpose (bool, optional): If True, transpose image. Defaults to False.
+            colorbar (bool, optional): Show colorbar. Defaults to True.
+            show (bool, optional): If True, show figure. Defaults to True.
+            **kwargs: Keyword arguments for matplotlib.pyplot.imshow() function
+
+        Raises:
+            ValueError: Dimensionality of the given layer is not equal to 2
+
+        Returns:
+            matplotlib.figure.Figure: Resulting figure
+        """
 
         plt.figure(figsize=self.__check_given_figsize(figsize), dpi=100)
         _2d_weights = self.layers[layer_identifier].data
