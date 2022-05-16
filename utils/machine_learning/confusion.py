@@ -4,6 +4,17 @@ import numpy as np
 
 
 class ConfusionEstimator(object):
+    """Class for computation a classification performance
+
+    Args:
+        tp (:obj:`float` or `np.ndarray`): True positive predictions
+        tn (:obj:`float` or `np.ndarray`): True negative predictions
+        fp (:obj:`float` or `np.ndarray`): False positive predictions
+        fn (:obj:`float` or `np.ndarray`): False negative predictions
+
+    Raises:
+        ValueError: If given drguments are not numbers
+    """
     def __init__(
             self,
             tp: Union[float, np.ndarray],
