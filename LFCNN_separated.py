@@ -260,8 +260,8 @@ if __name__ == '__main__':
             print(
                 f'Using {dataset_train.name} as a train set and {dataset_test.name} as a test set'
             )
-            classification_name_formatted_sep = f'{classification_name_formatted}_train'
-            f'_{dataset_train.name}_test_{dataset_test.name}'
+            classification_name_formatted_sep = f'{classification_name_formatted}_train'\
+                f'_{dataset_train.name}_test_{dataset_test.name}'
 
             if dataset_train.name != dataset_prev:
                 dataset_prev = dataset_train.name
