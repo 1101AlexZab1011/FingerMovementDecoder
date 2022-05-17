@@ -270,7 +270,7 @@ if __name__ == '__main__':
                 model.train(n_epochs=25, eval_step=100, early_stopping=5)
                 network_out_path = os.path.join(
                     subject_path,
-                    f'{model_name}_train_{dataset_train.name}_test_{dataset_test.name}'
+                    f'{model_name}_train_{dataset_train.name}'
                 )
                 yp_path = os.path.join(network_out_path, 'Predictions')
                 sp_path = os.path.join(network_out_path, 'Parameters')
