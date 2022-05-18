@@ -75,6 +75,8 @@ if __name__ == '__main__':
     parser.add_argument('--use-train', action='store_true', help='Use train set from '
                         'separated dataset to test a model')
     parser.add_argument('--no-params', action='store_true', help='Do not compute parameters')
+    parser.add_argument('-t', '--timerange', type=float, nargs='+',
+                        default=[None, None], help='Crop epochs in the given time range')
 
     combined_sessions, \
         excluded_subjects, \
@@ -90,7 +92,8 @@ if __name__ == '__main__':
         lfreq, \
         model_name, \
         use_train, \
-        no_params = vars(parser.parse_args()).values()
+        no_params, \
+        (tmin, tmax) = vars(parser.parse_args()).values()
 
     if model_name == 'LFCNN':
         classifier = mf.models.LFCNN
@@ -198,6 +201,11 @@ if __name__ == '__main__':
 
                     i += j
                     cases_indices_to_combine[-1].append(i)
+
+                    if tmin is not None or tmax is not None:
+                        assert tmin < tmax, f'Incorrect time range: {tmin}, {tmax}'
+                        group_epochs[case].crop(tmin, tmax)
+
                     if lfreq is None:
                         cases_to_combine_list.append(group_epochs[case])
                     else:

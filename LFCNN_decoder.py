@@ -60,7 +60,7 @@ def compute_temporal_parameters(model, *, fs=None):
 
 
 def get_order(order: np.array, *args):
-    order.ravel()
+    return order.ravel()
 
 
 @spinner(prefix='Compute spectral parameters... ')

@@ -71,10 +71,10 @@ if __name__ == '__main__':
         subject_parameters_path,
         f'{classification_name_formatted}_waveforms.pkl'
     ))
-    orders = read_pkl(os.path.join(
-        subject_parameters_path,
-        f'{classification_name_formatted}_sorting.pkl'
-    ))
+    # orders = read_pkl(os.path.join(
+    #     subject_parameters_path,
+    #     f'{classification_name_formatted}_sorting.pkl'
+    # ))
     info = read_pkl(os.path.join(
         subject_info_path,
         os.listdir(subject_info_path)[0]
@@ -91,10 +91,10 @@ if __name__ == '__main__':
             )
         )
     )
-    print(f'weight {orders.weight + 1}')
-    print(f'weight_corr {orders.weight_corr + 1 }')
-    print(f'output_corr {orders.output_corr + 1 }')
-    print(f'compwise_loss {orders.compwise_loss + 1 }')
+    # print(f'weight {orders.weight + 1}')
+    # print(f'weight_corr {orders.weight_corr + 1 }')
+    # print(f'output_corr {orders.output_corr + 1 }')
+    # print(f'compwise_loss {orders.compwise_loss + 1 }')
     plot_spatial_weights(
         spatial_parameters,
         temporal_parameters,
