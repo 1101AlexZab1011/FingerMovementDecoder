@@ -83,7 +83,7 @@ def score_planes(
                     raise ValueError(f'w_tmin is greater than w_tmax: {w_tmin=}, {w_tmax=}')
 
                 # print(f'{identifier}: {w_tmin}-{w_tmax}ms at {fmin}-{fmax}Hz')
-                
+
                 combiner \
                     .switch_data('filtered') \
                     .crop(tmin=w_tmin, tmax=w_tmax) \
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     EXCLUDED_SESSIONS = ['B1', 'B10']
     EXCLUDED_SUBJECTS = [] #['Az_Mar_05', 'Ga_Fed_06']
     EXCLUDED_LOCKS = ['StimCor']
-    
+
     parser = argparse.ArgumentParser(
         description='A script for applying the neural network "LFCNN" to the epoched data from gradiometers related to events for classification'
     )
@@ -146,8 +146,7 @@ if __name__ == '__main__':
                         default=[], help='IDs of subjects to exclude')
     parser.add_argument('-el', '--exclude-locks', type=str, nargs='+',
                         default=[], help='IDs of subjects to exclude')
-    
-    
+
     EXCLUDED_SESSIONS, \
     EXCLUDED_SUBJECTS, \
     EXCLUDED_LOCKS = vars(parser.parse_args()).values()

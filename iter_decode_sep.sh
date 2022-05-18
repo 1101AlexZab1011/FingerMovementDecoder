@@ -5,25 +5,25 @@
 # 4 cases
 for i in {0..10}
     do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2 B3" "B10 B11 B12" -cmc "LI" "LM" "RI" "RM" --no-params --tmax 0
+        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2 B3" "B10 B11 B12" -cmc "LI" "LM" "RI" "RM" --no-params --tmin 0
     done
 
 # left vs right
 for i in {0..10}
     do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2 B3" "B10 B11 B12" -cmc "LI LM" "RI RM" --no-params --tmax 0
+        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2 B3" "B10 B11 B12" -cmc "LI LM" "RI RM" --no-params --tmin 0
     done
 
 # left
 for i in {0..10}
     do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2 B3" "B10 B11 B12" -cmc "LI" "LM" --no-params --tmax 0
+        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2 B3" "B10 B11 B12" -cmc "LI" "LM" --no-params --tmin 0
     done
 
 # right
 for i in {0..10}
     do 
-        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2 B3" "B10 B11 B12" -cmc "RI" "RM" --no-params --tmax 0
+        ./venv/bin/python ./LFCNN_separated.py -cms "B1 B2 B3" "B10 B11 B12" -cmc "RI" "RM" --no-params --tmin 0
     done
 
 
