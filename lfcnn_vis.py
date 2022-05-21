@@ -133,7 +133,10 @@ def plot_tempospectral(
         length = len(iterables[0])
         for i, sample in enumerate(iterables[1:]):
             if len(sample) != length:
-                raise ValueError(f'Length validation failed: all elements must have length equal to {length}, but element {i} has length: {len(sample)}')
+                raise ValueError(
+                    'Length validation failed: all elements must have length equal '
+                    f'to {length}, but element {i} has length: {len(sample)}'
+                )
         return length
 
     spatial_parameters = wrap_in_list(spatial_parameters)
@@ -505,10 +508,7 @@ def plot_spatial_weights(
             # ax23.set_ylim(top=1.2)
 
             if logscale:
-                # ax23.set_aspect(25)
                 ax23.set_yscale('log')
-            # else:
-            #     ax23.set_aspect(75)
 
             fig2.suptitle(f'Latent source {sorting_callback.sorted_indices[iy] + 1}')
             plt.show()
