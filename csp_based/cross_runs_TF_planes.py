@@ -58,7 +58,7 @@ class CrossRunsTFScorer:
 
 if __name__ == '__main__':
     INCLUDED_SESSIONS = [f'B{i+1}' for i in range(10)]
-    EXCLUDED_SUBJECTS = []#['Az_Mar_05', 'Fe_To_08', 'Ga_Fed_06']
+    EXCLUDED_SUBJECTS = []  # ['Az_Mar_05', 'Fe_To_08', 'Ga_Fed_06']
     EXCLUDED_LOCKS = ['StimCor']
 
     content_root = './'
@@ -88,7 +88,7 @@ if __name__ == '__main__':
                 session = re.findall(r'(_B\d\d?)', epoch)[0][1:]
                 if session not in INCLUDED_SESSIONS:
                     continue
-                if not session in epochs:
+                if session not in epochs:
                     epochs.update({
                         session: {}
                     })
@@ -108,7 +108,10 @@ if __name__ == '__main__':
                             epochs[session][current_lock].update(
                                 {case: mne.read_epochs(os.path.join(subject_epochs, epoch))})
                         else:
-                            print(f'\nThe case \"{case}\" already in epoch {epoch}, skipping via the conflict\n')
+                            print(
+                                f'\nThe case \"{case}\" already in '
+                                f'epoch {epoch}, skipping via the conflict\n'
+                            )
 
             for session in epochs:
                 for lock in epochs[session]:
@@ -137,38 +140,42 @@ if __name__ == '__main__':
                     n_windows = len(centered_w_times)
 
                     for combiner, first_class_indices, second_class_indices, name in \
-                            zip(
-                                (
-                                        # left vs right
-                                        EpochsCombiner(resp_lock_lm_epochs, resp_lock_li_epochs, resp_lock_rm_epochs,
-                                                       resp_lock_ri_epochs),
-                                        # one finger two sides
-                                        EpochsCombiner(resp_lock_lm_epochs, resp_lock_li_epochs),
-                                        EpochsCombiner(resp_lock_rm_epochs, resp_lock_ri_epochs)
+                        zip(
+                            (
+                                # left vs right
+                                EpochsCombiner(
+                                    resp_lock_lm_epochs,
+                                    resp_lock_li_epochs,
+                                    resp_lock_rm_epochs,
+                                    resp_lock_ri_epochs
                                 ),
-                                (
-                                        # left vs right
-                                        (0, 1),
-                                        # one finger two sides
-                                        0,
-                                        0
-                                ),
-                                (
-                                        # left vs right
-                                        (2, 3),
-                                        # one finger two sides
-                                        1,
-                                        1,
-                                ),
-                                (
-                                        # left vs right
-                                        'left_vs_right',
-                                        # one finger two sides
-                                        'lm_vs_li',
-                                        'rm_vs_ri'
-                                )
+                                # one finger two sides
+                                EpochsCombiner(resp_lock_lm_epochs, resp_lock_li_epochs),
+                                EpochsCombiner(resp_lock_rm_epochs, resp_lock_ri_epochs)
+                            ),
+                            (
+                                # left vs right
+                                (0, 1),
+                                # one finger two sides
+                                0,
+                                0
+                            ),
+                            (
+                                # left vs right
+                                (2, 3),
+                                # one finger two sides
+                                1,
+                                1,
+                            ),
+                            (
+                                # left vs right
+                                'left_vs_right',
+                                # one finger two sides
+                                'lm_vs_li',
+                                'rm_vs_ri'
+                            )
 
-                            ):
+                        ):
                         tf_acc_cache = dict()
                         csp_cache = dict()
                         cross_tf_scores = list()
