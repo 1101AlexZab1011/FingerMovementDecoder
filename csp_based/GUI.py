@@ -433,9 +433,9 @@ if __name__ == '__main__':
             tmin, tmax = -.500, .500
             n_cycles = 14
             # n_cycles = 10
-            min_freq = 5.
+            min_freq = 1.
             max_freq = 70.
-            n_freqs = 7
+            n_freqs = 8
             # n_freqs = 15
             freqs_range = np.logspace(np.log10(min_freq), np.log10(max_freq), n_freqs)
             window_spacing = (n_cycles / np.max(freqs_range) / 2.)

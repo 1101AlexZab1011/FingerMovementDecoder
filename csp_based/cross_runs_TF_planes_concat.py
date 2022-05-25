@@ -4,7 +4,7 @@ import inspect
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir) 
+sys.path.insert(0, parentdir)
 
 import os
 import pickle
@@ -42,14 +42,14 @@ if __name__ == '__main__':
                         default=os.path.join(os.getcwd(), 'Source', 'Subjects'), help='Path to the subjects directory')
     parser.add_argument('--trials-name', type=str,
                         default='B', help='Name of trials')
-    
+
     combined_sessions, \
     excluded_subjects, \
     lock, \
     cases, \
     subjects_dir, \
     sessions_name = vars(parser.parse_args()).values()
-    
+
     combined_sessions = combined_sessions.split('-')
     from_, to = (
         int(re.findall(r'\d+', session)[-1])
@@ -57,48 +57,48 @@ if __name__ == '__main__':
     )
     included_sessions = [f'{sessions_name}{i}' for i in range(from_, to + 1)]
     combined_sessions = f'{included_sessions[0]}-{included_sessions[-1]}'
-    
+
     for subject_name in os.listdir(subjects_dir):
-        
+
         if subject_name in excluded_subjects:
             continue
-        
+
         train_acc, train_loss, val_acc, val_loss, test_acc, test_loss = (list() for _ in range(6))
         subject_path = os.path.join(subjects_dir, subject_name)
         epochs_path = os.path.join(subject_path, 'Epochs')
         epochs = {case: list() for case in cases}
         any_info = None
-        
+
         for epochs_file in os.listdir(epochs_path):
             if lock not in epochs_file:
                 continue
-            
+
             session = re.findall(r'_{0}\d\d?'.format(sessions_name), epochs_file)[0][1:]
-            
+
             if session not in included_sessions:
                 continue
-            
+
             for case in cases:
                 if case in epochs_file:
                     with Silence(), warnings.catch_warnings():
                         warnings.simplefilter("ignore")
                         epochs_ = mne.read_epochs(os.path.join(epochs_path, epochs_file))
                         epochs_.resample(200)
-                        
+
                         if any_info is None:
                             any_info = epochs_.info
-                        
+
                         epochs[case].append(epochs_)
-        
+
         epochs = dict(
-                    zip(
-                        epochs.keys(),
-                        map(
-                            mne.concatenate_epochs,
-                            list(epochs.values())
-                        )
-                    )
+            zip(
+                epochs.keys(),
+                map(
+                    mne.concatenate_epochs,
+                    list(epochs.values())
                 )
+            )
+        )
         resp_lock_li_epochs = epochs['LI']
         resp_lock_lm_epochs = epochs['LM']
         resp_lock_ri_epochs = epochs['RI']
@@ -114,9 +114,9 @@ if __name__ == '__main__':
         tmin, tmax = -.500, .500
         n_cycles = 14
         n_iters = 25
-        min_freq = 5.
+        min_freq = 1.
         max_freq = 70.
-        n_freqs = 7
+        n_freqs = 8
         freqs = np.logspace(np.log10(min_freq), np.log10(max_freq), n_freqs)
         freq_ranges = list(zip(freqs[:-1], freqs[1:]))
         window_spacing = (n_cycles / np.max(freqs) / 2.)
@@ -126,33 +126,37 @@ if __name__ == '__main__':
         for combiner, first_class_indices, second_class_indices, name in \
                 zip(
                     (
-                            # left vs right
-                            EpochsCombiner(resp_lock_lm_epochs, resp_lock_li_epochs, resp_lock_rm_epochs,
-                                            resp_lock_ri_epochs),
-                            # one finger two sides
-                            EpochsCombiner(resp_lock_lm_epochs, resp_lock_li_epochs),
-                            EpochsCombiner(resp_lock_rm_epochs, resp_lock_ri_epochs)
+                        # left vs right
+                        EpochsCombiner(
+                            resp_lock_lm_epochs,
+                            resp_lock_li_epochs,
+                            resp_lock_rm_epochs,
+                            resp_lock_ri_epochs
+                        ),
+                        # one finger two sides
+                        EpochsCombiner(resp_lock_lm_epochs, resp_lock_li_epochs),
+                        EpochsCombiner(resp_lock_rm_epochs, resp_lock_ri_epochs)
                     ),
                     (
-                            # left vs right
-                            (0, 1),
-                            # one finger two sides
-                            0,
-                            0
+                        # left vs right
+                        (0, 1),
+                        # one finger two sides
+                        0,
+                        0
                     ),
                     (
-                            # left vs right
-                            (2, 3),
-                            # one finger two sides
-                            1,
-                            1,
+                        # left vs right
+                        (2, 3),
+                        # one finger two sides
+                        1,
+                        1,
                     ),
                     (
-                            # left vs right
-                            'left_vs_right',
-                            # one finger two sides
-                            'lm_vs_li',
-                            'rm_vs_ri'
+                        # left vs right
+                        'left_vs_right',
+                        # one finger two sides
+                        'lm_vs_li',
+                        'rm_vs_ri'
                     )
 
                 ):
@@ -198,9 +202,9 @@ if __name__ == '__main__':
                             .crop(tmin=w_tmin, tmax=w_tmax) \
                             .combine(first_class_indices, second_class_indices, shuffle=True)
 
-                        if not f'{fmin}-{fmax}' in csp_cache:
+                        if f'{fmin}-{fmax}' not in csp_cache:
                             csp_cache.update({f'{fmin}-{fmax}': dict()})
-                        if not f'{w_tmin}-{w_tmax}' in csp_cache[f'{fmin}-{fmax}']:
+                        if f'{w_tmin}-{w_tmax}' not in csp_cache[f'{fmin}-{fmax}']:
                             csp = CSP(n_components=4, reg='shrinkage', rank='full')
 
                             fitted = False
@@ -213,9 +217,9 @@ if __name__ == '__main__':
 
                             csp_cache[f'{fmin}-{fmax}'].update({f'{w_tmin}-{w_tmax}': csp})
 
-                        if not f'{fmin}-{fmax}' in tf_acc_cache:
+                        if f'{fmin}-{fmax}' not in tf_acc_cache:
                             tf_acc_cache.update({f'{fmin}-{fmax}': dict()})
-                        if not f'{w_tmin}-{w_tmax}' in tf_acc_cache[f'{fmin}-{fmax}']:
+                        if f'{w_tmin}-{w_tmax}' not in tf_acc_cache[f'{fmin}-{fmax}']:
                             tf_acc_cache[f'{fmin}-{fmax}'].update({f'{w_tmin}-{w_tmax}': list()})
 
                         scored = False

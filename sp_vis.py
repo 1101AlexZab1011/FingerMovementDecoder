@@ -2,6 +2,7 @@ import matplotlib as mpl
 import argparse
 import os
 from lfcnn_vis import plot_spatial_weights, read_pkl
+from LFCNN_decoder import SpatialParameters, TemporalParameters, WaveForms
 
 if __name__ == '__main__':
     mpl.use('agg')
