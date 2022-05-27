@@ -63,6 +63,22 @@ def get_order(order: np.array, *args):
     return order.ravel()
 
 
+def compute_morlet_cwt(
+    sig: np.ndarray,
+    t: np.ndarray,
+    freqs: np.ndarray,
+    omega_0: Optional[float] = 5,
+    phase: Optional[bool] = False
+) -> np.ndarray:
+    dt = t[1] - t[0]
+    widths = omega_0 / (2 * np.pi * freqs * dt)
+    cwtmatr = sl.cwt(sig, lambda M, s: sl.morlet2(M, s, w=omega_0), widths)
+    if phase:
+        return cwtmatr
+    else:
+        return np.real(cwtmatr)**2 + np.imag(cwtmatr)**2
+
+
 @spinner(prefix='Compute spectral parameters... ')
 def compute_waveforms(model: mf.models.BaseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     time_courses = np.squeeze(model.lat_tcs.reshape(
@@ -76,8 +92,8 @@ def compute_waveforms(model: mf.models.BaseModel) -> tuple[np.ndarray, np.ndarra
         ls_induced = list()
 
         for lc in tc:
-            widths = np.arange(1, 71)
-            ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
+            freqs = np.arange(1, 71)
+            ls_induced.append(np.abs(compute_morlet_cwt(lc, times, freqs)))
 
         induced.append(np.array(ls_induced).mean(axis=0))
 
