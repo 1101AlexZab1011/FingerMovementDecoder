@@ -409,6 +409,9 @@ def plot_spatial_weights(
             self._fig.canvas.draw()
 
     def onclick(event):
+        flim = 70
+        crop = .05
+        shift = True
 
         if ax1.lines:
 
@@ -416,12 +419,23 @@ def plot_spatial_weights(
                 ax1.lines.remove(ax1.lines[i])
 
         _, iy = event.xdata, event.ydata
+
         if (event.inaxes == ax1 or event.inaxes == ax2) \
             and event.xdata is not None \
             and event.ydata is not None \
             and 0 < event.xdata < x_lim \
                 and -.5 < event.ydata < y_lim:
             iy = int(np.rint(iy))
+            induced = waveforms.induced.copy()[
+                sorting_callback.sorted_indices[iy],
+                :flim,
+                :
+            ]
+            crop *= induced.shape[1] / 2
+
+            for i, ind_course in enumerate(induced):
+                induced[i] /= ind_course.mean()
+
             color = colors[sorting_callback._sorted_indices[iy]]
             line = mp.lines.Line2D([0, x_lim], [iy, iy], color=color, linewidth=16, alpha=.4)
             ax1.add_line(line)
@@ -451,8 +465,9 @@ def plot_spatial_weights(
                 '#454545'
             )
             pos = ax22.imshow(
-                np.flip(waveforms.induced[sorting_callback.sorted_indices[iy], :, :], axis=0),
-                cmap='RdBu_r'
+                induced,
+                cmap='RdBu_r',
+                origin='lower'
             )
             cb = fig2.colorbar(
                 pos,
@@ -475,7 +490,8 @@ def plot_spatial_weights(
                     temporal_parameters.fresponces[sorting_callback.sorted_indices[iy]]
                 ),
             )
-            ax22_t.set_ylabel('Amplitude (μV)', labelpad=12.5, rotation=270)
+
+            ax22_t.set_ylabel('Amplitude', labelpad=12.5, rotation=270)
             ax22_t.spines['top'].set_alpha(.2)
             ax22_t.spines['right'].set_alpha(.2)
             ax22_t.spines['left'].set_alpha(.2)
@@ -490,11 +506,12 @@ def plot_spatial_weights(
             cb.ax.tick_params(axis='both', which='both', length=5, color='#00000050')
             times = np.unique(np.round(waveforms.times, 1))
             ranges = np.linspace(0, len(waveforms.times), len(times)).astype(int)
+
+            if shift:
+                times = np.round(times - times.mean(), 2)
+
             ax22.set_xticks(ranges)
             ax22.set_xticklabels(times)
-            freqs = [0] + [(i + 1) for i in range(waveforms.induced.shape[-2]) if (i + 1) % 10 == 0]
-            ax22.set_yticks(freqs)
-            ax22.set_yticklabels(sorted(freqs, reverse=True))
             ax22.set_xlabel('Time (s)')
             ax22.set_ylabel('Frequency (Hz)')
             ax23.legend(['Filter input', 'Filter output', 'Filter responce'], loc='upper right')
@@ -504,8 +521,10 @@ def plot_spatial_weights(
             ax23.spines['bottom'].set_alpha(.2)
             ax23.tick_params(axis='both', which='both', length=5, color='#00000050')
             ax23.set_xlabel('Frequency (Hz)')
-            ax23.set_ylabel('Amplitude (μV)')
+            ax23.set_ylabel('Amplitude')
             # ax23.set_ylim(top=1.2)
+            ax23.set_xlim([0, 70])
+            ax22_t.set_xlim([2 * crop, len(waveforms.times) - 2 * crop])
 
             if logscale:
                 ax23.set_yscale('log')

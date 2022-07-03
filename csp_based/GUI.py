@@ -21,6 +21,7 @@ from mne.time_frequency import AverageTFR
 from mne import create_info
 import numpy as np
 from typing import Union, List, Dict, Iterable, Tuple
+from lfcnn_vis import read_pkl
 
 
 def format_ranges(unformatted_ranges: Iterable) -> Tuple[List[str], Dict[str, str]]:
@@ -134,10 +135,18 @@ def generate_times(freqs_link: Linked) -> Union[list, None]:
 if __name__ == '__main__':
     content_root = './'
     subjects_folder_path = os.path.join(content_root, 'Source/Subjects')
-    subject_path = os.path.join(subjects_folder_path, 'Ga_Fed_06')
+    subject_path = os.path.join(subjects_folder_path, 'Ga_Fed')
     raw_path = os.path.join(subject_path, 'Raw', 'ML_Subject05_P1_tsss_mc_trans.fif')
-    resp_lock_lm_B1_epochs_path = os.path.join(subject_path, 'Epochs', 'RespCor_LM_B1_epochs.fif')
-    resp_lock_lm_B1_epochs = mne.read_epochs(resp_lock_lm_B1_epochs_path)
+    resp_lock_lm_B1_info_path = os.path.join(subject_path, 'Info', 'ML_Subject06_P1_tsss_mc_trans_info.pkl')
+    info = read_pkl(resp_lock_lm_B1_info_path)
+    info.pick_channels(
+        list(
+            filter(
+                lambda ch_name: (ch_name[-1] == '2' or ch_name[-1] == '3') and 'meg' in ch_name.lower(),
+                info['ch_names']
+            )
+        )
+    )
     root = './Source/Subjects'
     chain = Linked(
         name='SubjectsSelector',
@@ -414,13 +423,13 @@ if __name__ == '__main__':
                 freqs.meta['timemap'][times.selected_option]
             ]
             if e == '-plot-patterns-':
-                fig = csp.plot_patterns(resp_lock_lm_B1_epochs.info, size=5, res=128, show=False)
+                fig = csp.plot_patterns(info, size=5, res=128, show=False)
                 draw_figure_w_toolbar(
                     window['fig_cv'].TKCanvas, fig, window['controls_cv'].TKCanvas
                 )
             else:
                 fig = csp.plot_filters(
-                    resp_lock_lm_B1_epochs.info, size=5, res=128, show=False
+                    info, size=5, res=128, show=False
                 )
                 draw_figure_w_toolbar(
                     window['fig_cv'].TKCanvas, fig, window['controls_cv'].TKCanvas
@@ -431,12 +440,17 @@ if __name__ == '__main__':
         elif e == '-plot-plane-':
             # Times and frequencies configuration, hardcoded
             tmin, tmax = -.500, .500
+
             n_cycles = 14
-            # n_cycles = 10
             min_freq = 1.
             max_freq = 70.
             n_freqs = 8
-            # n_freqs = 15
+
+            # n_cycles = 14
+            # min_freq = 5.
+            # max_freq = 70.
+            # n_freqs = 7
+
             freqs_range = np.logspace(np.log10(min_freq), np.log10(max_freq), n_freqs)
             window_spacing = (n_cycles / np.max(freqs_range) / 2.)
             centered_w_times = np.arange(tmin, tmax, window_spacing)[1:]

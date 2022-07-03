@@ -13,19 +13,20 @@ from utils.storage_management import check_path
 from utils.machine_learning import one_hot_decoder
 import matplotlib as mpl
 import sklearn
-import mneflow
 from LFCNN_decoder import Predictions, save_parameters
 # compute_temporal_parameters,
 # , SpatialParameters, TemporalParameters,\
 # ComponentsOrder, , WaveForms,\
 from mneflow.models import BaseModel
 from utils.machine_learning.designer import ModelDesign, LayerDesign  # ParallelDesign
-from mneflow.layers import Dense  # DeMixing, LFTConv, TempPooling,
+from mneflow.layers import Dense, LFTConv, TempPooling
+from tensorflow.keras.initializers import Constant
+from tensorflow.keras import regularizers as k_reg
 
 
 class LFRNN(BaseModel):
-    def __init__(self, Dataset, specs=dict()):
-        self.scope = 'lfcnn'
+    def __init__(self, Dataset, specs=dict(), design='eegnet'):
+        self.scope = design
         specs.setdefault('filter_length', 7)
         specs.setdefault('n_latent', 32)
         specs.setdefault('pooling', 4)
@@ -42,39 +43,152 @@ class LFRNN(BaseModel):
         super(LFRNN, self).__init__(Dataset, specs)
 
     def build_graph(self):
-        # LFRNN
-        # self.design = ModelDesign(
-        #     self.inputs,
-        #     LayerDesign(tf.squeeze, axis=1),
-        #     tf.keras.layers.Bidirectional(
-        #         tf.keras.layers.LSTM(
-        #             self.specs['n_latent'],
-        #             bias_regularizer='l1',
-        #             return_sequences=True,
-        #             kernel_regularizer=tf.keras.regularizers.L1(.01),
-        #             recurrent_regularizer=tf.keras.regularizers.L1(.01),
-        #             dropout=0.4,
-        #             recurrent_dropout=0.4,
-        #         ),
-        #         merge_mode='sum'
-        #     ),
-        #     LayerDesign(tf.expand_dims, axis=1),
-        #     LFTConv(
-        #         size=self.specs['n_latent'],
-        #         nonlin=self.specs['nonlin'],
-        #         filter_length=self.specs['filter_length'],
-        #         padding=self.specs['padding'],
-        #         specs=self.specs
-        #     ),
-        #     TempPooling(
-        #         pooling=self.specs['pooling'],
-        #         pool_type=self.specs['pool_type'],
-        #         stride=self.specs['stride'],
-        #         padding=self.specs['padding'],
-        #     ),
-        #     tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
-        #     Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
-        # )
+        if self.scope == 'LFRNN':
+            # LFRNN
+            self.design = ModelDesign(
+                self.inputs,
+                LayerDesign(tf.squeeze, axis=1),
+                tf.keras.layers.Bidirectional(
+                    tf.keras.layers.LSTM(
+                        self.specs['n_latent'],
+                        bias_regularizer='l1',
+                        return_sequences=True,
+                        kernel_regularizer=tf.keras.regularizers.L1(.01),
+                        recurrent_regularizer=tf.keras.regularizers.L1(.01),
+                        dropout=0.4,
+                        recurrent_dropout=0.4,
+                    ),
+                    merge_mode='sum'
+                ),
+                LayerDesign(tf.expand_dims, axis=1),
+                LFTConv(
+                    size=self.specs['n_latent'],
+                    nonlin=self.specs['nonlin'],
+                    filter_length=self.specs['filter_length'],
+                    padding=self.specs['padding'],
+                    specs=self.specs
+                ),
+                TempPooling(
+                    pooling=self.specs['pooling'],
+                    pool_type=self.specs['pool_type'],
+                    stride=self.specs['stride'],
+                    padding=self.specs['padding'],
+                ),
+                tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
+                Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
+            )
+        elif self.scope == 'deep4':
+            # deep4
+            self.design = ModelDesign(
+                self.inputs,
+                LayerDesign(tf.transpose, [0, 3, 2, 1]),
+                tf.keras.layers.DepthwiseConv2D(
+                    kernel_size=(1, self.specs['filter_length']),
+                    depth_multiplier=self.specs['n_latent'],
+                    strides=1,
+                    padding=self.specs['padding'],
+                    activation=tf.identity,
+                    kernel_initializer="he_uniform",
+                    bias_initializer=Constant(0.1),
+                    data_format="channels_last",
+                    kernel_regularizer=k_reg.l2(self.specs['l2'])
+                    # kernel_constraint="maxnorm"
+                ),
+                *[ModelDesign(
+                    tf.keras.layers.Conv2D(
+                        filters=self.specs['n_latent'],
+                        kernel_size=(self.dataset.h_params['n_ch'], 1),
+                        strides=1,
+                        padding=self.specs['padding'],
+                        activation=self.specs['nonlin'],
+                        kernel_initializer="he_uniform",
+                        bias_initializer=Constant(0.1),
+                        data_format="channels_last",
+                        # data_format="channels_first",
+                        kernel_regularizer=k_reg.l2(self.specs['l2'])
+                    ),
+                    TempPooling(
+                        pooling=self.specs['pooling'],
+                        pool_type="avg",
+                        stride=self.specs['stride'],
+                        padding='SAME',
+                    )
+                ) for _ in range(4)],
+                Dense(size=self.out_dim, nonlin=tf.nn.softmax)
+            )
+        elif self.scope == 'fbcsp':
+            # FBCSP_ShallowNet
+            self.design = ModelDesign(
+                self.inputs,
+                LayerDesign(tf.transpose, [0, 3, 2, 1]),
+                tf.keras.layers.DepthwiseConv2D(
+                    kernel_size=(1, self.specs['filter_length']),
+                    depth_multiplier=self.specs['n_latent'],
+                    strides=1,
+                    padding="VALID",
+                    activation=tf.identity,
+                    kernel_initializer="he_uniform",
+                    bias_initializer=Constant(0.1),
+                    data_format="channels_last",
+                    kernel_regularizer=k_reg.l2(self.specs['l2'])
+                    # kernel_constraint="maxnorm"
+                ),
+                tf.keras.layers.Conv2D(
+                    filters=self.specs['n_latent'],
+                    kernel_size=(self.dataset.h_params['n_ch'], 1),
+                    strides=1,
+                    padding="VALID",
+                    activation=tf.square,
+                    kernel_initializer="he_uniform",
+                    bias_initializer=Constant(0.1),
+                    data_format="channels_last",
+                    # data_format="channels_first",
+                    kernel_regularizer=k_reg.l2(self.specs['l2'])
+                ),
+                TempPooling(
+                    pooling=self.specs['pooling'],
+                    pool_type="avg",
+                    stride=self.specs['stride'],
+                    padding='SAME',
+                ),
+                Dense(size=self.out_dim, nonlin=tf.identity)
+            )
+        elif self.scope == 'eegnet':
+            # EEGNet
+            self.design = ModelDesign(
+                self.inputs,
+                LayerDesign(tf.transpose, [0, 3, 2, 1]),
+                tf.keras.layers.Conv2D(
+                    self.specs['n_latent'],
+                    (2, self.specs['filter_length']),
+                    padding=self.specs['padding'],
+                    use_bias=False
+                ),
+                tf.keras.layers.BatchNormalization(axis=1),
+                tf.keras.layers.DepthwiseConv2D(
+                    (self.dataset.h_params['n_ch'], 1),
+                    use_bias=False,
+                    depth_multiplier=1,
+                    depthwise_constraint=tf.keras.constraints.MaxNorm(1.)
+                ),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.Activation('elu'),
+                tf.keras.layers.AveragePooling2D((1, self.specs['pooling'])),
+                tf.keras.layers.Dropout(self.specs['dropout']),
+                tf.keras.layers.SeparableConv2D(
+                    self.specs['n_latent'],
+                    (1, self.specs['filter_length'] // self.specs["pooling"]),
+                    use_bias=False,
+                    padding='same'
+                ),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.Activation('elu'),
+                tf.keras.layers.AveragePooling2D((1, self.specs['pooling'] * 2)),
+                tf.keras.layers.Dropout(self.specs['dropout']),
+                Dense(size=self.out_dim)
+            )
+        else:
+            raise NotImplementedError(f'Model design {self.scope} is not implemented')
         # resLFRNN
         # self.design = ModelDesign(
         #     self.inputs,
@@ -216,114 +330,6 @@ class LFRNN(BaseModel):
         #     tf.keras.layers.Dense(self.out_dim, kernel_regularizer='l1'),
         # )
 
-        # deep4
-        # self.design = ModelDesign(
-        #     self.inputs,
-        #     LayerDesign(tf.transpose, [0,3,2,1]),
-        #     tf.keras.layers.DepthwiseConv2D(
-        #         kernel_size=(1, self.specs['filter_length']),
-        #         depth_multiplier = self.specs['n_latent'],
-        #         strides=1,
-        #         padding=self.specs['padding'],
-        #         activation = tf.identity,
-        #         kernel_initializer="he_uniform",
-        #         bias_initializer=Constant(0.1),
-        #         data_format="channels_last",
-        #         kernel_regularizer=k_reg.l2(self.specs['l2'])
-        #         #kernel_constraint="maxnorm"
-        #     ),
-        #     *[ModelDesign(
-        #         tf.keras.layers.Conv2D(
-        #             filters=self.specs['n_latent'],
-        #             kernel_size=(self.dataset.h_params['n_ch'], 1),
-        #             strides=1,
-        #             padding=self.specs['padding'],
-        #             activation=self.specs['nonlin'],
-        #             kernel_initializer="he_uniform",
-        #             bias_initializer=Constant(0.1),
-        #             data_format="channels_last",
-        #             #data_format="channels_first",
-        #             kernel_regularizer=k_reg.l2(self.specs['l2'])
-        #         ),
-        #         TempPooling(
-        #             pooling=self.specs['pooling'],
-        #             pool_type="avg",
-        #             stride=self.specs['stride'],
-        #             padding='SAME',
-        #         )
-        #     ) for _ in range(4)],
-        #     Dense(size=self.out_dim, nonlin=tf.nn.softmax)
-        # )
-        # FBCSP_ShallowNet_d
-        # self.design = ModelDesign(
-        #     self.inputs,
-        #     LayerDesign(tf.transpose, [0,3,2,1]),
-        #     tf.keras.layers.DepthwiseConv2D(
-        #         kernel_size=(1, self.specs['filter_length']),
-        #         depth_multiplier = self.specs['n_latent'],
-        #         strides=1,
-        #         padding="VALID",
-        #         activation = tf.identity,
-        #         kernel_initializer="he_uniform",
-        #         bias_initializer=Constant(0.1),
-        #         data_format="channels_last",
-        #         kernel_regularizer=k_reg.l2(self.specs['l2'])
-        #         #kernel_constraint="maxnorm"
-        #     ),
-        #     tf.keras.layers.Conv2D(
-        #         filters=self.specs['n_latent'],
-        #         kernel_size=(self.dataset.h_params['n_ch'], 1),
-        #         strides=1,
-        #         padding="VALID",
-        #         activation = tf.square,
-        #         kernel_initializer="he_uniform",
-        #         bias_initializer=Constant(0.1),
-        #         data_format="channels_last",
-        #         #data_format="channels_first",
-        #         kernel_regularizer=k_reg.l2(self.specs['l2'])
-        #     ),
-        #     TempPooling(
-        #         pooling=self.specs['pooling'],
-        #         pool_type="avg",
-        #         stride=self.specs['stride'],
-        #         padding='SAME',
-        #     ),
-        #     Dense(size=self.out_dim, nonlin=tf.identity)
-        # )
-        # EEGNet
-        self.design = ModelDesign(
-            self.inputs,
-            LayerDesign(tf.transpose, [0, 3, 2, 1]),
-            tf.keras.layers.Conv2D(
-                self.specs['n_latent'],
-                (2, self.specs['filter_length']),
-                padding=self.specs['padding'],
-                use_bias=False
-            ),
-            tf.keras.layers.BatchNormalization(axis=1),
-            tf.keras.layers.DepthwiseConv2D(
-                (self.dataset.h_params['n_ch'], 1),
-                use_bias=False,
-                depth_multiplier=1,
-                depthwise_constraint=tf.keras.constraints.MaxNorm(1.)
-            ),
-            tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.Activation('elu'),
-            tf.keras.layers.AveragePooling2D((1, self.specs['pooling'])),
-            tf.keras.layers.Dropout(self.specs['dropout']),
-            tf.keras.layers.SeparableConv2D(
-                self.specs['n_latent'],
-                (1, self.specs['filter_length'] // self.specs["pooling"]),
-                use_bias=False,
-                padding='same'
-            ),
-            tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.Activation('elu'),
-            tf.keras.layers.AveragePooling2D((1, self.specs['pooling'] * 2)),
-            tf.keras.layers.Dropout(self.specs['dropout']),
-            Dense(size=self.out_dim)
-        )
-
         return self.design()
 
 
@@ -361,6 +367,8 @@ if __name__ == '__main__':
                         default='fingers_movement_epochs', help='Name of a project')
     parser.add_argument('-hp', '--high_pass', type=float,
                         default=None, help='High-pass filter (Hz)')
+    parser.add_argument('-m', '--model', type=str,
+                        default='LFCNN', help='Model to use')
 
     excluded_sessions, \
         excluded_subjects, \
@@ -373,7 +381,8 @@ if __name__ == '__main__':
         classification_postfix,\
         classification_prefix, \
         project_name, \
-        lfreq = vars(parser.parse_args()).values()
+        lfreq, \
+        model_name = vars(parser.parse_args()).values()
 
     if excluded_sessions:
         excluded_sessions = [
@@ -514,7 +523,7 @@ if __name__ == '__main__':
             l2=1e-6
         )
 
-        model = LFRNN(dataset, lf_params)
+        model = LFRNN(dataset, lf_params, model_name)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         network_out_path = os.path.join(subject_path, 'LFCNNm')
