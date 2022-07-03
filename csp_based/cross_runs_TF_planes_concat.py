@@ -25,6 +25,7 @@ import argparse
 from mne.decoding import  CSP
 from typing import Any
 from cross_runs_TF_planes import CrossRunsTFScorer
+from utils.console.colored import warn
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -171,7 +172,7 @@ if __name__ == '__main__':
             check_path(lock_tf_planes_path)
             out_path = os.path.join(lock_tf_planes_path, f'{name}.pkl')
             if os.path.exists(out_path):
-                print(f'The file {out_path} already exists, skipping...')
+                warn(f'The file {out_path} already exists, skipping...', True)
                 continue
             for i in range(n_iters):
                 tf_scores = np.zeros((n_freqs - 1, n_windows))
