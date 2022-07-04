@@ -196,6 +196,7 @@ if __name__ == '__main__':
                         default='fingers_movement_epochs', help='Name of a project')
     parser.add_argument('-hp', '--high_pass', type=float,
                         default=None, help='High-pass filter (Hz)')
+    parser.add_argument('--no-params', action='store_true', help='Do not compute parameters')
 
     excluded_sessions, \
         excluded_subjects, \
@@ -208,7 +209,8 @@ if __name__ == '__main__':
         classification_postfix,\
         classification_prefix, \
         project_name, \
-        lfreq = vars(parser.parse_args()).values()
+        lfreq, \
+        no_params = vars(parser.parse_args()).values()
 
     if excluded_sessions:
         excluded_sessions = [
@@ -399,78 +401,81 @@ if __name__ == '__main__':
         )
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
-        model.compute_patterns(meta['train_paths'])
-        nt = model.dataset.h_params['n_t']
-        time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
-        times = (1 / float(model.dataset.h_params['fs'])) * np.arange(model.dataset.h_params['n_t'])
-        patterns = model.patterns.copy()
-        model.compute_patterns(meta['train_paths'], output='filters')
-        filters = model.patterns.copy()
-        franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
 
-        sp_path = os.path.join(network_out_path, 'Parameters')
-        check_path(sp_path)
+        if not no_params:
+            model.compute_patterns(meta['train_paths'])
+            nt = model.dataset.h_params['n_t']
+            time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
+            times = (1 / float(model.dataset.h_params['fs'])) *\
+                np.arange(model.dataset.h_params['n_t'])
+            patterns = model.patterns.copy()
+            model.compute_patterns(meta['train_paths'], output='filters')
+            filters = model.patterns.copy()
+            franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
 
-        induced = list()
-        for tc in time_courses:
-            ls_induced = list()
-            for lc in tc:
-                widths = np.arange(1, 71)
-                ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
-            induced.append(np.array(ls_induced).mean(axis=0))
-        induced = np.array(induced)
+            sp_path = os.path.join(network_out_path, 'Parameters')
+            check_path(sp_path)
 
-        save_parameters(
-            WaveForms(time_courses.mean(1), induced, times, time_courses),
-            os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
-            'WaveForms'
-        )
+            induced = list()
+            for tc in time_courses:
+                ls_induced = list()
+                for lc in tc:
+                    widths = np.arange(1, 71)
+                    ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
+                induced.append(np.array(ls_induced).mean(axis=0))
+            induced = np.array(induced)
 
-        save_parameters(
-            SpatialParameters(patterns, filters),
-            os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
-            'spatial'
-        )
-        save_parameters(
-            TemporalParameters(franges, finputs, foutputs, fresponces),
-            os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
-            'temporal'
-        )
-        save_parameters(
-            ComponentsOrder(
-                get_order(*model._sorting('l2')),
-                get_order(*model._sorting('compwise_loss')),
-                get_order(*model._sorting('weight')),
-                get_order(*model._sorting('output_corr')),
-                get_order(*model._sorting('weight_corr')),
-            ),
-            os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
-            'sorting'
-        )
+            save_parameters(
+                WaveForms(time_courses.mean(1), induced, times, time_courses),
+                os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
+                'WaveForms'
+            )
 
-        pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
-        patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
-        filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
-        spectra_pics_path = os.path.join(pics_path, 'Spectra', classification_name_formatted)
-        wf_pics_path = os.path.join(pics_path, 'WaveForms', classification_name_formatted)
-        loss_pics_path = os.path.join(pics_path, 'Loss', classification_name_formatted)
-        acc_pics_path = os.path.join(pics_path, 'Accuracy', classification_name_formatted)
+            save_parameters(
+                SpatialParameters(patterns, filters),
+                os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
+                'spatial'
+            )
+            save_parameters(
+                TemporalParameters(franges, finputs, foutputs, fresponces),
+                os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
+                'temporal'
+            )
+            save_parameters(
+                ComponentsOrder(
+                    get_order(*model._sorting('l2')),
+                    get_order(*model._sorting('compwise_loss')),
+                    get_order(*model._sorting('weight')),
+                    get_order(*model._sorting('output_corr')),
+                    get_order(*model._sorting('weight_corr')),
+                ),
+                os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
+                'sorting'
+            )
 
-        check_path(
-            pics_path,
-            os.path.join(pics_path, 'Patterns'),
-            os.path.join(pics_path, 'Filters'),
-            os.path.join(pics_path, 'Spectra'),
-            os.path.join(pics_path, 'WaveForms'),
-            os.path.join(pics_path, 'Loss'),
-            os.path.join(pics_path, 'Accuracy'),
-            patterns_pics_path,
-            filters_pics_path,
-            spectra_pics_path,
-            wf_pics_path,
-            loss_pics_path,
-            acc_pics_path
-        )
+        # pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
+        # patterns_pics_path = os.path.join(pics_path, 'Patterns', classification_name_formatted)
+        # filters_pics_path = os.path.join(pics_path, 'Filters', classification_name_formatted)
+        # spectra_pics_path = os.path.join(pics_path, 'Spectra', classification_name_formatted)
+        # wf_pics_path = os.path.join(pics_path, 'WaveForms', classification_name_formatted)
+        # loss_pics_path = os.path.join(pics_path, 'Loss', classification_name_formatted)
+        # acc_pics_path = os.path.join(pics_path, 'Accuracy', classification_name_formatted)
+
+        # check_path(
+        #     pics_path,
+        #     os.path.join(pics_path, 'Patterns'),
+        #     os.path.join(pics_path, 'Filters'),
+        #     os.path.join(pics_path, 'Spectra'),
+        #     os.path.join(pics_path, 'WaveForms'),
+        #     os.path.join(pics_path, 'Loss'),
+        #     os.path.join(pics_path, 'Accuracy'),
+        #     patterns_pics_path,
+        #     filters_pics_path,
+        #     spectra_pics_path,
+        #     wf_pics_path,
+        #     loss_pics_path,
+        #     acc_pics_path
+        # )
         perf_table_path = os.path.join(
             perf_tables_path,
             f'{classification_name_formatted}.csv'

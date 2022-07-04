@@ -249,6 +249,7 @@ if __name__ == '__main__':
                         default='fingers_movement_epochs', help='Name of a project')
     parser.add_argument('-hp', '--high_pass', type=float,
                         default=None, help='High-pass filter (Hz)')
+    parser.add_argument('--no-params', action='store_true', help='Do not compute parameters')
 
     excluded_sessions, \
         excluded_subjects, \
@@ -261,7 +262,8 @@ if __name__ == '__main__':
         classification_postfix,\
         classification_prefix, \
         project_name, \
-        lfreq = vars(parser.parse_args()).values()
+        lfreq, \
+        no_params = vars(parser.parse_args()).values()
 
     if excluded_sessions:
         excluded_sessions = [
@@ -452,53 +454,55 @@ if __name__ == '__main__':
         train_loss_, train_acc_ = model.evaluate(meta['train_paths'])
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
 
-        model.compute_patterns(meta['train_paths'])
-        nt = model.dataset.h_params['n_t']
-        time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
-        times = (1 / float(model.dataset.h_params['fs'])) *\
-            np.arange(model.dataset.h_params['n_t'])
-        patterns = model.patterns.copy()
-        model.compute_patterns(meta['train_paths'], output='filters')
-        filters = model.patterns.copy()
-        franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
-        induced, times, time_courses = compute_waveforms(model)
+        if not no_params:
 
-        # induced = list()
-        # for tc in time_courses:
-        #     ls_induced = list()
-        #     for lc in tc:
-        #         widths = np.arange(1, 71)
-        #         ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
-        #     induced.append(np.array(ls_induced).mean(axis=0))
-        # induced = np.array(induced)
+            model.compute_patterns(meta['train_paths'])
+            nt = model.dataset.h_params['n_t']
+            time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
+            times = (1 / float(model.dataset.h_params['fs'])) *\
+                np.arange(model.dataset.h_params['n_t'])
+            patterns = model.patterns.copy()
+            model.compute_patterns(meta['train_paths'], output='filters')
+            filters = model.patterns.copy()
+            franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+            induced, times, time_courses = compute_waveforms(model)
 
-        save_parameters(
-            WaveForms(time_courses.mean(1), induced, times, time_courses),
-            os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
-            'WaveForms'
-        )
+            # induced = list()
+            # for tc in time_courses:
+            #     ls_induced = list()
+            #     for lc in tc:
+            #         widths = np.arange(1, 71)
+            #         ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
+            #     induced.append(np.array(ls_induced).mean(axis=0))
+            # induced = np.array(induced)
 
-        save_parameters(
-            SpatialParameters(patterns, filters),
-            os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
-            'spatial'
-        )
-        save_parameters(
-            TemporalParameters(franges, finputs, foutputs, fresponces),
-            os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
-            'temporal'
-        )
-        save_parameters(
-            ComponentsOrder(
-                get_order(*model._sorting('l2')),
-                get_order(*model._sorting('compwise_loss')),
-                get_order(*model._sorting('weight')),
-                get_order(*model._sorting('output_corr')),
-                get_order(*model._sorting('weight_corr')),
-            ),
-            os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
-            'sorting'
-        )
+            save_parameters(
+                WaveForms(time_courses.mean(1), induced, times, time_courses),
+                os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
+                'WaveForms'
+            )
+
+            save_parameters(
+                SpatialParameters(patterns, filters),
+                os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
+                'spatial'
+            )
+            save_parameters(
+                TemporalParameters(franges, finputs, foutputs, fresponces),
+                os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
+                'temporal'
+            )
+            save_parameters(
+                ComponentsOrder(
+                    get_order(*model._sorting('l2')),
+                    get_order(*model._sorting('compwise_loss')),
+                    get_order(*model._sorting('weight')),
+                    get_order(*model._sorting('output_corr')),
+                    get_order(*model._sorting('weight_corr')),
+                ),
+                os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
+                'sorting'
+            )
 
         perf_table_path = os.path.join(
             perf_tables_path,
