@@ -22,6 +22,7 @@ from utils.machine_learning.designer import ModelDesign, LayerDesign  # Parallel
 from mneflow.layers import Dense, LFTConv, TempPooling
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras import regularizers as k_reg
+from time import perf_counter
 
 
 class ZubarevNet(BaseModel):
@@ -524,8 +525,12 @@ if __name__ == '__main__':
         )
 
         model = ZubarevNet(dataset, lf_params, model_name)
+        t1 = perf_counter()
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
+        print('#' * 100)
+        print(f'{model_name} runtime: {perf_counter() - t1}')
+        print('#' * 100)
         network_out_path = os.path.join(subject_path, 'LFCNNm')
         check_path(network_out_path)
         yp_path = os.path.join(network_out_path, 'Predictions')
