@@ -24,7 +24,7 @@ from tensorflow.keras.initializers import Constant
 from tensorflow.keras import regularizers as k_reg
 
 
-class LFRNN(BaseModel):
+class ZubarevNet(BaseModel):
     def __init__(self, Dataset, specs=dict(), design='eegnet'):
         self.scope = design
         specs.setdefault('filter_length', 7)
@@ -523,7 +523,7 @@ if __name__ == '__main__':
             l2=1e-6
         )
 
-        model = LFRNN(dataset, lf_params, model_name)
+        model = ZubarevNet(dataset, lf_params, model_name)
         model.build()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         network_out_path = os.path.join(subject_path, 'LFCNNm')
@@ -562,7 +562,7 @@ if __name__ == '__main__':
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
         perf_table_path = os.path.join(
             perf_tables_path,
-            f'{classification_name_formatted}.csv'
+            f'{model_name}_{classification_name_formatted}.csv'
         )
         processed_df = pd.Series(
             [
