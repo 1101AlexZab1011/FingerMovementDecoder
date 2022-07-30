@@ -525,11 +525,11 @@ if __name__ == '__main__':
         )
 
         model = ZubarevNet(dataset, lf_params, model_name)
-        t1 = perf_counter()
         model.build()
+        t1 = perf_counter()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         print('#' * 100)
-        print(f'{model_name} runtime: {perf_counter() - t1}')
+        print(f'{classification_name_formatted}\n{model_name}\nruntime: {perf_counter() - t1}')
         print('#' * 100)
         network_out_path = os.path.join(subject_path, 'LFCNNm')
         check_path(network_out_path)
