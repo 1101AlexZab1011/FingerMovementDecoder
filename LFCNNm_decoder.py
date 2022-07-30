@@ -41,7 +41,7 @@ class ZubarevNet(BaseModel):
         specs.setdefault('l2_scope', [])
         specs.setdefault('maxnorm_scope', [])
 
-        super(LFRNN, self).__init__(Dataset, specs)
+        super(ZubarevNet, self).__init__(Dataset, specs)
 
     def build_graph(self):
         if self.scope == 'LFRNN':
