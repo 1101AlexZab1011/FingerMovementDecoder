@@ -21,6 +21,7 @@ import copy
 import scipy.signal as sl
 import sklearn
 import scipy as sp
+from time import perf_counter
 
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
@@ -409,7 +410,12 @@ if __name__ == '__main__':
 
         model = mf.models.LFCNN(dataset, lf_params)
         model.build()
+        t1 = perf_counter()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
+        print('#' * 100)
+        runtime = perf_counter() - t1
+        print(f'{classification_name_formatted}\nLFCNN\nruntime: {runtime}')
+        print('#' * 100)
         network_out_path = os.path.join(subject_path, 'LFCNN')
         yp_path = os.path.join(network_out_path, 'Predictions')
         sp_path = os.path.join(network_out_path, 'Parameters')
@@ -520,6 +526,7 @@ if __name__ == '__main__':
                 test_loss_,
                 model.v_metric,
                 model.v_loss,
+                runtime
             ],
             index=[
                 'n_classes',
@@ -531,7 +538,8 @@ if __name__ == '__main__':
                 'test_acc',
                 'test_loss',
                 'val_acc',
-                'val_loss'
+                'val_loss',
+                'runtime'
             ],
             name=subject_name
         ).to_frame().T

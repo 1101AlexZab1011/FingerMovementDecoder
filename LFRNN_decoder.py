@@ -21,6 +21,7 @@ from mneflow.models import LFCNN
 from LFCNN_decoder import Predictions, SpatialParameters, TemporalParameters,\
     ComponentsOrder, WaveForms, compute_temporal_parameters,\
     save_parameters, get_order
+from time import perf_counter
 
 
 class LFRNN(LFCNN):
@@ -358,7 +359,12 @@ if __name__ == '__main__':
 
         model = LFRNN(dataset, lf_params)
         model.build()
+        t1 = perf_counter()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
+        print('#' * 100)
+        runtime = perf_counter() - t1
+        print(f'{classification_name_formatted}\nLFCNN\nruntime: {runtime}')
+        print('#' * 100)
         network_out_path = os.path.join(subject_path, 'LFRNN')
         check_path(network_out_path)
         yp_path = os.path.join(network_out_path, 'Predictions')
@@ -492,6 +498,7 @@ if __name__ == '__main__':
                 test_loss_,
                 model.v_metric,
                 model.v_loss,
+                runtime
             ],
             index=[
                 'n_classes',
@@ -503,7 +510,8 @@ if __name__ == '__main__':
                 'test_acc',
                 'test_loss',
                 'val_acc',
-                'val_loss'
+                'val_loss',
+                'runtime'
             ],
             name=subject_name
         ).to_frame().T

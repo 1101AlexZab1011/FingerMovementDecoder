@@ -529,7 +529,8 @@ if __name__ == '__main__':
         t1 = perf_counter()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         print('#' * 100)
-        print(f'{classification_name_formatted}\n{model_name}\nruntime: {perf_counter() - t1}')
+        runtime = perf_counter() - t1
+        print(f'{classification_name_formatted}\n{model_name}\nruntime: {runtime}')
         print('#' * 100)
         network_out_path = os.path.join(subject_path, 'LFCNNm')
         check_path(network_out_path)
@@ -581,6 +582,7 @@ if __name__ == '__main__':
                 test_loss_,
                 model.v_metric,
                 model.v_loss,
+                runtime
             ],
             index=[
                 'n_classes',
@@ -592,7 +594,8 @@ if __name__ == '__main__':
                 'test_acc',
                 'test_loss',
                 'val_acc',
-                'val_loss'
+                'val_loss',
+                'runtime'
             ],
             name=subject_name
         ).to_frame().T
