@@ -363,7 +363,7 @@ if __name__ == '__main__':
         model.train(n_epochs=25, eval_step=100, early_stopping=5)
         print('#' * 100)
         runtime = perf_counter() - t1
-        print(f'{classification_name_formatted}\nLFCNN\nruntime: {runtime}')
+        print(f'{classification_name_formatted}\nLFRNN\nruntime: {runtime}')
         print('#' * 100)
         network_out_path = os.path.join(subject_path, 'LFRNN')
         check_path(network_out_path)
