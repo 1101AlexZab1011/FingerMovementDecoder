@@ -34,6 +34,8 @@ from typing import Optional, Union
 from dataclasses import asdict, dataclass, total_ordering
 import logging
 
+from combiners import EpochsCombiner
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
@@ -337,13 +339,30 @@ if __name__ == '__main__':
             )
         )
 
-        epochs_list = list(epochs.values())
+        i = 0
+        cases_indices_to_combine = list()
+        cases_to_combine_list = list()
 
-        X, Y = prepare_data(epochs_list)
-        X = np.transpose(X, (0, 2, 1))
-        n_classes, classes_samples = np.unique(Y, return_counts=True)
+        for combination in cases_to_combine:
+            cases_indices_to_combine.append(list())
+
+            for j, case in enumerate(combination):
+
+                i += j
+                cases_indices_to_combine[-1].append(i)
+                cases_to_combine_list.append(epochs[case])
+            i += 1
+
+        combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
+        n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)
         classes_samples = classes_samples.tolist()
+        combiner.shuffle()
+        X, Y = combiner.X, combiner.Y
+        X = np.array([
+            StandardScaler().fit_transform(epoch)
+            for epoch in X
+        ])
 
         ldrs = create_data_loaders(X.astype(np.float32), one_hot_encoder(Y).astype(np.float32), 100)
         ildrs = dict(
