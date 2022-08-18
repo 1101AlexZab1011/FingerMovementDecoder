@@ -287,7 +287,7 @@ if __name__ == '__main__':
         model=modelcfg,
         dataset=None,
         batch_size=100,
-        n_steps=200,
+        n_steps=20000,
         metric_iter=250,
         model_upd_freq=250,
         train_test_ratio=.7,
@@ -365,6 +365,7 @@ if __name__ == '__main__':
             for epoch in X
         ])
 
+        print(X.astype(np.float32).shape, one_hot_encoder(Y).astype(np.float32).shape)
         ldrs = create_data_loaders(X.astype(np.float32), one_hot_encoder(Y).astype(np.float32), 100)
         ildrs = dict(
             train=infinite(ldrs['train']),
