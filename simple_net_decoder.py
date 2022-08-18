@@ -364,8 +364,9 @@ if __name__ == '__main__':
             StandardScaler().fit_transform(epoch)
             for epoch in X
         ])
+        X = np.transpose(X, (0, 2, 1))
 
-        print(X.astype(np.float32).shape, one_hot_encoder(Y).astype(np.float32).shape)
+        # print(X.astype(np.float32).shape, one_hot_encoder(Y).astype(np.float32).shape)
         ldrs = create_data_loaders(X.astype(np.float32), one_hot_encoder(Y).astype(np.float32), 100)
         ildrs = dict(
             train=infinite(ldrs['train']),
