@@ -31,7 +31,8 @@ import pandas as pd
 import mne
 
 from typing import Optional, Union
-from dataclasses import asdict, dataclass, total_ordering
+from dataclasses import asdict, dataclass
+from functools import total_ordering
 import logging
 
 from combiners import EpochsCombiner
