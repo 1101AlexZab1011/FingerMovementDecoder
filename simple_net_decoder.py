@@ -11,7 +11,6 @@ from library.config_schema import MainConfig, SimpleNetConfig, FeatureExtractorC
     ParamsDict, flatten_dict, get_selected_params
 from library.func_utils import infinite, limited
 from library.interpreter import ModelInterpreter
-from library.models import SimpleNet
 from library.runner import LossFunction, TestIter, TrainIter, eval_model, train_model
 from library.visualize import get_model_weights_figure
 from library.metrics import Metrics
@@ -45,6 +44,77 @@ from omegaconf.omegaconf import OmegaConf
 
 from utils.storage_management import check_path
 from utils.console import Silence
+
+from library.type_aliases import ChanBatchTensor, SigBatchTensor
+from library.models import FeatureExtractor
+from scipy.signal import firwin
+
+
+class FeatureExtractorFrozenEnvelopes(FeatureExtractor):
+    def __init__(self,
+            cfg: FeatureExtractorConfig,
+            sfreq: int,
+            lfreq: int
+        ):
+        self.filter_weights = firwin(cfg.filtering_size, lfreq, pass_zero='lowpass', nyq=sfreq//2)
+        super().__init__(cfg)
+
+
+    def _create_envelope_detector(self, nch: int) -> nn.Sequential:
+        kern_conv, kern_env = self.cfg.filtering_size, self.cfg.envelope_size
+        pad_conv, pad_env = int(self.cfg.filtering_size / 2), int(self.cfg.envelope_size / 2)
+        model = nn.Sequential(
+            nn.Conv1d(nch, nch, kernel_size=kern_conv, bias=False, groups=nch, padding=pad_conv),
+            nn.BatchNorm1d(nch, affine=False),
+            nn.LeakyReLU(-1),  # just absolute value
+            nn.Conv1d(nch, nch, kernel_size=kern_env, groups=nch, padding=pad_env),
+        )
+
+        with torch.no_grad():
+            model[-1].weights = nn.Parameter(
+                torch.from_numpy(np.array([
+                    np.expand_dims(self.filter_weights, 0)
+                    for _ in range(self.cfg.hidden_channels)
+                ]))
+            )
+        model[-1].requires_grad_(False)
+
+        return model
+
+
+class SimpleNet(nn.Module):
+    def __init__(
+        self,
+        cfg: SimpleNetConfig,
+        feature_extractor: Optional[FeatureExtractor] = None
+    ):
+        super(self.__class__, self).__init__()
+        self.is_use_lstm = cfg.use_lstm
+        ext_cfg = cfg.feature_extractor
+        self.feature_extractor = FeatureExtractor(ext_cfg) if feature_extractor is None else feature_extractor
+
+        window_size = cfg.lag_backward + cfg.lag_forward + 1
+        final_out_features = (window_size // ext_cfg.downsampling + 1) * ext_cfg.hidden_channels
+
+        assert window_size > ext_cfg.filtering_size
+        assert window_size > ext_cfg.envelope_size
+
+        self.features_batchnorm = nn.BatchNorm1d(final_out_features, affine=False)
+        if cfg.use_lstm:
+            assert ext_cfg.hidden_channels % 2 == 0, "hidden channels number must be even"
+            hc = ext_cfg.hidden_channels
+            self.lstm = nn.LSTM(hc, hc // 2, num_layers=1, batch_first=True, bidirectional=True)
+
+        self.fc_layer = nn.Linear(final_out_features, cfg.out_channels)
+
+    def forward(self, x: SigBatchTensor) -> ChanBatchTensor:
+        features = self.feature_extractor(x)
+        if self.is_use_lstm:
+            features = self.lstm(features.transpose(1, 2))[0].transpose(1, 2)
+        features = features.reshape((features.shape[0], -1))
+        self.features_scaled = self.features_batchnorm(features)
+        output = self.fc_layer(self.features_scaled)
+        return output
 
 
 Loaders = dict[str, DataLoader]
@@ -201,6 +271,8 @@ if __name__ == '__main__':
                         default='', help='String to set in the start of a task name')
     parser.add_argument('--project_name', type=str,
                         default='fingers_movement_epochs', help='Name of a project')
+    parser.add_argument('-lp', '--low_pass', type=float,
+                        default=None, help='Low-pass filter (Hz) for envelope detector')
 
     excluded_sessions, \
         excluded_subjects, \
@@ -212,7 +284,8 @@ if __name__ == '__main__':
         classification_name,\
         classification_postfix,\
         classification_prefix, \
-        project_name = vars(parser.parse_args()).values()
+        project_name,\
+        lp = vars(parser.parse_args()).values()
 
     if excluded_sessions:
         excluded_sessions = [
@@ -253,7 +326,8 @@ if __name__ == '__main__':
 
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'perf_tables')
     dumps_path = os.path.join(os.path.dirname(subjects_dir), 'model_dumps')
-    check_path(perf_tables_path, dumps_path)
+    tb_path = os.path.join(os.path.dirname(subjects_dir), 'TB')
+    check_path(perf_tables_path, dumps_path, tb_path)
     subjects_performance = list()
 
     fh = logging.FileHandler('./Source/simplenet_history.log')
@@ -266,22 +340,22 @@ if __name__ == '__main__':
         # downsampling=102,  # half of input
         hidden_channels=4,
         # hidden_channels=32,  # as in LFCNN
-        filtering_size=15,  # band-pass filter -> as in the 2nd layer of LFCNN
-        envelope_size=15  # low-pass filter, same as band-pass
+        filtering_size=51,  # band-pass filter -> as in the 2nd layer of LFCNN
+        envelope_size=51  # low-pass filter, same as band-pass
     )
 
     modelcfg = SimpleNetConfig(
-        out_channels=4,
-        lag_backward=10,  # -500ms with 200 Hz -> 0.5*200 = 10 samples
-        lag_forward=10,  # 500ms with 200 Hz -> .5*200 = 10 samples
+        out_channels=None,
+        lag_backward=99,  # -500ms with 200 Hz -> 0.5*200 = 100 samples
+        lag_forward=99,  # 500ms with 200 Hz -> .5*200 = 100 samples
         use_lstm=False,
         feature_extractor=featuresextcfg
     )
 
     maincfg = MainConfig(
         debug=False,
-        lag_backward=60,
-        lag_forward=300,
+        lag_backward=99,
+        lag_forward=99,
         target_features_cnt=1,
         selected_channels=[i for i in range(306) if (i + 1) % 3],
         model=modelcfg,
@@ -357,6 +431,7 @@ if __name__ == '__main__':
         combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)
+        modelcfg.out_channels = n_classes
         classes_samples = classes_samples.tolist()
         combiner.shuffle()
         X, Y = combiner.X, combiner.Y
@@ -366,15 +441,28 @@ if __name__ == '__main__':
         ])
         X = np.transpose(X, (0, 2, 1))
 
-        # print(X.astype(np.float32).shape, one_hot_encoder(Y).astype(np.float32).shape)
         ldrs = create_data_loaders(X.astype(np.float32), one_hot_encoder(Y).astype(np.float32), 100)
         ildrs = dict(
             train=infinite(ldrs['train']),
             test=infinite(ldrs['test'])
         )
-        model = SimpleNet(modelcfg)
-        loss = nn.MSELoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=maincfg.learning_rate)
+        if lp is not None:
+            fe = FeatureExtractorFrozenEnvelopes(
+                modelcfg.feature_extractor, any_info['sfreq'], lp
+            )
+        else:
+            fe = FeatureExtractor(
+                modelcfg.feature_extractor
+            )
+        model = SimpleNet(
+            modelcfg,
+            fe
+        )
+        # loss = nn.MSELoss()
+        loss = nn.BCEWithLogitsLoss()
+        # loss = nn.CrossEntropyLoss()
+        # optimizer = torch.optim.Adam(model.parameters(), lr=maincfg.learning_rate)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=maincfg.learning_rate)
         train_iter = map(
             lambda x: ClassificationMetrics.calc(*x),
             infinite(TrainIter(model, ldrs["train"], loss, optimizer))
@@ -385,7 +473,9 @@ if __name__ == '__main__':
         )
 
         tr = trange(maincfg.n_steps, desc="Experiment main loop")
-        with SummaryWriter("TB") as sw:
+        with SummaryWriter(
+            os.path.join(tb_path, subject_name)
+        ) as sw:
             t1 = perf_counter()
             train_model(train_iter, test_iter, tr, model, maincfg.model_upd_freq, sw)
             runtime = perf_counter() - t1
@@ -398,7 +488,7 @@ if __name__ == '__main__':
             n_branches = maincfg.model.feature_extractor.hidden_channels
             signal = Signal(np.reshape(X, (X.shape[0] * X.shape[1], X.shape[2])), 600, [])
             mi = ModelInterpreter(model.feature_extractor, signal)
-            fig = get_model_weights_figure(mi, epochs_list[0].info, n_branches)
+            fig = get_model_weights_figure(mi, any_info, n_branches)
             sw.add_figure(tag=f"nsteps = {maincfg.n_steps}", figure=fig)
 
         train_acc, train_loss = metrics['train/acc'], metrics['train/loss']
@@ -413,7 +503,7 @@ if __name__ == '__main__':
                 n_classes,
                 *classes_samples,
                 sum(classes_samples),
-                int(len(X) * maincfg.train_test_ratio),
+                int(len(X) * (1 - maincfg.train_test_ratio)),
                 train_acc,
                 train_loss,
                 test_acc,

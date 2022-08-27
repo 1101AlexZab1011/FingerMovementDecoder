@@ -22,6 +22,7 @@ import scipy.signal as sl
 import sklearn
 import scipy as sp
 from time import perf_counter
+import mneflow
 
 
 SpatialParameters = namedtuple('SpatialParameters', 'patterns filters')
@@ -29,6 +30,78 @@ TemporalParameters = namedtuple('TemporalParameters', 'franges finputs foutputs 
 ComponentsOrder = namedtuple('ComponentsOrder', 'l2 compwise_loss weight output_corr weight_corr')
 Predictions = namedtuple('Predictions', 'y_p y_true')
 WaveForms = namedtuple('WaveForms', 'evoked induced times tcs')
+
+
+@spinner(prefix=lambda *args, **kwargs: f'Compute {kwargs.get("output", "patterns")}... ')
+def compute_patterns(model, data_path=None, *, output='patterns'):
+
+    if not data_path:
+        print("Computing patterns: No path specified, using validation dataset (Default)")
+        ds = model.dataset.val
+    elif isinstance(data_path, str) or isinstance(data_path, (list, tuple)):
+        ds = model.dataset._build_dataset(
+            data_path,
+            split=False,
+            test_batch=None,
+            repeat=True
+        )
+    elif isinstance(data_path, mneflow.data.Dataset):
+        if hasattr(data_path, 'test'):
+            ds = data_path.test
+        else:
+            ds = data_path.val
+    elif isinstance(data_path, tf.data.Dataset):
+        ds = data_path
+    else:
+        raise AttributeError('Specify dataset or data path.')
+
+    X, y = [row for row in ds.take(1)][0]
+
+    model.out_w_flat = model.fin_fc.w.numpy()
+    model.out_weights = np.reshape(
+        model.out_w_flat,
+        [-1, model.dmx.size, model.out_dim]
+    )
+    model.out_biases = model.fin_fc.b.numpy()
+    model.feature_relevances = model.get_component_relevances(X, y)
+
+    # compute temporal convolution layer outputs for vis_dics
+    tc_out = model.pool(model.tconv(model.dmx(X)).numpy())
+
+    # compute data covariance
+    X = X - tf.reduce_mean(X, axis=-2, keepdims=True)
+    X = tf.transpose(X, [3, 0, 1, 2])
+    X = tf.reshape(X, [X.shape[0], -1])
+    model.dcov = tf.matmul(X, tf.transpose(X))
+
+    # get spatial extraction fiter weights
+    demx = model.dmx.w.numpy()
+    model.lat_tcs = np.dot(demx.T, X)
+
+    kern = np.squeeze(model.tconv.filters.numpy()).T
+
+    X = X.numpy().T
+    if 'patterns' in output:
+        if 'old' in output:
+            model.patterns = np.dot(model.dcov, demx)
+        else:
+            patterns = []
+            X_filt = np.zeros_like(X)
+            for i_comp in range(kern.shape[0]):
+                for i_ch in range(X.shape[1]):
+                    x = X[:, i_ch]
+                    X_filt[:, i_ch] = np.convolve(x, kern[i_comp, :], mode="same")
+                patterns.append(np.cov(X_filt.T) @ demx[:, i_comp])
+            model.patterns = np.array(patterns).T
+    else:
+        model.patterns = demx
+
+    del X
+
+    #  Temporal conv stuff
+    model.filters = kern.T
+    model.tc_out = np.squeeze(tc_out)
+    model.corr_to_output = model.get_output_correlations(y)
 
 
 @spinner(prefix='Compute temporal parameters... ')
@@ -395,7 +468,7 @@ if __name__ == '__main__':
         meta = mf.produce_tfrecords((X, Y), **import_opt)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
-            n_latent=32,
+            n_latent=4,
             filter_length=50,
             nonlin=tf.keras.activations.elu,
             padding='SAME',
@@ -461,14 +534,15 @@ if __name__ == '__main__':
         test_loss_, test_acc_ = model.evaluate(meta['test_paths'])
 
         if not no_params:
-
-            model.compute_patterns(meta['train_paths'])
+            compute_patterns(model, meta['train_paths'], output='patterns old')
+            old_patterns = model.patterns.copy()
+            compute_patterns(model, meta['train_paths'])
             nt = model.dataset.h_params['n_t']
             time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
             times = (1 / float(model.dataset.h_params['fs'])) *\
                 np.arange(model.dataset.h_params['n_t'])
             patterns = model.patterns.copy()
-            model.compute_patterns(meta['train_paths'], output='filters')
+            compute_patterns(model, meta['train_paths'], output='filters')
             filters = model.patterns.copy()
             franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
             induced, times, time_courses = compute_waveforms(model)
@@ -487,7 +561,11 @@ if __name__ == '__main__':
                 os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
                 'WaveForms'
             )
-
+            save_parameters(
+                SpatialParameters(old_patterns, filters),
+                os.path.join(sp_path, f'{classification_name_formatted}_spatial_old.pkl'),
+                'spatial'
+            )
             save_parameters(
                 SpatialParameters(patterns, filters),
                 os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),

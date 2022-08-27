@@ -19,7 +19,7 @@ from LFCNN_decoder import Predictions, save_parameters
 # ComponentsOrder, , WaveForms,\
 from mneflow.models import BaseModel
 from utils.machine_learning.designer import ModelDesign, LayerDesign  # ParallelDesign
-from mneflow.layers import Dense, LFTConv, TempPooling
+from mneflow.layers import Dense, LFTConv, TempPooling, DeMixing
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras import regularizers as k_reg
 from time import perf_counter
@@ -44,7 +44,31 @@ class ZubarevNet(BaseModel):
         super(ZubarevNet, self).__init__(Dataset, specs)
 
     def build_graph(self):
-        if self.scope == 'LFRNN':
+        if self.scope == 'lfcnn':
+            self.design = ModelDesign(
+                self.inputs,
+                DeMixing(
+                    size=self.specs['n_latent'],
+                    nonlin=tf.identity,
+                    axis=3, specs=self.specs
+                ),
+                LFTConv(
+                    size=self.specs['n_latent'],
+                    nonlin=self.specs['nonlin'],
+                    filter_length=self.specs['filter_length'],
+                    padding=self.specs['padding'],
+                    specs=self.specs
+                ),
+                TempPooling(
+                    pooling=self.specs['pooling'],
+                    pool_type=self.specs['pool_type'],
+                    stride=self.specs['stride'],
+                    padding=self.specs['padding'],
+                ),
+                tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
+                Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
+            )
+        elif self.scope == 'lfrnn':
             # LFRNN
             self.design = ModelDesign(
                 self.inputs,
@@ -187,6 +211,34 @@ class ZubarevNet(BaseModel):
                 tf.keras.layers.AveragePooling2D((1, self.specs['pooling'] * 2)),
                 tf.keras.layers.Dropout(self.specs['dropout']),
                 Dense(size=self.out_dim)
+            )
+        elif self.scope == 'simplenet':
+            self.design = ModelDesign(
+                self.inputs,
+                DeMixing(
+                    size=self.specs['n_latent'],
+                    nonlin=tf.identity,
+                    axis=3, specs=self.specs
+                ),
+                LFTConv(
+                    size=self.specs['n_latent'],
+                    nonlin=self.specs['nonlin'],
+                    filter_length=self.specs['filter_length'],
+                    padding=self.specs['padding'],
+                    specs=self.specs
+                ),
+                LFTConv(
+                    size=self.specs['n_latent'],
+                    nonlin=self.specs['nonlin'],
+                    filter_length=self.specs['filter_length'],
+                    padding=self.specs['padding'],
+                    specs=self.specs
+                ),
+                LayerDesign(
+                    lambda X: X[:, :, ::self.specs['pooling']]
+                ),
+                tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
+                Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
             )
         else:
             raise NotImplementedError(f'Model design {self.scope} is not implemented')
@@ -507,7 +559,7 @@ if __name__ == '__main__':
         X, Y = combiner.X, combiner.Y
         meta = mf.produce_tfrecords((X, Y), **import_opt)
         print('#' * 100)
-        print(np.array(meta['test_fold'][0]).shape)
+        print(f'{meta["test_size"] = }, {meta["val_size"] = }, {meta["class_ratio"] = }')
         print('#' * 100)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
