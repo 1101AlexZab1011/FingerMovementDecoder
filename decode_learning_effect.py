@@ -322,7 +322,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--lock', type=str,
                         default='RespCor', help='Stimulus lock to consider')
     parser.add_argument('-c', '--cases', type=str, nargs='+',
-                        default=['LI', 'LM', 'RI', 'RM'], help='Cases to consider (must match '
+                        default=['B1-3', 'B10-12'], help='Cases to consider (must match '
                         'epochs file names for the respective classes)')
     parser.add_argument('-cmc', '--combine-cases', type=str, nargs='+',
                         default=None, help='Cases to consider (must be the number of strings in '
@@ -405,8 +405,6 @@ if __name__ == '__main__':
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)
         classes_samples = classes_samples.tolist()
-        print(ses_info.class_names, classes_samples)
-        raise OSError
         combiner.shuffle()
         import_opt = dict(
             savepath=storage.classification_path + '/',
