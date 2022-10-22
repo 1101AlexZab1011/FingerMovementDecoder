@@ -522,7 +522,7 @@ if __name__ == '__main__':
             ],
             index=[
                 'n_classes',
-                *class_names,
+                *ses_info.class_names,
                 'total',
                 'test_set',
                 'train_acc',
