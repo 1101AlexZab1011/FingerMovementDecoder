@@ -32,13 +32,14 @@ def plot_patterns(
     size=1, cbar_fmt='%3.1f', name_format='Latent\nSource %01d',
     show=True, show_names=False, title=None,
     outlines='head', contours=6,
-    image_interp='bilinear'
+    image_interp='linear'
 ) -> mpl.figure.Figure:
     if order is None:
         order = range(patterns.shape[1])
     if title is None:
         title = 'Computed patterns'
     info = copy.deepcopy(info)
+    info.__setstate__(dict(_unlocked=True))
     info['sfreq'] = 1.
     patterns = mne.EvokedArray(patterns, info, tmin=0)
     return patterns.plot_topomap(

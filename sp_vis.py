@@ -3,6 +3,13 @@ import argparse
 import os
 from lfcnn_vis import plot_spatial_weights, read_pkl
 from LFCNN_decoder import SpatialParameters, TemporalParameters, WaveForms
+from typing import  Optional
+import mne
+
+def info_pick_channels(info: mne.Info, ch_names: list[str], ordered: Optional[bool] = False) -> mne.Info:
+    sel = mne.pick_channels(info.ch_names, ch_names)
+    return mne.pick_info(info, sel, copy=False, verbose=False)
+
 
 if __name__ == '__main__':
     mpl.use('agg')
@@ -58,7 +65,7 @@ if __name__ == '__main__':
     )))
 
     subject_info_path = os.path.join(subjects_dir, subject_name, 'Info')
-    subject_parameters_path = os.path.join(subjects_dir, subject_name, model_name, 'Parameters')
+    subject_parameters_path = os.path.join(subjects_dir, subject_name, model_name, classification_name_formatted, 'Parameters')
 
     spatial_parameters = read_pkl(os.path.join(
         subject_parameters_path,
@@ -81,7 +88,8 @@ if __name__ == '__main__':
         os.listdir(subject_info_path)[0]
     ))
 
-    info.pick_channels(
+    info_pick_channels(
+        info,
         list(
             filter(
                 lambda ch_name: (

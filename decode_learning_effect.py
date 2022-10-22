@@ -422,7 +422,7 @@ if __name__ == '__main__':
         meta = mf.produce_tfrecords((X, Y), **import_opt)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
-            n_latent=4,
+            n_latent=32,
             filter_length=50,
             nonlin=tf.keras.activations.elu,
             padding='SAME',
