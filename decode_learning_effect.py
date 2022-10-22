@@ -450,7 +450,7 @@ if __name__ == '__main__':
                 y_pred_test,
                 y_true_test
             ),
-            os.path.join(storage.predictions_path, f'{classification_name_formatted}_pred.pkl'),
+            os.path.join(storage.predictions_path, f'{ses_info.classification_name_formatted}_pred.pkl'),
             'predictions'
         )
 
@@ -472,22 +472,22 @@ if __name__ == '__main__':
             induced, times, time_courses = compute_waveforms(model)
             save_parameters(
                 WaveForms(time_courses.mean(1), induced, times, time_courses),
-                os.path.join(storage.parameters_path, f'{classification_name_formatted}_waveforms.pkl'),
+                os.path.join(storage.parameters_path, f'{ses_info.classification_name_formatted}_waveforms.pkl'),
                 'WaveForms'
             )
             save_parameters(
                 SpatialParameters(old_patterns, filters),
-                os.path.join(storage.parameters_path, f'{classification_name_formatted}_spatial_old.pkl'),
+                os.path.join(storage.parameters_path, f'{ses_info.classification_name_formatted}_spatial_old.pkl'),
                 'spatial'
             )
             save_parameters(
                 SpatialParameters(patterns, filters),
-                os.path.join(storage.parameters_path, f'{classification_name_formatted}_spatial.pkl'),
+                os.path.join(storage.parameters_path, f'{ses_info.classification_name_formatted}_spatial.pkl'),
                 'spatial'
             )
             save_parameters(
                 TemporalParameters(franges, finputs, foutputs, fresponces),
-                os.path.join(storage.parameters_path, f'{classification_name_formatted}_temporal.pkl'),
+                os.path.join(storage.parameters_path, f'{ses_info.classification_name_formatted}_temporal.pkl'),
                 'temporal'
             )
             save_parameters(
@@ -498,13 +498,13 @@ if __name__ == '__main__':
                     get_order(*model._sorting('output_corr')),
                     get_order(*model._sorting('weight_corr')),
                 ),
-                os.path.join(storage.parameters_path, f'{classification_name_formatted}_sorting.pkl'),
+                os.path.join(storage.parameters_path, f'{ses_info.classification_name_formatted}_sorting.pkl'),
                 'sorting'
             )
 
         perf_table_path = os.path.join(
             storage.perf_tables_path,
-            f'{classification_name_formatted}.csv'
+            f'{ses_info.classification_name_formatted}.csv'
         )
         processed_df = pd.Series(
             [
