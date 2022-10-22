@@ -264,7 +264,7 @@ class StorageManager:
         if self.__current_subject_index < len(self.subject_dirs):
             self.select_subject(self.subject_dirs[self.__current_subject_index])
             self.__current_subject_index += 1
-            return self
+            return self.subject_dirs[self.__current_subject_index]
         else:
             raise StopIteration
 
@@ -390,7 +390,7 @@ if __name__ == '__main__':
 
     combined_sessions = tuple(map(lambda data: [f'_{sessions_name}{i}_' for i in data.split(' ')], combined_sessions))
 
-    for _ in storage:
+    for subject_name in storage:
         prepare_epochs(
             storage,
             'Resp',
