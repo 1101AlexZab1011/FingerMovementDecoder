@@ -263,8 +263,9 @@ class StorageManager:
     def __next__(self):
         if self.__current_subject_index < len(self.subject_dirs):
             self.select_subject(self.subject_dirs[self.__current_subject_index])
+            subject_name = self.subject_dirs[self.__current_subject_index]
             self.__current_subject_index += 1
-            return self.subject_dirs[self.__current_subject_index]
+            return subject_name
         else:
             raise StopIteration
 
