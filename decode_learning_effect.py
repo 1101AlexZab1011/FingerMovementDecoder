@@ -389,14 +389,9 @@ if __name__ == '__main__':
     assert len(combined_sessions) == 2, 'Script is implemented for only two combinations of '\
         f'sessions, {len(combined_sessions)} is given'
 
-    combined_sessions = tuple(map(lambda data: [f'_{sessions_name}{i}_' for i in data.split(' ')], combined_sessions))
+    combined_sessions = sorted(tuple(map(lambda data: [f'_{sessions_name}{i}_' for i in data.split(' ')], combined_sessions)))
 
     for subject_name in storage:
-        prepare_epochs(
-            storage,
-            'Resp',
-            combined_sessions
-        )
         combiner = EpochsCombiner(*prepare_epochs(
                 storage,
                 'Resp',
