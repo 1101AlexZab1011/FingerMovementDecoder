@@ -405,7 +405,7 @@ if __name__ == '__main__':
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)
         classes_samples = classes_samples.tolist()
-        print(ses_info.class_names, class_samples)
+        print(ses_info.class_names, classes_samples)
         raise OSError
         combiner.shuffle()
         import_opt = dict(
