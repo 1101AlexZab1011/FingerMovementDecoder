@@ -36,6 +36,7 @@ from LFCNN_decoder import SpatialParameters,\
     Predictions,\
     WaveForms,\
     compute_morlet_cwt,\
+    save_parameters,\
     get_order
 import scipy.signal as sl
 
