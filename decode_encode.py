@@ -25,21 +25,135 @@ import scipy as sp
 from time import perf_counter
 import mneflow
 from models import SimpleNet, ZubarevNetFactory
-from LFCNN_decoder import SpatialParameters,\
-    TemporalParameters,\
-    ComponentsOrder,\
-    Predictions,\
-    WaveForms,\
-    save_parameters,\
-    compute_patterns,\
-    compute_waveforms,\
-    compute_temporal_parameters,\
-    get_order
 from mneflow.layers import Dense, LFTConv, TempPooling, DeMixing
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras import regularizers as k_reg
 from utils.machine_learning import one_hot_encoder
 
+from LFCNN_decoder import SpatialParameters,\
+    TemporalParameters,\
+    ComponentsOrder,\
+    Predictions,\
+    WaveForms,\
+    compute_morlet_cwt,\
+    get_order
+import scipy.signal as sl
+
+def compute_patterns(model, data_path=None, *, output='patterns'):
+
+    if not data_path:
+        print("Computing patterns: No path specified, using validation dataset (Default)")
+        ds = model.dataset.val
+    elif isinstance(data_path, str) or isinstance(data_path, (list, tuple)):
+        ds = model.dataset._build_dataset(
+            data_path,
+            split=False,
+            test_batch=None,
+            repeat=True
+        )
+    elif isinstance(data_path, mneflow.data.Dataset):
+        if hasattr(data_path, 'test'):
+            ds = data_path.test
+        else:
+            ds = data_path.val
+    elif isinstance(data_path, tf.data.Dataset):
+        ds = data_path
+    else:
+        raise AttributeError('Specify dataset or data path.')
+
+    X, y = [row for row in ds.take(1)][0]
+
+    model.out_w_flat = model.fin_fc.w.numpy()
+    model.out_weights = np.reshape(
+        model.out_w_flat,
+        [-1, model.dmx.size, model.out_dim]
+    )
+    model.out_biases = model.fin_fc.b.numpy()
+    model.feature_relevances = model.get_component_relevances(X, y)
+
+    # compute temporal convolution layer outputs for vis_dics
+    tc_out = model.pool(model.tconv(model.dmx(X)).numpy())
+
+    # compute data covariance
+    X = X - tf.reduce_mean(X, axis=-2, keepdims=True)
+    X = tf.transpose(X, [3, 0, 1, 2])
+    X = tf.reshape(X, [X.shape[0], -1])
+    model.dcov = tf.matmul(X, tf.transpose(X))
+
+    # get spatial extraction fiter weights
+    demx = model.dmx.w.numpy()
+    model.lat_tcs = np.dot(demx.T, X)
+
+    kern = np.squeeze(model.tconv.filters.numpy()).T
+
+    X = X.numpy().T
+    if 'patterns' in output:
+        if 'old' in output:
+            model.patterns = np.dot(model.dcov, demx)
+        else:
+            patterns = []
+            X_filt = np.zeros_like(X)
+            for i_comp in range(kern.shape[0]):
+                for i_ch in range(X.shape[1]):
+                    x = X[:, i_ch]
+                    X_filt[:, i_ch] = np.convolve(x, kern[i_comp, :], mode="same")
+                patterns.append(np.cov(X_filt.T) @ demx[:, i_comp])
+            model.patterns = np.array(patterns).T
+    else:
+        model.patterns = demx
+
+    del X
+
+    #  Temporal conv stuff
+    model.filters = kern.T
+    model.tc_out = np.squeeze(tc_out)
+    model.corr_to_output = model.get_output_correlations(y)
+
+def compute_temporal_parameters(model, *, fs=None):
+
+    if fs is None:
+
+        if model.dataset.h_params['fs']:
+            fs = model.dataset.h_params['fs']
+        else:
+            print('Sampling frequency not specified, setting to 1.')
+            fs = 1.
+
+    out_filters = model.filters
+    _, psd = sl.welch(model.lat_tcs, fs=fs, nperseg=fs * 2)
+    finputs = psd[:, :-1]
+    franges = None
+    foutputs = list()
+    fresponces = list()
+
+    for i, flt in enumerate(out_filters.T):
+        w, h = (lambda w, h: (w, np.abs(h)))(*sl.freqz(flt, 1, worN=fs))
+        foutputs.append(np.abs(finputs[i, :] * h))
+
+        if franges is None:
+            franges = w / np.pi * fs / 2
+        fresponces.append(h)
+
+    return franges, finputs, foutputs, fresponces
+
+def compute_waveforms(model: mneflow.models.BaseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    time_courses = np.squeeze(model.lat_tcs.reshape(
+        [model.specs['n_latent'], -1, model.dataset.h_params['n_t']]
+    ))
+    times = (1 / float(model.dataset.h_params['fs'])) *\
+        np.arange(model.dataset.h_params['n_t'])
+    induced = list()
+
+    for tc in time_courses:
+        ls_induced = list()
+
+        for lc in tc:
+            freqs = np.arange(1, 71)
+            ls_induced.append(np.abs(compute_morlet_cwt(lc, times, freqs)))
+
+        induced.append(np.array(ls_induced).mean(axis=0))
+
+    return np.array(induced), times, time_courses
 
 SessionInfo = namedtuple(
     'SessionInfo',
