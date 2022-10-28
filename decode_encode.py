@@ -317,7 +317,6 @@ def prepare_epochs(
 
         if session in excluded_sessions:
             continue
-        print(storage.epochs_path, epochs_file)
 
         for case in cases:
             if case in epochs_file:
@@ -328,15 +327,15 @@ def prepare_epochs(
 
                     epochs[case].append(epochs_)
 
-        return dict(
-            zip(
-                epochs.keys(),
-                map(
-                    mne.concatenate_epochs,
-                    list(epochs.values())
-                )
+    return dict(
+        zip(
+            epochs.keys(),
+            map(
+                mne.concatenate_epochs,
+                list(epochs.values())
             )
         )
+    )
 
 if __name__ == '__main__':
     mpl.use('agg')
