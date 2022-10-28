@@ -42,7 +42,7 @@ from tensorflow.keras import regularizers as k_reg
 
 SessionInfo = namedtuple(
     'SessionInfo',
-    'cases_cmb class_names classification_name classification_name_formatted model_name'
+    'cases_cmb class_names classification_name classification_name_formatted model_name excluded_sessions excluded_subjects'
 )
 
 def make_session_info(
@@ -51,7 +51,9 @@ def make_session_info(
     classification_name: Optional[str] = None,
     classification_prefix: Optional[str] = None,
     classification_postfix: Optional[str] = None,
-    model_name: Optional[str] = 'unknown'
+    model_name: Optional[str] = 'unknown',
+    excluded_sessions: Optional[list[str]] = None,
+    excluded_subjects: Optional[list[str]] = None
 ) -> SessionInfo:
     cases_to_combine = [case.split(' ') for case in cases] if cases_to_combine is None else [
         case.split(' ') for case in cases_to_combine
@@ -74,12 +76,17 @@ def make_session_info(
         )
     )
 
+    excluded_sessions = list() if excluded_sessions is None else excluded_sessions
+    excluded_subjects = list() if excluded_subjects is None else excluded_subjects
+
     return SessionInfo(
         cases_to_combine,
         class_names,
         classification_name,
         classification_name_formatted,
-        model_name
+        model_name,
+        excluded_sessions,
+        excluded_subjects
     )
 
 
@@ -262,10 +269,14 @@ class StorageManager:
 
     def __next__(self):
         if self.__current_subject_index < len(self.subject_dirs):
-            self.select_subject(self.subject_dirs[self.__current_subject_index])
-            subject_name = self.subject_dirs[self.__current_subject_index]
-            self.__current_subject_index += 1
-            return subject_name
+            if self.subject_dirs[self.__current_subject_index] in self.session_info.excluded_subjects:
+                self.__current_subject_index += 1
+                return next(self)
+            else:
+                self.select_subject(self.subject_dirs[self.__current_subject_index])
+                subject_name = self.subject_dirs[self.__current_subject_index]
+                self.__current_subject_index += 1
+                return subject_name
         else:
             raise StopIteration
 
@@ -289,26 +300,42 @@ class StorageManager:
 def prepare_epochs(
     storage: StorageManager,
     lock: str,
-    comb_ses: tuple[list[str], list[str]]
+    cases: list[str],
+    sessions_name: str,
+    excluded_sessions: list[str]
 ) -> dict[str, mne.Epochs | mne.EpochsArray]:
     if storage.subject_path is None:
         raise AttributeError('A subject is not selected in the storage')
 
-    return {
-        tuple(comb): mne.concatenate_epochs(list(
-            map(
-                lambda epoch_file: mne.read_epochs(
-                    os.path.join(storage.epochs_path, epoch_file)
-                ).resample(200),
-                filter(
-                    lambda epochs_file: any([
-                        ses in epochs_file for ses in comb
-                    ]) and lock in epochs_file,
-                    os.listdir(storage.epochs_path)
+    epochs = {case: list() for case in cases}
+
+    for epochs_file in os.listdir(storage.epochs_path):
+        if lock not in epochs_file:
+            continue
+
+        session = re.findall(r'_{0}\d\d?'.format(sessions_name), epochs_file)[0][1:]
+
+        if session in excluded_sessions:
+            continue
+
+        for case in cases:
+            if case in epochs_file:
+                with Silence(), warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    epochs_ = mne.read_epochs(os.path.join(storage.epochs_path, epochs_file))
+                    epochs_.resample(200)
+
+                    epochs[case].append(epochs_)
+
+        return dict(
+            zip(
+                epochs.keys(),
+                map(
+                    mne.concatenate_epochs,
+                    list(epochs.values())
                 )
             )
-        )) for comb in comb_ses
-    }
+        )
 
 if __name__ == '__main__':
     mpl.use('agg')
@@ -316,22 +343,23 @@ if __name__ == '__main__':
         description='A script for applying the neural network "LFCNN" to the epoched data from '
         'gradiometers related to events for classification'
     )
-    parser.add_argument('-cms', '--combine-sessions', type=str, nargs='+',
-                        default=['1 2 3', '10 11 12'], help='Sessions to combine')
+    parser.add_argument('-es', '--exclude-sessions', type=str, nargs='+',
+                        default=[], help='Sessions to exclude')
     parser.add_argument('-ep', '--exclude-participants', type=str, nargs='+',
                         default=[], help='IDs of subjects to exclude')
     parser.add_argument('-l', '--lock', type=str,
                         default='RespCor', help='Stimulus lock to consider')
     parser.add_argument('-c', '--cases', type=str, nargs='+',
-                        default=['B1-3', 'B10-12'], help='Cases to consider (must match '
-                        'epochs file names for the respective classes)')
-    parser.add_argument('-cmc', '--combine-cases', type=str, nargs='+',
-                        default=None, help='Cases to consider (must be the number of strings in '
-                        'which classes to combine are written separated by a space, indices '
-                        'corresponds to order of "--cases" parameter)')
+                        default=['LI', 'LM', 'RI', 'RM'],
+                        help='Cases to consider (must match epochs file names '
+                        'for the respective classes)')
+    parser.add_argument('-cmb', '--combine-cases', type=str, nargs='+',
+                        default=None, help='Cases to consider (must be the number of '
+                        'strings in which classes to combine are written separated by '
+                        'a space, indices corresponds to order of "--cases" parameter)')
     parser.add_argument('-sd', '--subjects-dir', type=str,
-                        default=os.path.join(os.getcwd(), 'Source', 'Subjects'), help='Path to the '
-                        'subjects directory')
+                        default=os.path.join(os.getcwd(), 'Source', 'Subjects'),
+                        help='Path to the subjects directory')
     parser.add_argument('--trials-name', type=str,
                         default='B', help='Name of trials')
     parser.add_argument('--name', type=str,
@@ -340,21 +368,15 @@ if __name__ == '__main__':
                         default='', help='String to append to a task name')
     parser.add_argument('--prefix', type=str,
                         default='', help='String to set in the start of a task name')
-    parser.add_argument('--project-name', type=str,
+    parser.add_argument('--project_name', type=str,
                         default='fingers_movement_epochs', help='Name of a project')
-    parser.add_argument('-hp', '--high-pass', type=float,
+    parser.add_argument('-hp', '--high_pass', type=float,
                         default=None, help='High-pass filter (Hz)')
+    parser.add_argument('--no-params', action='store_true', help='Do not compute parameters')
     parser.add_argument('-m', '--model', type=str,
                         default='LFCNN', help='Model to use')
-    parser.add_argument('--use-train', action='store_true', help='Use train set from '
-                        'separated dataset to test a model')
-    parser.add_argument('--no-params', action='store_true', help='Do not compute parameters')
-    parser.add_argument('--tmin', type=float, default=None,
-                        help='Time to start (Where 0 is stimulus), defaults to start of epoch')
-    parser.add_argument('--tmax', type=float, default=None,
-                        help='Time to end (Where 0 is stimulus), defaults to end of epoch')
 
-    combined_sessions, \
+    excluded_sessions, \
         excluded_subjects, \
         lock, \
         cases, \
@@ -366,10 +388,17 @@ if __name__ == '__main__':
         classification_prefix, \
         project_name, \
         lfreq, \
-        model_name, \
-        use_train, \
-        no_params, \
-        tmin, tmax = vars(parser.parse_args()).values()
+        no_params,\
+        model_name = vars(parser.parse_args()).values()
+
+    if excluded_sessions:
+        excluded_sessions = [
+            sessions_name + session
+            if sessions_name not in session
+            else session
+            for session in excluded_sessions
+        ]
+
 
     ses_info = make_session_info(
         cases,
@@ -377,7 +406,9 @@ if __name__ == '__main__':
         classification_name,
         classification_prefix,
         classification_postfix,
-        model_name
+        model_name,
+        excluded_sessions,
+        excluded_subjects
     )
 
     classifier = select_model(model_name)
@@ -386,26 +417,38 @@ if __name__ == '__main__':
         ses_info
     )
 
-    assert len(combined_sessions) == 2, 'Script is implemented for only two combinations of '\
-        f'sessions, {len(combined_sessions)} is given'
-
-    combined_sessions = sorted(tuple(map(lambda data: [f'_{sessions_name}{i}_' for i in data.split(' ')], combined_sessions)))
 
     for subject_name in storage:
 
-        if subject_name in excluded_subjects:
-            continue
+        epochs = prepare_epochs(
+            storage, lock, cases, sessions_name, excluded_sessions
+        )
 
-        combiner = EpochsCombiner(*prepare_epochs(
-                storage,
-                'Resp',
-                combined_sessions
-            ).values()
-        ).combine(0, 1)
+        i = 0
+        cases_indices_to_combine = list()
+        cases_to_combine_list = list()
+
+        for combination in ses_info.cases_cmb:
+            cases_indices_to_combine.append(list())
+
+            for j, case in enumerate(combination):
+
+                i += j
+                cases_indices_to_combine[-1].append(i)
+                if lfreq is None:
+                    cases_to_combine_list.append(epochs[case])
+                else:
+                    cases_to_combine_list.append(epochs[case].filter(lfreq, None))
+
+            i += 1
+
+        combiner = EpochsCombiner(*cases_to_combine_list).combine(*cases_indices_to_combine)
+
         n_classes, classes_samples = np.unique(combiner.Y, return_counts=True)
         n_classes = len(n_classes)
         classes_samples = classes_samples.tolist()
         combiner.shuffle()
+
         import_opt = dict(
             savepath=storage.classification_path + '/',
             out_name=project_name,
