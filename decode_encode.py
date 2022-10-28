@@ -38,6 +38,7 @@ from LFCNN_decoder import SpatialParameters,\
 from mneflow.layers import Dense, LFTConv, TempPooling, DeMixing
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras import regularizers as k_reg
+from utils.machine_learning import one_hot_encoder
 
 
 SessionInfo = namedtuple(
@@ -642,3 +643,92 @@ if __name__ == '__main__':
                 .to_csv(perf_table_path)
         else:
             processed_df.to_csv(perf_table_path)
+
+        _, n_times, n_channels = model.input_shape
+        n_classes = model.out_dim
+
+        last_dim_x = n_times//4 + 3 if n_times%2 else n_times//4 + 2
+        last_dim_y = n_channels//4 + 3 if n_channels%2 else n_channels//4 + 2
+
+        encoder_design = ModelDesign(
+            tf.keras.Input(shape=(1, 1, n_classes,), name='input_layer'),
+            tf.keras.layers.Conv2DTranspose(10, (n_times//4, n_channels//4)),
+            tf.keras.layers.Conv2DTranspose(10, (n_times//2, n_channels//2)),
+            tf.keras.layers.Conv2DTranspose(1, (last_dim, last_dim_y)),
+            LayerDesign(
+                lambda X: tf.transpose(X, (0, 3, 1, 2))
+            )
+        )
+        encoder = Encoder(model, encoder_design)
+        encoder.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+            loss=MaximizingLabelLoss(),
+            callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)],
+            metrics=['acc']
+        )
+        Yoh = tf.expand_dims(tf.expand_dims(one_hot_encoder(Y), 1), 1)
+        encoder.fit(
+            X,
+            Yoh,
+            epochs=1,
+            validation_split=0.2,
+            shuffle=True,
+        )
+        generated_data = encoder(Yoh)
+        save_parameters(
+            Predictions(
+                model.km(generated_data).numpy(),
+                y_true_test
+            ),
+            os.path.join(storage.predictions_path, f'{ses_info.classification_name_formatted}_generated_pred.pkl'),
+            'predictions'
+        )
+        import_opt = dict(
+            savepath=storage.classification_path + '/',
+            out_name=project_name + '_generated',
+            fs=200,
+            input_type='trials',
+            target_type='int',
+            picks={'meg': 'grad'},
+            scale=True,
+            crop_baseline=True,
+            decimate=None,
+            scale_interval=(0, 60),
+            n_folds=5,
+            overwrite=True,
+            segment=False,
+            test_set='holdout'
+        )
+        meta = mf.produce_tfrecords(
+            (
+                tf.transpose(tf.squeeze(generated_data), (0, 2, 1)).numpy(),
+                Y
+            ),
+                **import_opt
+        )
+        dataset = mf.Dataset(meta, train_batch=100)
+        compute_patterns(model, dataset, output='patterns')
+        patterns = model.patterns.copy()
+        nt = model.dataset.h_params['n_t']
+        time_courses = np.squeeze(model.lat_tcs.reshape([model.specs['n_latent'], -1, nt]))
+        times = (1 / float(model.dataset.h_params['fs'])) *\
+            np.arange(model.dataset.h_params['n_t'])
+        compute_patterns(model, dataset, output='filters')
+        filters = model.patterns.copy()
+        franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
+        induced, times, time_courses = compute_waveforms(model)
+        save_parameters(
+            WaveForms(time_courses.mean(1), induced, times, time_courses),
+            os.path.join(storage.parameters_path, f'{ses_info.classification_name_formatted}_generated_waveforms.pkl'),
+            'WaveForms'
+        )
+        save_parameters(
+            SpatialParameters(patterns, filters),
+            os.path.join(storage.parameters_path, f'{ses_info.classification_name_formatted}_generated_spatial.pkl'),
+            'spatial'
+        )
+        save_parameters(
+            TemporalParameters(franges, finputs, foutputs, fresponces),
+            os.path.join(storage.parameters_path, f'{ses_info.classification_name_formatted}_generated_temporal.pkl'),
+            'temporal'
+        )
