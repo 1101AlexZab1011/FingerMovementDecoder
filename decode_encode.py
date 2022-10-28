@@ -661,7 +661,6 @@ if __name__ == '__main__':
         encoder.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
             loss=MaximizingLabelLoss(),
-            callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)],
             metrics=['acc']
         )
         Yoh = tf.expand_dims(tf.expand_dims(one_hot_encoder(Y), 1), 1)
@@ -670,6 +669,7 @@ if __name__ == '__main__':
             Yoh,
             epochs=1,
             validation_split=0.2,
+            callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)],
             shuffle=True,
         )
         generated_data = encoder(Yoh)
