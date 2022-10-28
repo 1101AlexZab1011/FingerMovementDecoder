@@ -665,7 +665,6 @@ if __name__ == '__main__':
         )
         Yoh = tf.expand_dims(tf.expand_dims(one_hot_encoder(Y), 1), 1)
         encoder.fit(
-            X,
             Yoh,
             epochs=1,
             validation_split=0.2,
