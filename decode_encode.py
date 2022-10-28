@@ -666,7 +666,7 @@ if __name__ == '__main__':
         Yoh = tf.expand_dims(tf.expand_dims(one_hot_encoder(Y), 1), 1)
         encoder.fit(
             Yoh,
-            epochs=1,
+            epochs=5,
             validation_split=0.2,
             callbacks=[tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)],
             shuffle=True,
