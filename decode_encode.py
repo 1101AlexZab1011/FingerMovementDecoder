@@ -337,6 +337,62 @@ def prepare_epochs(
         )
     )
 
+
+class MaximizingLabelLoss(tf.keras.losses.Loss):
+
+    def call(self, y_true, y_pred):
+        y_true = tf.cast(y_true, tf.float32)
+        y_pred = tf.cast(y_pred, tf.float32)
+        y_true_inv = tf.cast(tf.math.logical_not(tf.cast(y_true, bool)), tf.dtypes.float32)
+        y_true_val = tf.math.reduce_sum(y_true*y_pred)
+        y_true = tf.squeeze(y_true)
+        y_pred = tf.squeeze(y_pred)
+        useful_diff = y_true_inv*y_pred - y_true_inv*y_true_val
+
+        return tf.math.reduce_mean(useful_diff)/(1+ tf.math.reduce_std(useful_diff[:, :, 1:]))
+
+
+class Encoder(tf.keras.Model):
+
+    def __init__(
+        self,
+        decoder: mneflow.models.BaseModel,
+        encoder_design: ModelDesign
+    ):
+        super().__init__()
+        self.decoder = decoder
+        self.encoder_design = encoder_design
+
+    def call(self, inputs):
+        return self.encoder_design(inputs)
+
+    def train_step(self, data):
+        y = data
+
+        with tf.GradientTape() as tape:
+            encoder_pred = self(y, training=True)
+            decoder_pred = self.decoder.km(encoder_pred)
+            decoder_pred = tf.expand_dims(tf.expand_dims(decoder_pred, 1), 1)
+            loss = self.compiled_loss(y, decoder_pred, regularization_losses=self.losses)
+
+        trainable_vars = [var for elem in self.encoder_design if hasattr(elem, 'trainable_variables') for var in elem.trainable_variables]
+        gradients = tape.gradient(loss, trainable_vars)
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        self.compiled_metrics.update_state(y, decoder_pred)
+
+        return {m.name: m.result() for m in self.metrics}
+
+    def test_step(self, data):
+        y = data
+        encoder_pred = self(y, training=False)
+        decoder_pred = self.decoder.km(encoder_pred)
+        decoder_pred = tf.expand_dims(tf.expand_dims(decoder_pred, 1), 1)
+        self.compiled_loss(y, decoder_pred, regularization_losses=self.losses)
+        self.compiled_metrics.update_state(y, decoder_pred)
+
+        return {m.name: m.result() for m in self.metrics}
+
+
 if __name__ == '__main__':
     mpl.use('agg')
     parser = argparse.ArgumentParser(
@@ -466,6 +522,8 @@ if __name__ == '__main__':
             test_set='holdout'
         )
         X, Y = combiner.X, combiner.Y
+        print(X.shape)
+        raise OSError
         meta = mf.produce_tfrecords((X, Y), **import_opt)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
