@@ -652,7 +652,7 @@ if __name__ == '__main__':
             tf.keras.Input(shape=(1, 1, n_classes,), name='input_layer'),
             tf.keras.layers.Conv2DTranspose(10, (n_times//4, n_channels//4)),
             tf.keras.layers.Conv2DTranspose(10, (n_times//2, n_channels//2)),
-            tf.keras.layers.Conv2DTranspose(1, (last_dim, last_dim_y)),
+            tf.keras.layers.Conv2DTranspose(1, (last_dim_x, last_dim_y)),
             LayerDesign(
                 lambda X: tf.transpose(X, (0, 3, 1, 2))
             )
