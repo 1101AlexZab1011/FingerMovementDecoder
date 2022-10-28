@@ -320,6 +320,7 @@ def prepare_epochs(
 
         for case in cases:
             if case in epochs_file:
+                print('ok')
                 with Silence(), warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     epochs_ = mne.read_epochs(os.path.join(storage.epochs_path, epochs_file))
