@@ -317,10 +317,10 @@ def prepare_epochs(
 
         if session in excluded_sessions:
             continue
+        print(epochs_file)
 
         for case in cases:
             if case in epochs_file:
-                print(epochs_file)
                 with Silence(), warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     epochs_ = mne.read_epochs(os.path.join(storage.epochs_path, epochs_file))
