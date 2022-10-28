@@ -317,7 +317,7 @@ def prepare_epochs(
 
         if session in excluded_sessions:
             continue
-        print(epochs_file)
+        print(storage.epochs_path, epochs_file)
 
         for case in cases:
             if case in epochs_file:
