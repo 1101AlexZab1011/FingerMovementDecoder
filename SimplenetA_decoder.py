@@ -23,8 +23,9 @@ import sklearn
 import scipy as sp
 from time import perf_counter
 import mneflow
-from deepmeg.params import SpatialParameters, TemporalParameters, CompressionParameters, WaveForms, Predictions,\
-    compute_temporal_parameters, compute_waveforms, compute_compression_parameters
+from deepmeg.params import save_parameters, compute_temporal_parameters, compute_waveforms, \
+    Predictions, WaveForms, TemporalParameters, SpatialParameters, ComponentsOrder, get_order, \
+    compute_compression_parameters, CompressionParameters
 from utils.models import SimpleNetA
 
 
