@@ -230,7 +230,7 @@ if __name__ == '__main__':
         runtime = perf_counter() - t1
         print(f'{classification_name_formatted}\nLFCNN\nruntime: {runtime}')
         print('#' * 100)
-        network_out_path = os.path.join(subject_path, 'LFCNN')
+        network_out_path = os.path.join(subject_path, 'SimplenetA')
         yp_path = os.path.join(network_out_path, 'Predictions')
         sp_path = os.path.join(network_out_path, 'Parameters')
         check_path(network_out_path, yp_path, sp_path)
