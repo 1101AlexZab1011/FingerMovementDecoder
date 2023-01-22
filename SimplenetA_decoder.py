@@ -283,6 +283,11 @@ if __name__ == '__main__':
             induced, induced_filt, times, time_courses, time_courses_filt = compute_waveforms(model)
             temp_relevance_loss, compression_weights = compute_compression_parameters(model)
 
+            save_parameters(
+                model.branch_relevance_loss,
+                os.path.join(sp_path, f'{classification_name_formatted}_branch_loss.pkl'),
+                'branches relevance'
+            )
 
             save_parameters(
                 WaveForms(time_courses.mean(1), time_courses_filt.mean(1), induced, induced_filt, times, time_courses),
