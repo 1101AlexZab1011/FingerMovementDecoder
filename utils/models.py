@@ -426,7 +426,7 @@ class SimpleNetA(SimpleNet):
         )
         self.out_biases = self.fin_fc.b.numpy()
         if relevances:
-            self.componentwise_loss(X, y)
+            self.compute_componentwise_loss(X, y)
             self.branchwise_loss(X, y)
             self.tempwise_loss(X, y)
 
