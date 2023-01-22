@@ -97,7 +97,7 @@ class SimpleNet(mf.models.LFCNN):
             [-1, self.dmx.size, self.out_dim]
         )
         self.out_biases = self.fin_fc.b.numpy()
-        self.feature_relevances = self.componentwise_loss(X, y)
+        self.feature_relevances = self.compute_componentwise_loss(X, y)
         self.branchwise_loss(X, y)
 
         # compute temporal convolution layer outputs for vis_dics
