@@ -209,17 +209,17 @@ if __name__ == '__main__':
         meta = mf.produce_tfrecords((X, Y), **import_opt)
         dataset = mf.Dataset(meta, train_batch=100)
         lf_params = dict(
-            n_latent=4,
-            filter_length=50,
-            nonlin=tf.identity,
-            padding='SAME',
-            pooling=10,
-            stride=10,
+            n_latent=8, #number of latent factors
+            filter_length=50, #convolutional filter length in time samples
+            nonlin = tf.identity,
+            padding = 'SAME',
+            pooling = 5,#pooling factor
+            stride = 5, #stride parameter for pooling layer
             pool_type='max',
-            model_path=import_opt['savepath'],
-            dropout=.4,
-            l2_scope=["weights"],
-            l2=1e-6
+            model_path = import_opt['savepath'],
+            dropout = .4,
+            l1_scope = ["weights"],
+            l1=3e-1
         )
 
         model = SimpleNetA(dataset, lf_params)
@@ -295,7 +295,7 @@ if __name__ == '__main__':
                 'spatial'
             )
             save_parameters(
-                TemporalParameters(franges, finputs, foutputs, fresponces),
+                TemporalParameters(franges, finputs, foutputs, fresponces, fpatterns),
                 os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
                 'temporal'
             )
