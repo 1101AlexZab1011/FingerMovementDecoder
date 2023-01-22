@@ -25,7 +25,7 @@ from time import perf_counter
 import mneflow
 from deepmeg.params import SpatialParameters, TemporalParameters, CompressionParameters, WaveForms, Predictions,\
     compute_temporal_parameters, compute_waveforms, compute_compression_parameters
-from models import SimpleNetA
+from utils.models import SimpleNetA
 
 
 if __name__ == '__main__':
