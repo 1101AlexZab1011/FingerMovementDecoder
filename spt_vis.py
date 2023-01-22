@@ -5,6 +5,7 @@ from lfcnn_vis import plot_spatial_weights, read_pkl
 from LFCNN_decoder import SpatialParameters, TemporalParameters, WaveForms
 from typing import  Optional
 import mne
+from deepmeg.viz import plot_spatial_weights
 
 def info_pick_channels(info: mne.Info, ch_names: list[str], ordered: Optional[bool] = False) -> mne.Info:
     sel = mne.pick_channels(info.ch_names, ch_names)
@@ -64,8 +65,14 @@ if __name__ == '__main__':
         [classification_prefix, classification_name, classification_postfix]
     )))
 
-    subject_info_path = os.path.join(subjects_dir, subject_name, 'Info')
-    subject_parameters_path = os.path.join(subjects_dir, subject_name, model_name, classification_name_formatted, 'Parameters')
+    # subject_info_path = os.path.join(subjects_dir, subject_name, 'Info')
+    subject_info_path = os.path.join(subjects_dir, 'Ga_Fed', 'Info')
+    subject_parameters_path = os.path.join(subjects_dir, subject_name, model_name, 'Parameters')
+
+    order = read_pkl(os.path.join(
+        subject_parameters_path,
+        f'{classification_name_formatted}_branch_loss.pkl'
+    ))
 
     spatial_parameters = read_pkl(os.path.join(
         subject_parameters_path,
@@ -109,6 +116,8 @@ if __name__ == '__main__':
         temporal_parameters,
         waveforms,
         info,
-        summarize=sort,
+        compressions,
+        summarize=order - order.min(),
+        temp_params=['input', 'output', 'response', 'pattern'],
         logscale=logscale
     )
