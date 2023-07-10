@@ -65,7 +65,8 @@ if __name__ == '__main__':
     )))
 
     subject_info_path = os.path.join(subjects_dir, subject_name, 'Info')
-    subject_parameters_path = os.path.join(subjects_dir, subject_name, model_name, classification_name_formatted, 'Parameters')
+    # subject_parameters_path = os.path.join(subjects_dir, subject_name, model_name, classification_name_formatted, 'Parameters')
+    subject_parameters_path = os.path.join(subjects_dir, subject_name, model_name, 'Parameters')
 
     spatial_parameters = read_pkl(os.path.join(
         subject_parameters_path,
