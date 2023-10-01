@@ -25,7 +25,7 @@ from tensorflow.keras import regularizers as k_reg
 from time import perf_counter
 
 
-class ZubarevNet(BaseModel):
+class MneflowNet(BaseModel):
     def __init__(self, Dataset, specs=dict(), design='eegnet'):
         self.scope = design
         specs.setdefault('filter_length', 7)
@@ -41,7 +41,7 @@ class ZubarevNet(BaseModel):
         specs.setdefault('l2_scope', [])
         specs.setdefault('maxnorm_scope', [])
 
-        super(ZubarevNet, self).__init__(Dataset, specs)
+        super(MneflowNet, self).__init__(Dataset, specs)
 
     def build_graph(self):
         if self.scope == 'lfcnn':
@@ -454,7 +454,7 @@ if __name__ == '__main__':
             l2=1e-6
         )
 
-        model = ZubarevNet(dataset, lf_params, model_name)
+        model = MneflowNet(dataset, lf_params, model_name)
         print(tf.keras.Model(inputs=model.inputs, outputs=model.y_pred).summary())
         model.build()
         t1 = perf_counter()

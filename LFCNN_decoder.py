@@ -33,7 +33,26 @@ WaveForms = namedtuple('WaveForms', 'evoked induced times tcs')
 
 
 @spinner(prefix=lambda *args, **kwargs: f'Compute {kwargs.get("output", "patterns")}... ')
-def compute_patterns(model, data_path=None, *, output='patterns'):
+def compute_patterns(model: mf.models.BaseModel, data_path: str = None, *, output: str = 'patterns'):
+    """
+    Compute patterns and related data from a given model and dataset.
+
+    This function computes patterns, spatial weights, and other related data from a trained model and dataset.
+
+    Args:
+        model (mf.models.BaseModel): The trained model from which to compute patterns.
+        data_path (Optional[Union[str, list, tuple, mneflow.data.Dataset, tf.data.Dataset]], optional):
+            The dataset or data path for computing patterns. If not provided, the validation dataset from the model
+            will be used by default.
+        output (str, optional): The type of output to compute. Options: 'patterns', 'patterns_old', or 'weights'.
+            Default is 'patterns'.
+
+    Raises:
+        AttributeError: If an unsupported dataset or data path is specified.
+
+    Returns:
+        None: The function directly modifies the `model` object with computed data.
+    """
 
     if not data_path:
         print("Computing patterns: No path specified, using validation dataset (Default)")
@@ -107,7 +126,24 @@ def compute_patterns(model, data_path=None, *, output='patterns'):
 
 
 @spinner(prefix='Compute temporal parameters... ')
-def compute_temporal_parameters(model, *, fs=None):
+def compute_temporal_parameters(model: mf.models.BaseModel, *, fs: float = None):
+    """
+    This function computes temporal parameters such as frequency ranges, input powers, output powers, and filter responses
+    for a given model. It utilizes the provided model's filters and latent time courses. Sampling frequency (`fs`)
+    can be specified; otherwise, it is inferred from the model's dataset or set to 1 if not available.
+
+    Args:
+        model (mf.models.BaseModel): The model for which to compute temporal parameters.
+        fs (Optional[float], optional): The sampling frequency of the data. If not provided, it is inferred from
+            the model's dataset or set to 1 if not available.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, List[np.ndarray], List[np.ndarray]]: A tuple containing:
+            - franges (np.ndarray): The frequency ranges.
+            - finputs (np.ndarray): Input powers (power spectral density).
+            - foutputs (List[np.ndarray]): Output powers for each filter.
+            - fresponces (List[np.ndarray]): Filter responses for each filter.
+    """
 
     if fs is None:
 
@@ -149,6 +185,24 @@ def compute_morlet_cwt(
     omega_0: Optional[float] = 5,
     phase: Optional[bool] = False
 ) -> np.ndarray:
+    """
+    Compute the Continuous Wavelet Transform (CWT) using the Morlet wavelet.
+
+    This function computes the Continuous Wavelet Transform (CWT) of a given signal using the Morlet wavelet.
+    The CWT represents how the signal's frequency content evolves over time.
+
+    Args:
+        sig (np.ndarray): The input signal for which to compute the CWT.
+        t (np.ndarray): The time points corresponding to the signal.
+        freqs (np.ndarray): The frequencies at which to compute the CWT.
+        omega_0 (Optional[float], optional): The angular frequency parameter for the Morlet wavelet.
+            Defaults to 5.
+        phase (Optional[bool], optional): If True, returns the complex CWT. If False, returns the power CWT.
+            Defaults to False.
+
+    Returns:
+        np.ndarray: The computed CWT, either in complex form (if phase=True) or as power (real^2 + imag^2).
+    """
     dt = t[1] - t[0]
     widths = omega_0 / (2 * np.pi * freqs * dt)
     cwtmatr = sl.cwt(sig, lambda M, s: sl.morlet2(M, s, w=omega_0), widths)
@@ -160,6 +214,21 @@ def compute_morlet_cwt(
 
 @spinner(prefix='Compute spectral parameters... ')
 def compute_waveforms(model: mf.models.BaseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Compute spectral parameters from the model's latent time courses.
+
+    This function computes spectral parameters, including the time courses, induced power, and average power spectra,
+    from the model's latent time courses using the Morlet wavelet transform.
+
+    Args:
+        model (mf.models.BaseModel): The machine learning model containing latent time courses.
+
+    Returns:
+        tuple[np.ndarray, np.ndarray, np.ndarray]: A tuple containing:
+            - np.ndarray: The average induced power spectra for each latent source and frequency.
+            - np.ndarray: The time points corresponding to the latent time courses.
+            - np.ndarray: The latent time courses.
+    """
     time_courses = np.squeeze(model.lat_tcs.reshape(
         [model.specs['n_latent'], -1, model.dataset.h_params['n_t']]
     ))
@@ -180,7 +249,22 @@ def compute_waveforms(model: mf.models.BaseModel) -> tuple[np.ndarray, np.ndarra
 
 
 def save_parameters(content: Any, path: str, parameters_type: Optional[str] = '') -> NoReturn:
+    """
+    Save content as parameters to a pickle file at the specified path.
 
+    This function saves the provided content, which can be any Python object, as parameters to a pickle file
+    at the specified path. It optionally allows specifying a type of parameters (e.g., 'model' or 'hyperparameters')
+    for informational purposes.
+
+    Args:
+        content (Any): The Python object to be saved as parameters.
+        path (str): The path to the pickle file where parameters will be saved.
+        parameters_type (Optional[str]): An optional string specifying the type of parameters (e.g., 'model' or 'hyperparameters').
+            This is for informational purposes and will be included in the print message.
+
+    Raises:
+        OSError: If the specified path does not have a '.pkl' extension.
+    """
     parameters_type = parameters_type + ' ' if parameters_type else parameters_type
     print(f'Saving {parameters_type}parameters...')
 
@@ -193,7 +277,18 @@ def save_parameters(content: Any, path: str, parameters_type: Optional[str] = ''
 
 
 def save_model_weights(model: mf.models.BaseModel, path: str) -> NoReturn:
+    """
+    Save the weights of a machine learning model to an HDF5 file.
 
+    This function saves the weights of a machine learning model to an HDF5 file at the specified path.
+
+    Args:
+        model (mf.models.BaseModel): The machine learning model whose weights will be saved.
+        path (str): The path to the HDF5 file where model weights will be saved.
+
+    Raises:
+        OSError: If the specified path does not have a '.h5' extension.
+    """
     print('Saving model weights')
 
     if path[-3:] != '.h5':
@@ -202,95 +297,6 @@ def save_model_weights(model: mf.models.BaseModel, path: str) -> NoReturn:
     model.km.save_weights(path, overwrite=True)
 
     print('Successfully saved')
-
-
-def plot_waveforms(model, sorting='compwise_loss', tmin=0, class_names=None) -> mpl.figure.Figure:
-
-    fs = model.dataset.h_params['fs']
-
-    if not hasattr(model, 'lat_tcs'):
-        model.compute_patterns(model.dataset)
-
-    if not hasattr(model, 'uorder'):
-        order, _ = model._sorting(sorting)
-        model.uorder = order.ravel()
-
-    if np.any(model.uorder):
-
-        for jj, uo in enumerate(model.uorder):
-            f, ax = plt.subplots(2, 2)
-            f.set_size_inches([16, 16])
-            nt = model.dataset.h_params['n_t']
-            model.waveforms = np.squeeze(model.lat_tcs.reshape(
-                [model.specs['n_latent'], -1, nt]
-            ).mean(1))
-            tstep = 1 / float(fs)
-            times = tmin + tstep * np.arange(nt)
-            scaling = 3 * np.mean(np.std(model.waveforms, -1))
-            [
-                ax[0, 0].plot(times, wf + scaling * i)
-                for i, wf in enumerate(model.waveforms) if i not in model.uorder
-            ]
-            ax[0, 0].plot(times, model.waveforms[uo] + scaling * uo, 'k', linewidth=5.)
-            ax[0, 0].set_title('Latent component waveforms')
-            bias = model.tconv.b.numpy()[uo]
-            ax[0, 1].stem(model.filters.T[uo], use_line_collection=True)
-            ax[0, 1].hlines(bias, 0, len(model.filters.T[uo]), linestyle='--', label='Bias')
-            ax[0, 1].legend()
-            ax[0, 1].set_title('Filter coefficients')
-            conv = np.convolve(model.filters.T[uo], model.waveforms[uo], mode='same')
-            vmin = conv.min()
-            vmax = conv.max()
-            ax[1, 0].plot(times + 0.5 * model.specs['filter_length'] / float(fs), conv)
-            tstep = float(model.specs['stride']) / fs
-            strides = np.arange(times[0], times[-1] + tstep / 2, tstep)[1:-1]
-            pool_bins = np.arange(times[0], times[-1] + tstep, model.specs['pooling'] / fs)[1:]
-            ax[1, 0].vlines(strides, vmin, vmax, linestyle='--', color='c', label='Strides')
-            ax[1, 0].vlines(pool_bins, vmin, vmax, linestyle='--', color='m', label='Pooling')
-            ax[1, 0].set_xlim(times[0], times[-1])
-            ax[1, 0].legend()
-            ax[1, 0].set_title('Convolution output')
-            strides1 = np.linspace(times[0], times[-1] + tstep / 2, model.F.shape[1])
-            ax[1, 1].pcolor(strides1, np.arange(model.specs['n_latent']), model.F)
-            ax[1, 1].hlines(uo, strides1[0], strides1[-1], color='r')
-            ax[1, 1].set_title('Feature relevance map')
-
-            if class_names:
-                comp_name = class_names[jj]
-            else:
-                comp_name = "Class " + str(jj)
-
-            f.suptitle(comp_name, fontsize=16)
-
-        return f
-
-
-def plot_patterns(
-    patterns, info, order=None, cmap='RdBu_r', sensors=True,
-    colorbar=False, res=64,
-    size=1, cbar_fmt='%3.1f', name_format='Latent\nSource %01d',
-    show=True, show_names=False, title=None,
-    outlines='head', contours=6,
-    image_interp='bilinear'
-) -> mpl.figure.Figure:
-
-    if not title:
-        title = 'All patterns'
-
-    n_components = patterns.shape[1]
-    info = copy.deepcopy(info)
-    info['sfreq'] = 1.
-    patterns = mne.EvokedArray(patterns, info, tmin=0)
-
-    order = range(n_components) if order is None else order
-
-    return patterns.plot_topomap(
-        times=order,
-        cmap=cmap, colorbar=colorbar, res=res,
-        cbar_fmt=cbar_fmt, sensors=sensors, units=None, time_unit='s',
-        time_format=name_format, size=size, show_names=show_names,
-        title=title, outlines=outlines,
-        contours=contours, image_interp=image_interp, show=show)
 
 
 if __name__ == '__main__':
@@ -440,13 +446,11 @@ if __name__ == '__main__':
 
                 if lfreq is not None:
                     epochs[case] = epochs[case].filter(lfreq, None)
-                
+
                 if crop_from is not None or crop_to is not None:
                     epochs[case] = epochs[case].crop(crop_from, crop_to)
-                
-                
+
                 cases_to_combine_list.append(epochs[case])
-                    
 
             i += 1
 

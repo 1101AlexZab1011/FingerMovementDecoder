@@ -5,31 +5,7 @@ import sys
 import time
 from typing import Optional, Callable, Union, List, Tuple
 from utils.console.asynchrony import looped
-
-
-class Spinner(object):
-    def __init__(
-        self,
-        delay: Optional[float] = 0.1,
-        states: Optional[Tuple[str, ...]] = ('/', '-', '\\', '|')
-    ):
-        self.delay = delay
-        self.__states = states
-        self.__current_state = 0
-
-    def __call__(self):
-        sys.stdout.write(self.__states[self.__current_state])
-        sys.stdout.flush()
-        time.sleep(0.1)
-        sys.stdout.write('\b')
-        self.__current_state = (self.__current_state + 1) % len(self.__states)
-
-    def __iter__(self):
-        return iter(self.__states)
-
-    def __next__(self):
-        self.__current_state = (self.__current_state + 1) % len(self.__states)
-        return self.__states[self.__current_state - 1]
+from utils.console.colored import clean_styles
 
 
 async def async_spinner(
@@ -38,6 +14,31 @@ async def async_spinner(
         postfix: Optional[str] = '',
         delay: Optional[Union[float, int]] = .1
 ):
+    """
+    Asynchronously display a spinning animation in the console.
+
+    The `async_spinner` function displays a spinning animation in the console using a set of characters. This is often
+    used to provide visual feedback during asynchronous tasks.
+
+    Args:
+        chars (Optional[List[str]]): A list of characters to use for the spinning animation. Defaults to `['|', '/', '-', '\\']`.
+        prefix (Optional[str]): A string to be displayed before the spinning animation. Defaults to an empty string ('').
+        postfix (Optional[str]): A string to be displayed after the spinning animation. Defaults to an empty string ('').
+        delay (Optional[Union[float, int]]): The time delay (in seconds) between each animation frame. Defaults to 0.1 seconds.
+
+    Example:
+        To display a spinning animation with default settings:
+
+        >>> await async_spinner()
+
+    Notes:
+        - You can customize the animation frames and time delay by providing the `chars` and `delay` arguments.
+        - The animation continues until the task that is awaiting `async_spinner()` is canceled using `asyncio.CancelledError`.
+
+    Warning:
+        - Using `async_spinner()` in Jupyter Notebook may not display the animation correctly. It's better suited for console applications.
+
+    """
     if chars is None:
         chars_to_use = ['|', '/', '-', '\\']
     else:
@@ -45,8 +46,7 @@ async def async_spinner(
     write, flush = sys.stdout.write, sys.stdout.flush
     for char in itertools.cycle(chars_to_use):
         status = f'{prefix}{char}{postfix}'
-        # print(len(actual_char), actual_char, char.encode('ascii'))
-        space = len(prefix) + len(postfix) + len(char)
+        space = len(clean_styles(prefix)) + len(clean_styles(postfix)) + len(clean_styles(char)) # be aware of using special characters
         write(status)
         flush()
         write('\x08' * space)
@@ -63,6 +63,42 @@ def spinned(
         postfix: Optional[Union[str, Callable]] = '',
         delay: Optional[Union[float, int]] = .1
 ):
+
+    """
+    Decorator for displaying a spinning animation during the execution of an asynchronous function.
+
+    The `spinned` decorator is used to wrap an asynchronous function and display a spinning animation in the console
+    while the function is running. This can provide visual feedback to the user during long-running tasks.
+
+    Args:
+        chars (Optional[List[str]]): A list of characters to use for the spinning animation. Defaults to `['|', '/', '-', '\\']`.
+        prefix (Optional[Union[str, Callable]]): A string or callable function to be displayed before the spinning animation.
+            Defaults to an empty string ('').
+        postfix (Optional[Union[str, Callable]]): A string or callable function to be displayed after the spinning animation.
+            Defaults to an empty string ('').
+        delay (Optional[Union[float, int]]): The time delay (in seconds) between each animation frame. Defaults to 0.1 seconds.
+
+    Returns:
+        Callable: A wrapped asynchronous function with the spinning animation.
+
+    Example:
+        To decorate an asynchronous function 'async_task' with a spinning animation:
+
+        >>> @spinned(chars=['|', '/', '-', '\\'], prefix='Processing: ')
+        >>> async def async_task():
+        >>>     await asyncio.sleep(3)  # Simulate a long-running task
+
+    Notes:
+        - The spinning animation continues until the decorated function completes.
+        - You can customize the animation frames, delay, prefix, and postfix as needed.
+        - The `chars` argument allows you to specify a list of characters for the spinning animation.
+        - The `prefix` and `postfix` arguments can be either strings or callable functions that return strings.
+        - The decorated function should be asynchronous.
+
+    Warning:
+        - Using `spinned` in Jupyter Notebook may not display the animation correctly. It's better suited for console applications.
+
+    """
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -101,6 +137,48 @@ def spinner(
         postfix: Optional[Union[str, Callable]] = '',
         delay: Optional[Union[float, int]] = .1
 ):
+    """
+    Decorator for displaying a spinning animation during the execution of a synchronous or asynchronous function.
+
+    The `spinner` decorator combines the functionality of the `spinned` and `looped` decorators to create a spinning
+    animation that can be applied to both synchronous and asynchronous functions. It displays the animation in the console
+    while the wrapped function is running.
+
+    Args:
+        chars (Optional[List[str]]): A list of characters to use for the spinning animation. Defaults to `['|', '/', '-', '\\']`.
+        prefix (Optional[Union[str, Callable]]): A string or callable function to be displayed before the spinning animation.
+            Defaults to an empty string ('').
+        postfix (Optional[Union[str, Callable]]): A string or callable function to be displayed after the spinning animation.
+            Defaults to an empty string ('').
+        delay (Optional[Union[float, int]]): The time delay (in seconds) between each animation frame. Defaults to 0.1 seconds.
+
+    Returns:
+        Callable: A wrapped function (synchronous or asynchronous) with the spinning animation.
+
+    Example:
+        To decorate a synchronous function 'sync_task' with a spinning animation:
+
+        >>> @spinner(chars=['|', '/', '-', '\\'], prefix='Processing: ')
+        >>> def sync_task():
+        >>>     time.sleep(3)  # Simulate a long-running task
+
+        To decorate an asynchronous function 'async_task' with the same spinning animation:
+
+        >>> @spinner(chars=['|', '/', '-', '\\'], prefix='Processing: ')
+        >>> async def async_task():
+        >>>     await asyncio.sleep(3)  # Simulate a long-running task
+
+    Notes:
+        - The spinning animation continues until the wrapped function completes.
+        - You can customize the animation frames, delay, prefix, and postfix as needed.
+        - The `chars` argument allows you to specify a list of characters for the spinning animation.
+        - The `prefix` and `postfix` arguments can be either strings or callable functions that return strings.
+        - The wrapped function can be either synchronous or asynchronous.
+
+    Warning:
+        - Using `spinner` in Jupyter Notebook may not display the animation correctly. It's better suited for console applications.
+
+    """
     def wrapper(func):
         return looped(spinned(chars, prefix, postfix, delay)(func))
 

@@ -14,6 +14,7 @@ from typing import Any, NoReturn, Optional, Union
 import matplotlib as mpl
 from matplotlib.widgets import Button
 from utils.storage_management import read_pkl
+import mneflow as mf
 
 
 def plot_patterns(
@@ -24,6 +25,39 @@ def plot_patterns(
     outlines='head', contours=6,
     image_interp='linear', **kwargs
 ) -> mpl.figure.Figure:
+    """
+    Plot topographic patterns of source activities.
+
+    This function plots topographic patterns of source activities, typically obtained from source localization techniques
+    in neuroimaging. It uses the MNE-Python library's `plot_topomap` method.
+
+    Args:
+        patterns (array-like): The topographic patterns of source activities to be plotted.
+        info (mne.Info): The MNE-Python Info object containing information about the data.
+        order (list, optional): The order in which patterns are plotted. Default is None, which uses the natural order.
+        axes (mpl.axes.Axes | None, optional): The matplotlib axes to plot the patterns on. Default is None, which creates
+            new axes.
+        cmap (str, optional): The colormap to use for plotting the patterns. Default is 'RdBu_r'.
+        sensors (bool, optional): Whether to show sensor positions on the plot. Default is True.
+        colorbar (bool, optional): Whether to include a colorbar. Default is False.
+        res (int, optional): The resolution of the topomap. Default is 64.
+        size (float, optional): The size of the topomap. Default is 1.
+        cbar_fmt (str, optional): The format string for the colorbar labels. Default is '%3.1f'.
+        name_format (str, optional): The format for naming each topomap. Default is 'Latent\nSource %01d'.
+        show (bool, optional): Whether to display the plot. Default is True.
+        show_names (bool, optional): Whether to show channel names on the plot. Default is False.
+        title (str, optional): The title of the plot. Default is 'Computed patterns'.
+        outlines (str | None, optional): The outlines to use for the head. Default is 'head'.
+        contours (int, optional): The number of contour lines to draw. Default is 6.
+        image_interp (str, optional): The interpolation method for the topomap image. Default is 'linear'.
+        **kwargs: Additional keyword arguments to pass to `plot_topomap`.
+
+    Returns:
+        mpl.figure.Figure: The matplotlib Figure object containing the topographic patterns plot.
+
+    Note:
+        - This function relies on the MNE-Python library for topomap visualization.
+    """
     if order is None:
         order = range(patterns.shape[1])
     if title is None:
@@ -42,7 +76,112 @@ def plot_patterns(
         contours=contours, image_interp=image_interp, show=show, **kwargs)
 
 
-def plot_spectra(temporal_parameters, order, title='', xlim=None, ylim=None, legend=None):
+def plot_waveforms(model: mf.models.BaseModel, sorting='compwise_loss', tmin=0, class_names=None) -> mpl.figure.Figure:
+    """
+    Plot waveforms and related information for latent components of a machine learning model.
+
+    This function plots waveforms, filter coefficients, convolution output, and feature relevance maps
+    for latent components of a machine learning model. It provides insights into how each latent component
+    contributes to the model's predictions.
+
+    Args:
+        model (mf.models.BaseModel): The machine learning model containing latent components to be visualized.
+        sorting (str): The sorting criteria for ordering the latent components. Default is 'compwise_loss'.
+        tmin (float): The starting time for plotting waveforms. Default is 0.
+        class_names (list[str]): Optional list of class names for the latent components.
+
+    Returns:
+        mpl.figure.Figure: A Matplotlib figure containing the plots for latent components.
+
+    """
+
+    fs = model.dataset.h_params['fs']
+
+    if not hasattr(model, 'lat_tcs'):
+        model.compute_patterns(model.dataset)
+
+    if not hasattr(model, 'uorder'):
+        order, _ = model._sorting(sorting)
+        model.uorder = order.ravel()
+
+    if np.any(model.uorder):
+
+        for jj, uo in enumerate(model.uorder):
+            f, ax = plt.subplots(2, 2)
+            f.set_size_inches([16, 16])
+            nt = model.dataset.h_params['n_t']
+            model.waveforms = np.squeeze(model.lat_tcs.reshape(
+                [model.specs['n_latent'], -1, nt]
+            ).mean(1))
+            tstep = 1 / float(fs)
+            times = tmin + tstep * np.arange(nt)
+            scaling = 3 * np.mean(np.std(model.waveforms, -1))
+            [
+                ax[0, 0].plot(times, wf + scaling * i)
+                for i, wf in enumerate(model.waveforms) if i not in model.uorder
+            ]
+            ax[0, 0].plot(times, model.waveforms[uo] + scaling * uo, 'k', linewidth=5.)
+            ax[0, 0].set_title('Latent component waveforms')
+            bias = model.tconv.b.numpy()[uo]
+            ax[0, 1].stem(model.filters.T[uo], use_line_collection=True)
+            ax[0, 1].hlines(bias, 0, len(model.filters.T[uo]), linestyle='--', label='Bias')
+            ax[0, 1].legend()
+            ax[0, 1].set_title('Filter coefficients')
+            conv = np.convolve(model.filters.T[uo], model.waveforms[uo], mode='same')
+            vmin = conv.min()
+            vmax = conv.max()
+            ax[1, 0].plot(times + 0.5 * model.specs['filter_length'] / float(fs), conv)
+            tstep = float(model.specs['stride']) / fs
+            strides = np.arange(times[0], times[-1] + tstep / 2, tstep)[1:-1]
+            pool_bins = np.arange(times[0], times[-1] + tstep, model.specs['pooling'] / fs)[1:]
+            ax[1, 0].vlines(strides, vmin, vmax, linestyle='--', color='c', label='Strides')
+            ax[1, 0].vlines(pool_bins, vmin, vmax, linestyle='--', color='m', label='Pooling')
+            ax[1, 0].set_xlim(times[0], times[-1])
+            ax[1, 0].legend()
+            ax[1, 0].set_title('Convolution output')
+            strides1 = np.linspace(times[0], times[-1] + tstep / 2, model.F.shape[1])
+            ax[1, 1].pcolor(strides1, np.arange(model.specs['n_latent']), model.F)
+            ax[1, 1].hlines(uo, strides1[0], strides1[-1], color='r')
+            ax[1, 1].set_title('Feature relevance map')
+
+            if class_names:
+                comp_name = class_names[jj]
+            else:
+                comp_name = "Class " + str(jj)
+
+            f.suptitle(comp_name, fontsize=16)
+
+        return f
+
+
+def plot_spectra(
+    temporal_parameters: TemporalParameters,
+    order: list, title: str = '',
+    xlim: tuple = None,
+    ylim: tuple = None,
+    legend: bool = None
+) -> mpl.figure.Figure:
+    """
+    Plot spectral information of temporal parameters.
+
+    This function plots spectral information of temporal parameters, typically obtained from signal processing or analysis.
+    It visualizes filter input, filter output, and filter response for a set of temporal components.
+
+    Args:
+        temporal_parameters (TemporalParameters): The temporal parameters object containing spectral information.
+        order (list): The order in which spectral information for components should be plotted.
+        title (str, optional): The title of the plot. Default is an empty string.
+        xlim (tuple, optional): The x-axis limits for the plot. Default is None.
+        ylim (tuple, optional): The y-axis limits for the plot. Default is None.
+        legend (list, optional): The legend labels for the plot. Default is None.
+
+    Returns:
+        mpl.figure.Figure: The matplotlib Figure object containing the spectral information plot.
+
+    Note:
+        - This function organizes the spectral information into a grid of subplots based on the number of components.
+        - The `temporal_parameters` object should contain spectral information for filter input, filter output, and filter response.
+    """
 
     if not len(order) % 3:
         n_cols = 3
@@ -116,6 +255,32 @@ def plot_tempospectral(
     spatial_data_type: Optional[str] = 'patterns',
     topomap_kwargs: Optional[dict] = None
 ) -> mp.figure.Figure:
+    """
+    Plot temporal-spectral information for multiple subjects and components.
+
+    This function generates a complex plot that combines temporal and spectral information for multiple subjects
+    and components. It is especially useful for visualizing analysis results in neuroscience or signal processing.
+
+    Args:
+        spatial_parameters (Union[SpatialParameters, list[SpatialParameters]]): Spatial parameters or a list of
+            spatial parameters for each subject.
+        temporal_parameters (Union[TemporalParameters, list[TemporalParameters]]): Temporal parameters or a list of
+            temporal parameters for each subject.
+        orders (Union[np.ndarray, list[np.ndarray]]): The order in which spectral information for components should
+            be plotted.
+        info (mne.Info): The MNE info object containing subject information.
+        subject_names (Optional[Union[str, list[str]]], optional): Names of subjects. Default is None.
+        class_names (Optional[Union[str, list[str]]], optional): Names of classes or components. Default is None.
+        title (Optional[str], optional): The title of the plot. Default is None.
+        xlim (Optional[Union[int, float]], optional): The x-axis limits for the plot. Default is None.
+        ylim (Optional[Union[int, float]], optional): The y-axis limits for the plot. Default is None.
+        legend (Optional[Union[int, float]], optional): Legend labels for the plot. Default is None.
+        spatial_data_type (Optional[str], optional): Type of spatial data ('patterns' or 'filters'). Default is 'patterns'.
+        topomap_kwargs (Optional[dict], optional): Additional keyword arguments for topomap plotting. Default is None.
+
+    Returns:
+        mp.figure.Figure: The matplotlib Figure object containing the combined temporal-spectral information plot.
+    """
 
     def wrap_in_list(content):
         return [content] if not isinstance(content, list) else content
@@ -308,6 +473,29 @@ def plot_spatial_weights(
     show: Optional[bool] = True,
     logscale: Optional[bool] = False
 ) -> Union[mp.figure.Figure, NoReturn]:
+    """
+    Plot spatial weights, patterns, and temporal responses.
+
+    This function generates a complex plot that visualizes spatial patterns, spatial weights, and temporal responses
+    of a given dataset. It can be used for analyzing and visualizing the results of source localization or other
+    similar techniques in neuroscience.
+
+    Args:
+        spatial_parameters (SpatialParameters): Spatial parameters.
+        temporal_parameters (TemporalParameters): Temporal parameters.
+        waveforms (WaveForms): Waveform data.
+        info (mne.Info): The MNE info object containing subject information.
+        summarize (Optional[Union[str, list[float]]], optional): The method for summarizing spatial patterns.
+            Options: 'sum' (sum of weights), 'sumabs' (sum of absolute values), 'abssum' (absolute sum).
+            Default is 'sum'.
+        title (Optional[str], optional): The title of the plot. Default is 'Spatial Patterns'.
+        show (Optional[bool], optional): Whether to display the plot. Default is True.
+        logscale (Optional[bool], optional): Whether to use a logarithmic scale for the y-axis. Default is False.
+
+    Returns:
+        Union[mp.figure.Figure, NoReturn]: The matplotlib Figure object containing the spatial weights plot,
+        or None if `show` is set to False.
+    """
 
     mp.use('Qt5Agg')
 

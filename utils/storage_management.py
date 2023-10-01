@@ -6,6 +6,26 @@ import pickle
 
 
 def read_pkl(path: str) -> Any:
+    """
+    Read and load data from a pickle (.pkl) file.
+
+    This function reads the contents of a pickle file located at the specified 'path' and returns the deserialized data.
+
+    Args:
+        path (str): The file path to the pickle file to be read.
+
+    Returns:
+        Any: The deserialized data loaded from the pickle file.
+
+    Raises:
+        FileNotFoundError: If the specified file 'path' does not exist.
+        pickle.UnpicklingError: If an error occurs during the unpickling process.
+
+    Examples:
+        To load data from a pickle file named 'data.pkl' located in the current directory:
+
+        >>> loaded_data = read_pkl('data.pkl')
+    """
     with open(
         path,
         'rb'
@@ -14,6 +34,27 @@ def read_pkl(path: str) -> Any:
             file
         )
     return content
+
+
+def save_pkl(content: Any, path: str):
+    """
+    Save content to a pickle file.
+
+    This function serializes the provided content and saves it to a file in the pickle format (.pkl).
+
+    Args:
+        content (Any): The data or object to be saved to the pickle file.
+        path (str): The file path where the content will be saved. The file extension must be ".pkl".
+
+    Raises:
+        OSError: If the provided file path does not have the ".pkl" extension.
+
+    Returns:
+        None
+    """
+    if path[-4:] != '.pkl':
+        raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
+    pickle.dump(content, open(path, 'wb'))
 
 
 def check_path(*args: str) -> None:

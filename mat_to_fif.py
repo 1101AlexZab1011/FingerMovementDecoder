@@ -9,27 +9,7 @@ import mne
 from utils.console import Silence
 from utils.console.colored import ColoredText, bold, success, alarm, warn
 from utils.console.spinner import spinner
-from utils.storage_management import check_path
-
-
-@spinner(prefix=lambda path: f'Reading {path}... ')
-def read_pkl(path: str) -> Any:
-    with open(
-        path,
-        'rb'
-    ) as file:
-        content = pickle.load(
-            file
-        )
-    return content
-
-
-@spinner(prefix=lambda _, path: f'Saving file into {path}... ')
-def save_pkl(content: Any, path: str) -> NoReturn:
-    if path[-4:] != '.pkl':
-        raise OSError(f'Pickle file must have extension ".pkl", but it has "{path[-4:]}"')
-    pickle.dump(content, open(path, 'wb'))
-
+from utils.storage_management import check_path, read_pkl, save_pkl
 
 @spinner(
     prefix=lambda path, info=None:
@@ -39,7 +19,7 @@ def save_pkl(content: Any, path: str) -> NoReturn:
     f'{path.split("/")[-3]}'  # [-5]}'
     f'... '
 )
-def read_mat_epochs(path, *, info):
+def read_mat_epochs(path: str, *, info: mne.Info):
     with Silence():
         return mne.read_epochs_fieldtrip(path, info=info)
 
@@ -51,7 +31,7 @@ def read_mat_epochs(path, *, info):
     f'{path.split("/")[-3]}'
     f'... '
 )
-def save_epochs(path, epochs: Union[mne.Epochs, mne.EpochsArray]) -> None:
+def save_epochs(path: str, epochs: Union[mne.Epochs, mne.EpochsArray]) -> None:
     with warnings.catch_warnings(), Silence():
         warnings.simplefilter("ignore")
         epochs.save(path, overwrite=True)
