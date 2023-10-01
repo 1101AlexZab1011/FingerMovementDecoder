@@ -4,8 +4,6 @@ import os
 from utils.viz import plot_spatial_weights
 from utils.storage_management import read_pkl
 from LFCNN_decoder import SpatialParameters, TemporalParameters, WaveForms
-from typing import  Optional
-import mne
 from utils import info_pick_channels
 
 

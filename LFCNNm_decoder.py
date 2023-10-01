@@ -18,7 +18,7 @@ from LFCNN_decoder import Predictions, save_parameters
 # , SpatialParameters, TemporalParameters,\
 # ComponentsOrder, , WaveForms,\
 from mneflow.models import BaseModel
-from utils.machine_learning.designer import ModelDesign, LayerDesign  # ParallelDesign
+from utils.machine_learning.designer import ModelDesign, LayerDesign
 from mneflow.layers import Dense, LFTConv, TempPooling, DeMixing
 from tensorflow.keras.initializers import Constant
 from tensorflow.keras import regularizers as k_reg

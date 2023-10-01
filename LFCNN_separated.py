@@ -24,7 +24,6 @@ from LFCNN_decoder import compute_temporal_parameters, \
     ComponentsOrder
 from dataclasses import dataclass
 from itertools import product
-from LFRNN_decoder import LFRNN
 
 
 @dataclass

@@ -1,10 +1,8 @@
 from typing import Optional, Union
-
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LogisticRegression
-
 from utils.machine_learning import AbstractTransformer
 
 

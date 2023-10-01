@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import mne
-import pickle
 from LFCNN_decoder import SpatialParameters, TemporalParameters, WaveForms
 from dataclasses import dataclass
 import matplotlib as mp
@@ -10,7 +9,7 @@ import scipy as sp
 import argparse
 import os
 from utils.storage_management import check_path
-from typing import Any, NoReturn, Optional, Union
+from typing import NoReturn, Optional, Union
 import matplotlib as mpl
 from matplotlib.widgets import Button
 from utils.storage_management import read_pkl

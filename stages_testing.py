@@ -6,19 +6,14 @@ import pickle
 from LFCNN_decoder import SpatialParameters, TemporalParameters, WaveForms, Predictions, ComponentsOrder
 import matplotlib.gridspec as gridspec
 from utils import info_pick_channels
+from utils.storage_management import read_pkl
 from utils.viz import plot_patterns
 import matplotlib as mpl
 from matplotlib.patches import Rectangle, ConnectionPatch
 import math
-import copy
 import itertools
 import matplotlib.cm as cm
 import matplotlib.colors as mc
-
-
-def read_pkl(fname):
-    with open(fname, 'rb') as f:
-        return pickle.load(f)
 
 
 def validate_arrays(array1, array2):

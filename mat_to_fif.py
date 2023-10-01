@@ -4,7 +4,7 @@ import pickle
 import re
 import warnings
 from shutil import rmtree
-from typing import NoReturn, Union, Any
+from typing import Union
 import mne
 from utils.console import Silence
 from utils.console.colored import ColoredText, bold, success, alarm, warn

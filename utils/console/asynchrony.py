@@ -1,9 +1,6 @@
 import asyncio
 import functools
 import os
-from asyncio import Task
-from typing import Union, Callable, Optional, Coroutine
-
 
 def looped(func):
     """
