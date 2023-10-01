@@ -4,9 +4,7 @@ import itertools
 import sys
 import time
 from typing import Optional, Callable, Union, List, Tuple
-
 from utils.console.asynchrony import looped
-from utils.console.colored import clean_styles
 
 
 class Spinner(object):
@@ -47,11 +45,8 @@ async def async_spinner(
     write, flush = sys.stdout.write, sys.stdout.flush
     for char in itertools.cycle(chars_to_use):
         status = f'{prefix}{char}{postfix}'
-        actual_prefix = clean_styles(prefix) if prefix else ''
-        actual_postfix = clean_styles(postfix) if postfix else ''
-        actual_char = clean_styles(char) if char else ''
         # print(len(actual_char), actual_char, char.encode('ascii'))
-        space = len(actual_prefix) + len(actual_postfix) + len(actual_char)
+        space = len(prefix) + len(postfix) + len(char)
         write(status)
         flush()
         write('\x08' * space)

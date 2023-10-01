@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import mneflow as mf
-from combiners import EpochsCombiner
+from utils.combiners import EpochsCombiner
 from utils.console import Silence
 from utils.console.spinner import spinner
 from utils.storage_management import check_path

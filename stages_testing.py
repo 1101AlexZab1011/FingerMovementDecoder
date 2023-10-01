@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import pickle
 from LFCNN_decoder import SpatialParameters, TemporalParameters, WaveForms, Predictions, ComponentsOrder
 import matplotlib.gridspec as gridspec
-from GUI import info_pick_channels
+from utils import info_pick_channels
+from utils.viz import plot_patterns
 import matplotlib as mpl
 from matplotlib.patches import Rectangle, ConnectionPatch
 import math
@@ -67,32 +68,6 @@ def process_subject(subjects_dir, model_name, classification_name, sessions, sub
     }
 
     return info, waves_data_pair, patterns_data_pair
-
-
-def plot_patterns(
-    patterns, info, order=None, axes=None, cmap='RdBu_r', sensors=True,
-    colorbar=False, res=64,
-    size=1, cbar_fmt='%3.1f', name_format='Latent\nSource %01d',
-    show=True, show_names=False, title=None,
-    outlines='head', contours=6,
-    image_interp='linear', **kwargs
-) -> mpl.figure.Figure:
-    if order is None:
-        order = range(patterns.shape[1])
-    if title is None:
-        title = 'Computed patterns'
-    info = copy.deepcopy(info)
-    info.__setstate__(dict(_unlocked=True))
-    info['sfreq'] = 1.
-    patterns = mne.EvokedArray(patterns, info, tmin=0)
-    return patterns.plot_topomap(
-        times=order,
-        axes=axes,
-        cmap=cmap, colorbar=colorbar, res=res,
-        cbar_fmt=cbar_fmt, sensors=sensors, units=None, time_unit='s',
-        time_format=name_format, size=size, show_names=show_names,
-        outlines=outlines,
-        contours=contours, image_interp=image_interp, show=show, **kwargs)
 
 
 def lcm_list(numbers):
@@ -352,20 +327,6 @@ def plot_sescomp(
 
 
 def plot_histogram(data, bins=10, axis=None, **kwargs) -> plt.Figure:
-    """
-    Plot a histogram of the input data.
-
-    Parameters:
-    - data: 1-dimensional NumPy array of float values.
-    - bins: Number of bins for the histogram.
-    - axis: (Optional) Matplotlib axis object. If provided, the histogram will be plotted on this axis.
-            If not provided, a new figure and axis will be created.
-    - **kwargs: Additional keyword arguments to be passed to the axis.hist() function.
-
-    Returns:
-    - If axis is provided, returns nothing.
-    - If axis is not provided, returns the figure and axis objects.
-    """
     if axis is None:
         # Create a new figure and axis
         fig, axis = plt.subplots(**kwargs)
@@ -378,21 +339,6 @@ def plot_histogram(data, bins=10, axis=None, **kwargs) -> plt.Figure:
 
 
 def plot_boxplot(data1, data2, labels=None, axis=None, **kwargs) -> plt.Figure:
-    """
-    Plot side-by-side boxplots for two sets of data.
-
-    Parameters:
-    - data1: 1-dimensional NumPy array of float values for the first dataset.
-    - data2: 1-dimensional NumPy array of float values for the second dataset.
-    - labels: (Optional) List of two labels for the datasets. If provided, these labels will be used for the x-axis tick labels.
-    - axis: (Optional) Matplotlib axis object. If provided, the boxplots will be plotted on this axis.
-            If not provided, a new figure and axis will be created.
-    - **kwargs: Additional keyword arguments to be passed to the axis.boxplot() function.
-
-    Returns:
-    - If axis is provided, returns nothing.
-    - If axis is not provided, returns the figure and axis objects.
-    """
     if axis is None:
         # Create a new figure and axis
         fig, axis = plt.subplots(**kwargs)
@@ -519,29 +465,6 @@ if __name__ == '__main__':
                     notsig_patterns_cosine.append(patterns_cosine)
 
                 cluster_ranges.append(cluster_range)
-
-            # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
-            # if best_neg_pattern:
-            #     _ = plot_patterns(
-            #         patterns_data_pair[session1].patterns,
-            #         info, best_neg_pattern,
-            #         axes=ax1,
-            #         show=False,
-            #         name_format=f'NEG: component: {best_neg_pattern}; time: {best_neg_pattern_time[0]:.3f} - {best_neg_pattern_time[-1]:.3f} s',
-            #     )
-            # if best_pos_pattern:
-            #     _ = plot_patterns(
-            #         patterns_data_pair[session1].patterns,
-            #         info, best_pos_pattern,
-            #         axes=ax2,
-            #         show=False,
-            #         name_format=f'POS: component: {best_pos_pattern}; time: {best_pos_pattern_time[0]:.3f} - {best_pos_pattern_time[-1]:.3f} s',
-            #     )
-            # fig.savefig(
-            #     os.path.join(
-            #         pics_dir, 'Learning_Effect', f'{subject}_{model_name}_{classification_name}_{sessions[0]}_{sessions[1]}_neg_pos.png'
-            #     ), dpi=300
-            # )
 
             cluster_ranges = np.array(cluster_ranges)
             cluster_ranges_prob.append(cluster_ranges.sum(axis=0))

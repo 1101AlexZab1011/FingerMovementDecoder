@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import mneflow as mf
-from combiners import EpochsCombiner
+from utils.combiners import EpochsCombiner
 from utils.console import Silence
 from utils.storage_management import check_path
 from utils.machine_learning import one_hot_decoder
@@ -68,41 +68,7 @@ class ZubarevNet(BaseModel):
                 tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
                 Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
             )
-        elif self.scope == 'lfrnn':
-            # LFRNN
-            self.design = ModelDesign(
-                self.inputs,
-                LayerDesign(tf.squeeze, axis=1),
-                tf.keras.layers.Bidirectional(
-                    tf.keras.layers.LSTM(
-                        self.specs['n_latent'],
-                        bias_regularizer='l1',
-                        return_sequences=True,
-                        kernel_regularizer=tf.keras.regularizers.L1(.01),
-                        recurrent_regularizer=tf.keras.regularizers.L1(.01),
-                        dropout=0.4,
-                        recurrent_dropout=0.4,
-                    ),
-                    merge_mode='sum'
-                ),
-                LayerDesign(tf.expand_dims, axis=1),
-                LFTConv(
-                    size=self.specs['n_latent'],
-                    nonlin=self.specs['nonlin'],
-                    filter_length=self.specs['filter_length'],
-                    padding=self.specs['padding'],
-                    specs=self.specs
-                ),
-                TempPooling(
-                    pooling=self.specs['pooling'],
-                    pool_type=self.specs['pool_type'],
-                    stride=self.specs['stride'],
-                    padding=self.specs['padding'],
-                ),
-                tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
-                Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
-            )
-        elif self.scope == 'deep4':
+        elif self.scope == 'deep4' or self.scope == 'vgg19':
             # deep4
             self.design = ModelDesign(
                 self.inputs,
@@ -294,146 +260,6 @@ class ZubarevNet(BaseModel):
             )
         else:
             raise NotImplementedError(f'Model design {self.scope} is not implemented')
-        # resLFRNN
-        # self.design = ModelDesign(
-        #     self.inputs,
-        #     LayerDesign(tf.squeeze, axis=1),
-        #     tf.keras.layers.Bidirectional(
-        #         tf.keras.layers.LSTM(
-        #             self.specs['n_latent'],
-        #             bias_regularizer='l1',
-        #             return_sequences=True,
-        #             kernel_regularizer=tf.keras.regularizers.L1(.01),
-        #             recurrent_regularizer=tf.keras.regularizers.L1(.01),
-        #             dropout=0.4,
-        #             recurrent_dropout=0.4,
-        #         ),
-        #         merge_mode='sum'
-        #     ),
-        #     LayerDesign(tf.expand_dims, axis=1),
-        #     ParallelDesign(
-        #         LFTConv(
-        #             size=self.specs['n_latent'],
-        #             nonlin=self.specs['nonlin'],
-        #             filter_length=self.specs['filter_length']//2,
-        #             padding=self.specs['padding'],
-        #             specs=self.specs
-        #         ),
-        #         LFTConv(
-        #             size=self.specs['n_latent'],
-        #             nonlin=self.specs['nonlin'],
-        #             filter_length=self.specs['filter_length'],
-        #             padding=self.specs['padding'],
-        #             specs=self.specs
-        #         ),
-        #         LFTConv(
-        #             size=self.specs['n_latent'],
-        #             nonlin=self.specs['nonlin'],
-        #             filter_length=self.specs['filter_length']*2,
-        #             padding=self.specs['padding'],
-        #             specs=self.specs
-        #         ),
-        #     ),
-        #     TempPooling(
-        #         pooling=self.specs['pooling'],
-        #         pool_type=self.specs['pool_type'],
-        #         stride=self.specs['stride'],
-        #         padding=self.specs['padding'],
-        #     ),
-        #     tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
-        #     Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
-        # )
-        # resLFCNN
-        # self.design = ModelDesign(
-        #     self.inputs,
-        #     DeMixing(size=self.specs['n_latent'], nonlin=tf.identity, axis=3, specs=self.specs),
-        #     ParallelDesign(
-        #         LFTConv(
-        #             size=self.specs['n_latent'],
-        #             nonlin=self.specs['nonlin'],
-        #             filter_length=self.specs['filter_length']//2,
-        #             padding=self.specs['padding'],
-        #             specs=self.specs
-        #         ),
-        #         LFTConv(
-        #             size=self.specs['n_latent'],
-        #             nonlin=self.specs['nonlin'],
-        #             filter_length=self.specs['filter_length'],
-        #             padding=self.specs['padding'],
-        #             specs=self.specs
-        #         ),
-        #         LFTConv(
-        #             size=self.specs['n_latent'],
-        #             nonlin=self.specs['nonlin'],
-        #             filter_length=self.specs['filter_length']*2,
-        #             padding=self.specs['padding'],
-        #             specs=self.specs
-        #         ),
-        #     ),
-        #     TempPooling(
-        #         pooling=self.specs['pooling'],
-        #         pool_type=self.specs['pool_type'],
-        #         stride=self.specs['stride'],
-        #         padding=self.specs['padding'],
-        #     ),
-        #     tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
-        #     Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
-        # )
-        # sLFCNN
-        # self.design = ModelDesign(
-        #     self.inputs,
-        #     DeMixing(size=self.specs['n_latent'], nonlin=tf.identity, axis=3, specs=self.specs),
-        #     LFTConv(
-        #         size=self.specs['n_latent'],
-        #         nonlin=self.specs['nonlin'],
-        #         filter_length=self.specs['filter_length'],
-        #         padding=self.specs['padding'],
-        #         specs=self.specs
-        #     ),
-        #     tf.keras.layers.DepthwiseConv2D(
-        #         (1, self.inputs.shape[2]),
-        #         padding='valid',
-        #         activation='relu',
-        #         kernel_regularizer='l1'
-        #     ),
-        #     tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
-        #     tf.keras.layers.Flatten(),
-        #     tf.keras.layers.Dense(self.out_dim, kernel_regularizer='l1'),
-        # )
-        # sLFRNN
-        # self.design = ModelDesign(
-        #     self.inputs,
-        #     LayerDesign(tf.squeeze, axis=1),
-        #     tf.keras.layers.Bidirectional(
-        #         tf.keras.layers.LSTM(
-        #             self.specs['n_latent'],
-        #             bias_regularizer='l1',
-        #             return_sequences=True,
-        #             kernel_regularizer=tf.keras.regularizers.L1(.01),
-        #             recurrent_regularizer=tf.keras.regularizers.L1(.01),
-        #             dropout=0.4,
-        #             recurrent_dropout=0.4,
-        #         ),
-        #         merge_mode='sum'
-        #     ),
-        #     LayerDesign(tf.expand_dims, axis=1),
-        #     LFTConv(
-        #         size=self.specs['n_latent'],
-        #         nonlin=self.specs['nonlin'],
-        #         filter_length=self.specs['filter_length'],
-        #         padding=self.specs['padding'],
-        #         specs=self.specs
-        #     ),
-        #     tf.keras.layers.DepthwiseConv2D(
-        #         (1, self.inputs.shape[2]),
-        #         padding='valid',
-        #         activation='relu',
-        #         kernel_regularizer='l1'
-        #     ),
-        #     tf.keras.layers.Dropout(self.specs['dropout'], noise_shape=None),
-        #     tf.keras.layers.Flatten(),
-        #     tf.keras.layers.Dense(self.out_dim, kernel_regularizer='l1'),
-        # )
 
         return self.design()
 
@@ -441,7 +267,7 @@ class ZubarevNet(BaseModel):
 if __name__ == '__main__':
     mpl.use('agg')
     parser = argparse.ArgumentParser(
-        description='A script for applying the neural network "LFCNN"'
+        description='A script for applying neural models (LFCNN, VGG19, EEGNet, FBCSP ShallowNet)'
         ' to the epoched data from gradiometers related to events for classification'
     )
     parser.add_argument('-es', '--exclude-sessions', type=str, nargs='+',

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import mneflow as mf
-from combiners import EpochsCombiner
+from utils.combiners import EpochsCombiner
 from utils.console import Silence
 from utils.storage_management import check_path
 from utils.machine_learning import one_hot_decoder
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     mpl.use('agg')
     parser = argparse.ArgumentParser(
         description='A script for applying the neural network "LFCNN" to the epoched data from '
-        'gradiometers related to events for classification'
+        'gradiometers related to events for classification, multiple sessions are combined into groups, to test generalization form one group to another'
     )
     parser.add_argument('-cms', '--combine-sessions', type=str, nargs='+',
                         default=[], help='Sessions to combine')
@@ -99,8 +99,6 @@ if __name__ == '__main__':
 
     if model_name == 'LFCNN':
         classifier = mf.models.LFCNN
-    elif model_name == 'LFRNN':
-        classifier = LFRNN
     else:
         raise NotImplementedError(f'This model is not implemented: {model_name}')
 

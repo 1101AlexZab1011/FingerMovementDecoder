@@ -2,6 +2,18 @@ from functools import wraps
 import hashlib
 from typing import Optional, Callable, Any, Union, Dict
 import os
+import pickle
+
+
+def read_pkl(path: str) -> Any:
+    with open(
+        path,
+        'rb'
+    ) as file:
+        content = pickle.load(
+            file
+        )
+    return content
 
 
 def check_path(*args: str) -> None:

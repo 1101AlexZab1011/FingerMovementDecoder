@@ -13,17 +13,7 @@ from utils.storage_management import check_path
 from typing import Any, NoReturn, Optional, Union
 import matplotlib as mpl
 from matplotlib.widgets import Button
-
-
-def read_pkl(path: str) -> Any:
-    with open(
-        path,
-        'rb'
-    ) as file:
-        content = pickle.load(
-            file
-        )
-    return content
+from utils.storage_management import read_pkl
 
 
 def plot_patterns(
