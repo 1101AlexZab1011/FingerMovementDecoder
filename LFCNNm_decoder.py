@@ -35,8 +35,8 @@ class ZubarevNet(BaseModel):
         specs.setdefault('padding', 'SAME')
         specs.setdefault('pool_type', 'max')
         specs.setdefault('nonlin', tf.nn.relu)
-        specs.setdefault('l1', 3e-4)
-        specs.setdefault('l2', 0)
+        specs.setdefault('l1_lambda', 3e-4)
+        specs.setdefault('l2_lambda', 0)
         specs.setdefault('l1_scope', ['fc', 'demix', 'lf_conv'])
         specs.setdefault('l2_scope', [])
         specs.setdefault('maxnorm_scope', [])
@@ -119,27 +119,79 @@ class ZubarevNet(BaseModel):
                     kernel_regularizer=k_reg.l2(self.specs['l2'])
                     # kernel_constraint="maxnorm"
                 ),
-                *[ModelDesign(
-                    tf.keras.layers.Conv2D(
-                        filters=self.specs['n_latent'],
-                        kernel_size=(self.dataset.h_params['n_ch'], 1),
-                        strides=1,
-                        padding=self.specs['padding'],
-                        activation=self.specs['nonlin'],
-                        kernel_initializer="he_uniform",
-                        bias_initializer=Constant(0.1),
-                        data_format="channels_last",
-                        # data_format="channels_first",
-                        kernel_regularizer=k_reg.l2(self.specs['l2'])
-                    ),
-                    TempPooling(
-                        pooling=self.specs['pooling'],
-                        pool_type="avg",
-                        stride=self.specs['stride'],
-                        padding='SAME',
-                    )
-                ) for _ in range(4)],
-                Dense(size=self.out_dim, nonlin=tf.nn.softmax)
+                tf.keras.layers.Conv2D(
+		        filters=self.specs['n_latent'],
+		        kernel_size=(self.dataset.h_params['n_ch'], 1),
+		        strides=1,
+		        padding=self.specs['padding'],
+		        activation=self.specs['nonlin'],
+		        kernel_initializer="he_uniform",
+		        bias_initializer=Constant(0.1),
+		        data_format="channels_last",
+		        # data_format="channels_first",
+		        kernel_regularizer=k_reg.l2(self.specs['l2'])
+		    ),
+		TempPooling(
+		        pooling=self.specs['pooling'],
+		        pool_type="avg",
+		        stride=self.specs['stride'],
+		        padding='SAME',
+		    ),
+		tf.keras.layers.Conv2D(
+		        filters=self.specs['n_latent'],
+		        kernel_size=(self.dataset.h_params['n_ch'], 1),
+		        strides=1,
+		        padding=self.specs['padding'],
+		        activation=self.specs['nonlin'],
+		        kernel_initializer="he_uniform",
+		        bias_initializer=Constant(0.1),
+		        data_format="channels_last",
+		        # data_format="channels_first",
+		        kernel_regularizer=k_reg.l2(self.specs['l2'])
+		    ),
+		TempPooling(
+		        pooling=self.specs['pooling'],
+		        pool_type="avg",
+		        stride=self.specs['stride'],
+		        padding='SAME',
+		    ),
+		tf.keras.layers.Conv2D(
+		        filters=self.specs['n_latent'],
+		        kernel_size=(self.dataset.h_params['n_ch'], 1),
+		        strides=1,
+		        padding=self.specs['padding'],
+		        activation=self.specs['nonlin'],
+		        kernel_initializer="he_uniform",
+		        bias_initializer=Constant(0.1),
+		        data_format="channels_last",
+		        # data_format="channels_first",
+		        kernel_regularizer=k_reg.l2(self.specs['l2'])
+		    ),
+		TempPooling(
+		        pooling=self.specs['pooling'],
+		        pool_type="avg",
+		        stride=self.specs['stride'],
+		        padding='SAME',
+		    ),
+		 tf.keras.layers.Conv2D(
+		        filters=self.specs['n_latent'],
+		        kernel_size=(self.dataset.h_params['n_ch'], 1),
+		        strides=1,
+		        padding=self.specs['padding'],
+		        activation=self.specs['nonlin'],
+		        kernel_initializer="he_uniform",
+		        bias_initializer=Constant(0.1),
+		        data_format="channels_last",
+		        # data_format="channels_first",
+		        kernel_regularizer=k_reg.l2(self.specs['l2'])
+		    ),
+		TempPooling(
+		        pooling=self.specs['pooling'],
+		        pool_type="avg",
+		        stride=self.specs['stride'],
+		        padding='SAME',
+		    ),
+                Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
             )
         elif self.scope == 'fbcsp':
             # FBCSP_ShallowNet
@@ -176,7 +228,7 @@ class ZubarevNet(BaseModel):
                     stride=self.specs['stride'],
                     padding='SAME',
                 ),
-                Dense(size=self.out_dim, nonlin=tf.identity)
+                Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
             )
         elif self.scope == 'eegnet':
             # EEGNet
@@ -210,7 +262,7 @@ class ZubarevNet(BaseModel):
                 tf.keras.layers.Activation('elu'),
                 tf.keras.layers.AveragePooling2D((1, self.specs['pooling'] * 2)),
                 tf.keras.layers.Dropout(self.specs['dropout']),
-                Dense(size=self.out_dim)
+                Dense(size=self.out_dim, nonlin=tf.identity, specs=self.specs)
             )
         elif self.scope == 'simplenet':
             self.design = ModelDesign(
@@ -577,6 +629,7 @@ if __name__ == '__main__':
         )
 
         model = ZubarevNet(dataset, lf_params, model_name)
+        print(tf.keras.Model(inputs=model.inputs, outputs=model.y_pred).summary())
         model.build()
         t1 = perf_counter()
         model.train(n_epochs=25, eval_step=100, early_stopping=5)

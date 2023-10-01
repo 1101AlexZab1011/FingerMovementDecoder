@@ -275,7 +275,7 @@ if __name__ == '__main__':
             classification_name_formatted_sep = f'{classification_name_formatted}_train'\
                 f'_{dataset_train.name}_test_{dataset_test.name}'
 
-            if dataset_train.name != dataset_prev:
+            if dataset_train.name != dataset_prev: # retrain model if new train set is used
                 dataset_prev = dataset_train.name
                 model = classifier(dataset_train.dataset, lf_params)
                 model.build()
@@ -320,12 +320,13 @@ if __name__ == '__main__':
             train_loss_, train_acc_ = model.evaluate(dataset_train.dataset.train)
             test_loss_, test_acc_ = model.evaluate(test_data)
 
-            if new_parameters and not no_params:
+            if not no_params:
                 dataset_prev = dataset_train.name
                 new_parameters = False
-                model.compute_patterns(meta['train_paths'])
+                from LFCNN_decoder_tr import compute_patterns
+                compute_patterns(model, dataset_test.dataset)
                 patterns = model.patterns.copy()
-                model.compute_patterns(meta['train_paths'], output='filters')
+                compute_patterns(model, dataset_test.dataset, output='filters')
                 filters = model.patterns.copy()
                 franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
                 induced, times, time_courses = compute_waveforms(model)
@@ -335,22 +336,22 @@ if __name__ == '__main__':
                         y_pred_test,
                         y_true_test
                     ),
-                    os.path.join(yp_path, f'{classification_name_formatted}_pred.pkl'),
+                    os.path.join(yp_path, f'{classification_name_formatted_sep}_pred.pkl'),
                     'predictions'
                 )
                 save_parameters(
-                    WaveForms(time_courses.mean(1), induced, times, time_courses),
-                    os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),
+                    WaveForms(time_courses.mean(1), induced, times, model.lat_tcs_filt),
+                    os.path.join(sp_path, f'{classification_name_formatted_sep}_waveforms.pkl'),
                     'WaveForms'
                 )
                 save_parameters(
                     SpatialParameters(patterns, filters),
-                    os.path.join(sp_path, f'{classification_name_formatted}_spatial.pkl'),
+                    os.path.join(sp_path, f'{classification_name_formatted_sep}_spatial.pkl'),
                     'spatial'
                 )
                 save_parameters(
                     TemporalParameters(franges, finputs, foutputs, fresponces),
-                    os.path.join(sp_path, f'{classification_name_formatted}_temporal.pkl'),
+                    os.path.join(sp_path, f'{classification_name_formatted_sep}_temporal.pkl'),
                     'temporal'
                 )
                 save_parameters(
@@ -361,7 +362,7 @@ if __name__ == '__main__':
                         get_order(*model._sorting('output_corr')),
                         get_order(*model._sorting('weight_corr')),
                     ),
-                    os.path.join(sp_path, f'{classification_name_formatted}_sorting.pkl'),
+                    os.path.join(sp_path, f'{classification_name_formatted_sep}_sorting.pkl'),
                     'sorting'
                 )
 
@@ -409,3 +410,4 @@ if __name__ == '__main__':
                 ).to_csv(perf_table_path)
             else:
                 processed_df.to_csv(perf_table_path)
+

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # 4 fingers
+./venv/bin/python ./LFCNNm_decoder.py -cmb "RI" "RM" "LI" "LM" --prefix LFCNN --model lfcnn
 ./venv/bin/python ./LFCNNm_decoder.py -cmb "RI" "RM" "LI" "LM" --prefix EEGNet --model eegnet
 ./venv/bin/python ./LFCNNm_decoder.py -cmb "RI" "RM" "LI" "LM" --prefix FBCSP_ShallowNet --model fbcsp
 ./venv/bin/python ./LFCNNm_decoder.py -cmb "RI" "RM" "LI" "LM" --prefix Deep4 --model deep4

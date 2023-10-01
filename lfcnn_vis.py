@@ -32,7 +32,7 @@ def plot_patterns(
     size=1, cbar_fmt='%3.1f', name_format='Latent\nSource %01d',
     show=True, show_names=False, title=None,
     outlines='head', contours=6,
-    image_interp='linear'
+    image_interp='linear', **kwargs
 ) -> mpl.figure.Figure:
     if order is None:
         order = range(patterns.shape[1])
@@ -48,8 +48,8 @@ def plot_patterns(
         cmap=cmap, colorbar=colorbar, res=res,
         cbar_fmt=cbar_fmt, sensors=sensors, units=None, time_unit='s',
         time_format=name_format, size=size, show_names=show_names,
-        title=title, outlines=outlines,
-        contours=contours, image_interp=image_interp, show=show)
+        outlines=outlines,
+        contours=contours, image_interp=image_interp, show=show, **kwargs)
 
 
 def plot_spectra(temporal_parameters, order, title='', xlim=None, ylim=None, legend=None):

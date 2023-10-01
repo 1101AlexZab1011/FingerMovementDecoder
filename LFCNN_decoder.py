@@ -63,10 +63,12 @@ def compute_patterns(model, data_path=None, *, output='patterns'):
         [-1, model.dmx.size, model.out_dim]
     )
     model.out_biases = model.fin_fc.b.numpy()
-    model.feature_relevances = model.get_component_relevances(X, y)
-
+    model.feature_relevances = model.compute_componentwise_loss(X, y)
+    model.compwise_losses = model.feature_relevances
     # compute temporal convolution layer outputs for vis_dics
-    tc_out = model.pool(model.tconv(model.dmx(X)).numpy())
+    # tc_out = model.pool(model.tconv(model.dmx(X)).numpy())
+    model.lat_tcs_filt = model.tconv(model.dmx(X)).numpy()
+    tc_out = model.pool(model.lat_tcs_filt)
 
     # compute data covariance
     X = X - tf.reduce_mean(X, axis=-2, keepdims=True)
@@ -134,7 +136,10 @@ def compute_temporal_parameters(model, *, fs=None):
 
 
 def get_order(order: np.array, *args):
-    return order.ravel()
+    if order is not None:
+        return order.ravel()
+    else:
+        return (None, None)
 
 
 def compute_morlet_cwt(
@@ -324,6 +329,8 @@ if __name__ == '__main__':
     parser.add_argument('-hp', '--high_pass', type=float,
                         default=None, help='High-pass filter (Hz)')
     parser.add_argument('--no-params', action='store_true', help='Do not compute parameters')
+    parser.add_argument('-cf', '--crop-from', type=float, help='Crop epoch from time', default=None)
+    parser.add_argument('-ct', '--crop-to', type=float, help='Crop epoch to time', default=None)
 
     excluded_sessions, \
         excluded_subjects, \
@@ -337,7 +344,8 @@ if __name__ == '__main__':
         classification_prefix, \
         project_name, \
         lfreq, \
-        no_params = vars(parser.parse_args()).values()
+        no_params, \
+        crop_from, crop_to = vars(parser.parse_args()).values()
 
     if excluded_sessions:
         excluded_sessions = [
@@ -429,10 +437,16 @@ if __name__ == '__main__':
 
                 i += j
                 cases_indices_to_combine[-1].append(i)
-                if lfreq is None:
-                    cases_to_combine_list.append(epochs[case])
-                else:
-                    cases_to_combine_list.append(epochs[case].filter(lfreq, None))
+
+                if lfreq is not None:
+                    epochs[case] = epochs[case].filter(lfreq, None)
+                
+                if crop_from is not None or crop_to is not None:
+                    epochs[case] = epochs[case].crop(crop_from, crop_to)
+                
+                
+                cases_to_combine_list.append(epochs[case])
+                    
 
             i += 1
 
@@ -455,9 +469,9 @@ if __name__ == '__main__':
             target_type='int',
             picks={'meg': 'grad'},
             scale=True,
-            crop_baseline=True,
-            decimate=None,
+            crop_baseline=False,
             scale_interval=(0, 60),
+            decimate=None,
             n_folds=5,
             overwrite=True,
             segment=False,
