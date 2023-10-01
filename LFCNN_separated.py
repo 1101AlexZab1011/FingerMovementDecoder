@@ -13,7 +13,7 @@ from utils.storage_management import check_path
 from utils.machine_learning import one_hot_decoder
 import matplotlib as mpl
 import sklearn
-from LFCNN_decoder import compute_temporal_parameters, \
+from LFCNN_decoder import compute_patterns, compute_temporal_parameters, \
     compute_waveforms, \
     save_parameters, \
     get_order, \
@@ -320,7 +320,6 @@ if __name__ == '__main__':
             if not no_params:
                 dataset_prev = dataset_train.name
                 new_parameters = False
-                from LFCNN_decoder_tr import compute_patterns
                 compute_patterns(model, dataset_test.dataset)
                 patterns = model.patterns.copy()
                 compute_patterns(model, dataset_test.dataset, output='filters')
