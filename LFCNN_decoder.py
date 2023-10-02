@@ -565,15 +565,6 @@ if __name__ == '__main__':
             franges, finputs, foutputs, fresponces = compute_temporal_parameters(model)
             induced, times, time_courses = compute_waveforms(model)
 
-            # induced = list()
-            # for tc in time_courses:
-            #     ls_induced = list()
-            #     for lc in tc:
-            #         widths = np.arange(1, 71)
-            #         ls_induced.append(np.abs(sp.signal.cwt(lc, sp.signal.ricker, widths)))
-            #     induced.append(np.array(ls_induced).mean(axis=0))
-            # induced = np.array(induced)
-
             save_parameters(
                 WaveForms(time_courses.mean(1), induced, times, time_courses),
                 os.path.join(sp_path, f'{classification_name_formatted}_waveforms.pkl'),

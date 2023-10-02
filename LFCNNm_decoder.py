@@ -336,6 +336,13 @@ if __name__ == '__main__':
     if classification_name is None:
         classification_name = '_vs_'.join(class_names)
 
+    classification_name_formatted = "_".join(
+        list(filter(
+            lambda s: s not in (None, ""),
+            [classification_prefix, classification_name, classification_postfix]
+        ))
+    )
+
     perf_tables_path = os.path.join(os.path.dirname(subjects_dir), 'perf_tables')
     pics_path = os.path.join(os.path.dirname(subjects_dir), 'Pictures')
     check_path(perf_tables_path, pics_path)
@@ -407,12 +414,7 @@ if __name__ == '__main__':
         combiner.shuffle()
         tfr_path = os.path.join(subject_path, 'TFR')
         check_path(tfr_path)
-        classification_name_formatted = "_".join(
-            list(filter(
-                lambda s: s not in (None, ""),
-                [classification_prefix, classification_name, classification_postfix]
-            ))
-        )
+
         savepath = os.path.join(
             tfr_path,
             classification_name_formatted
